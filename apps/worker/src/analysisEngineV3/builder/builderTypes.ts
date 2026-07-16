@@ -141,6 +141,7 @@ export type V3PromptBuilderInput = {
   readonly subjectModule: V3PromptSubjectModule;
   readonly glossary: V3PromptGlossary;
   readonly outputSchema: V3PromptOutputSchema;
+  readonly compiledReviewerContext?: import("../reviewerCompiler/compilerTypes.js").ReviewerCompiledContext | null;
 };
 
 export type V3RenderedPrompt = {

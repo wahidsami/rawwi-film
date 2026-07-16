@@ -9,6 +9,7 @@ export type V3PromptBuilderContext = Readonly<{
   subjectModule: V3PromptBuilderInput["subjectModule"];
   glossary: V3PromptBuilderInput["glossary"];
   outputSchema: V3PromptBuilderInput["outputSchema"];
+  compiledReviewerContext?: V3PromptBuilderInput["compiledReviewerContext"];
 }>;
 
 function isPlainObject(value: unknown): value is V3PromptJsonObject {
@@ -83,6 +84,6 @@ export function normalizePromptBuilderInput(input: V3PromptBuilderInput): V3Prom
       fields: [...input.outputSchema.fields],
       notes: input.outputSchema.notes ? [...input.outputSchema.notes] : undefined,
     },
+    compiledReviewerContext: input.compiledReviewerContext ?? null,
   };
 }
-

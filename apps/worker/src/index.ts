@@ -21,6 +21,7 @@ import { setContext, logger } from "./logger.js";
 import { initializeLexiconCache, getLexiconCache } from "./lexiconCache.js";
 import { processChunkForJob } from "./pipelineRunner.js";
 import { processPdfExtraction } from "./pdfExtraction.js";
+import { ensureReviewerAcademyRegistry } from "./analysisEngineV3/reviewerCompiler/compilerLoader.js";
 
 type ChunkProcessResult = {
   ok: boolean;
@@ -59,6 +60,7 @@ function getRuntimeConfigLogPayload() {
     analysisHybridMode: config.ANALYSIS_HYBRID_MODE,
     analysisEvalLog: config.ANALYSIS_EVAL_LOG,
     analysisDeepAuditor: config.ANALYSIS_DEEP_AUDITOR,
+    reviewerCompilerEnabled: config.REVIEWER_COMPILER_ENABLED,
     largeJobChunkThreshold: config.ANALYSIS_LARGE_JOB_CHUNK_THRESHOLD,
     largeJobTextLengthThreshold: config.ANALYSIS_LARGE_JOB_TEXT_LENGTH_THRESHOLD,
     passGatingEnabled: config.ANALYSIS_PASS_GATING_ENABLED,
@@ -255,10 +257,18 @@ async function processClaimedChunk(
 }
 
 async function processOneJob(): Promise<boolean> {
+  logger.info("Poll tick started", {
+    pollIntervalMs: config.POLL_INTERVAL_MS,
+    chunkConcurrency: config.WORKER_CHUNK_CONCURRENCY,
+  });
   const extractionVersion = await fetchNextPendingExtractionVersion();
   if (extractionVersion) {
     setContext({});
     try {
+      logger.info("Extraction queue item selected before analysis polling", {
+        extractionVersionId: extractionVersion.id,
+        scriptId: extractionVersion.script_id,
+      });
       await processPdfExtraction(extractionVersion);
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") {
@@ -290,6 +300,10 @@ async function processOneJob(): Promise<boolean> {
   const jobStartedAt = Date.now();
   const job = await fetchNextJob();
   if (!job) {
+    logger.info("No analysis job found during poll tick", {
+      pollIntervalMs: config.POLL_INTERVAL_MS,
+      chunkConcurrency: config.WORKER_CHUNK_CONCURRENCY,
+    });
     const aggregationJob = await fetchNextAggregationCandidateJob();
     if (!aggregationJob) return false;
     setContext({ jobId: aggregationJob.id });
@@ -314,6 +328,12 @@ async function processOneJob(): Promise<boolean> {
   const normalizedText = await fetchJobNormalizedText(job.id);
   const desiredConcurrency = config.WORKER_CHUNK_CONCURRENCY;
   const claimed = await claimChunkBatch(job.id, desiredConcurrency);
+  logger.info("Claim batch completed", {
+    jobId: job.id,
+    desiredConcurrency,
+    claimedCount: claimed.length,
+    chunkIndexes: claimed.map((chunk) => chunk.chunk_index),
+  });
   if (claimed.length === 0) return false;
 
   logger.info("Worker runtime config for claimed job", {
@@ -409,6 +429,7 @@ async function runOnce(jobId: string | undefined): Promise<void> {
   }
 
   await initializeLexiconCache(supabase);
+  ensureReviewerAcademyRegistry();
   const staleSweep = startStaleJudgingSweep();
   logger.info("Worker runtime config loaded", {
     mode: jobId ? "once" : "single-run",
@@ -488,6 +509,7 @@ async function runDev(): Promise<never> {
   }
 
   await initializeLexiconCache(supabase);
+  ensureReviewerAcademyRegistry();
   logger.info("Worker dev loop started", {
     pollIntervalMs: config.POLL_INTERVAL_MS,
     chunkConcurrency: config.WORKER_CHUNK_CONCURRENCY,
@@ -503,6 +525,9 @@ async function runDev(): Promise<never> {
       setContext({});
       let didWork = false;
       try {
+        logger.info("Worker poll loop iteration starting", {
+          pollIntervalMs: config.POLL_INTERVAL_MS,
+        });
         didWork = await processOneJob();
       } catch (error) {
         logger.error("Worker loop iteration failed", {

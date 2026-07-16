@@ -6,14 +6,17 @@ import { renderReasoningStageAssembly } from "./stageAssembler.js";
 import { renderSemanticLayerSection } from "./semanticAssembler.js";
 import { joinPromptSections, renderListSection, renderRawSection, renderSection, renderStableJsonSection, renderStructuredSection } from "./sectionAssembler.js";
 import type { V3PromptBuilderInput, V3RenderedPrompt } from "./builderTypes.js";
+import { config } from "../../config.js";
 import { createPromptConceptContext, runReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRunner.js";
 import { getDefaultReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRegistry.js";
 import { renderReviewerMethodologySection } from "../reviewerMethodology/reviewerMethodologyRenderer.js";
-import { getDefaultReviewerQuestionSet, renderReviewerQuestionSetSection, createDefaultReviewerQuestionRegistry } from "../reviewerQuestions/index.js";
+import { getDefaultReviewerQuestionSet, renderReviewerQuestionSetSection } from "../reviewerQuestions/index.js";
 import { createReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
 import { renderReviewerKnowledgePacksSection } from "../reviewerKnowledge/reviewerKnowledgeRenderer.js";
 import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
 import { buildReviewerReasoningEnginePayload } from "./reviewerReasoningEngine.js";
+import { compileReviewerContext } from "../reviewerCompiler/compiler.js";
+import { renderCompiledReviewerContextSection } from "../reviewerCompiler/compilerRenderer.js";
 
 function renderDecisionGraphSection(decisionGraph: V3PromptBuilderInput["decisionGraph"]): string {
   const nodeSections = decisionGraph.nodes.map((node) =>
@@ -70,41 +73,63 @@ export function renderV3Prompt(input: V3PromptBuilderInput): string {
   const context = normalizePromptBuilderInput(input);
   const conceptContext = createPromptConceptContext(context);
   const reviewerAssessment = runReviewerMethodology({ promptInput: context, conceptContext });
-  const reviewerQuestionRegistry = createDefaultReviewerQuestionRegistry();
-  const reviewerKnowledgeSelection = createEmergencyContextualReviewerKnowledgeSelection({
-    promptInput: context,
-    conceptContext,
-    assessment: reviewerAssessment,
-  });
-  const knowledgeRetrieval = createReviewerKnowledgeRetrievalReport({
-    assessment: reviewerAssessment,
-    conceptContext,
-    subjectModule: context.subjectModule,
-    registry: reviewerKnowledgeSelection.reviewerKnowledgeRegistry,
-    topK: Math.max(1, reviewerKnowledgeSelection.routing.selectedReviewerPackIds.length),
-  });
-  const universalKnowledgePack = knowledgeRetrieval.selectedPacks.find((pack) => pack.id === "v3_00_universal") ?? null;
-  const reviewerQuestionSet = universalKnowledgePack?.default_question_set_id
-    ? reviewerQuestionRegistry.load(universalKnowledgePack.default_question_set_id) ?? getDefaultReviewerQuestionSet()
-    : getDefaultReviewerQuestionSet();
-  const reviewerKnowledgePacks = knowledgeRetrieval.selectedPacks;
-  const reviewerReasoningEngine = buildReviewerReasoningEnginePayload(
-    context,
-    conceptContext,
-    reviewerAssessment,
-    reviewerKnowledgePacks,
-    reviewerKnowledgeSelection.knowledgeRegistry,
-    knowledgeRetrieval,
-  );
+  const reviewerQuestionSet = getDefaultReviewerQuestionSet();
+  const compiledReviewerContext = config.REVIEWER_COMPILER_ENABLED
+    ? (context.compiledReviewerContext ?? compileReviewerContext({
+        promptInput: context,
+        conceptContext,
+        assessment: reviewerAssessment,
+      }).compiledReviewerContext)
+    : null;
+  const reviewerKnowledgeSelection = config.REVIEWER_COMPILER_ENABLED
+    ? null
+    : createEmergencyContextualReviewerKnowledgeSelection({
+        promptInput: context,
+        conceptContext,
+        assessment: reviewerAssessment,
+      });
+  const knowledgeRetrieval = config.REVIEWER_COMPILER_ENABLED
+    ? null
+    : createReviewerKnowledgeRetrievalReport({
+        assessment: reviewerAssessment,
+        conceptContext,
+        subjectModule: context.subjectModule,
+        registry: reviewerKnowledgeSelection!.reviewerKnowledgeRegistry,
+        topK: Math.max(1, reviewerKnowledgeSelection!.routing.selectedReviewerPackIds.length),
+      });
+  const reviewerKnowledgePacks = knowledgeRetrieval?.selectedPacks ?? [];
+  const reviewerReasoningEngine = config.REVIEWER_COMPILER_ENABLED
+    ? null
+    : buildReviewerReasoningEnginePayload(
+        context,
+        conceptContext,
+        reviewerAssessment,
+        reviewerKnowledgePacks,
+        reviewerKnowledgeSelection!.knowledgeRegistry,
+        knowledgeRetrieval!,
+      );
   const reviewerMethodology = getDefaultReviewerMethodology();
 
   return joinPromptSections([
     "# Analysis Engine V3 System Prompt",
     renderReviewerMethodologySection(reviewerMethodology, reviewerAssessment),
     renderReviewerQuestionSetSection(reviewerQuestionSet),
-    renderReviewerKnowledgePacksSection(reviewerKnowledgePacks),
-    renderStableJsonSection("GPT Reviewer Assistant", reviewerReasoningEngine.gpt_reviewer_assistant ?? {}),
-    renderStableJsonSection("Reviewer Reasoning Engine", reviewerReasoningEngine),
+    config.REVIEWER_COMPILER_ENABLED && compiledReviewerContext
+      ? renderCompiledReviewerContextSection(compiledReviewerContext)
+      : renderReviewerKnowledgePacksSection(reviewerKnowledgePacks),
+    config.REVIEWER_COMPILER_ENABLED && compiledReviewerContext
+      ? renderStableJsonSection("Compiled Reviewer Context Summary", {
+          selected_reviewer_ids: [...compiledReviewerContext.selection.selectedReviewerIds],
+          selected_reviewer_labels: [...compiledReviewerContext.selection.selectedReviewerLabels],
+          loaded_manual_count: compiledReviewerContext.loadedManualCount,
+          estimated_token_count: compiledReviewerContext.estimatedTokenCount,
+          prompt_character_count: compiledReviewerContext.promptCharacterCount,
+          prompt_token_estimate: compiledReviewerContext.promptTokenEstimate,
+        })
+      : renderStableJsonSection("GPT Reviewer Assistant", reviewerReasoningEngine!.gpt_reviewer_assistant ?? {}),
+    config.REVIEWER_COMPILER_ENABLED && compiledReviewerContext
+      ? null
+      : renderStableJsonSection("Reviewer Reasoning Engine", reviewerReasoningEngine!),
     renderReasoningStageAssembly(context.reasoningContract),
     renderDecisionGraphSection(context.decisionGraph),
     renderSemanticLayerSection(context.semanticLayer),

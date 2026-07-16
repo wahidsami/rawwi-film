@@ -13,8 +13,10 @@ import { getDefaultReviewerMethodology } from "../reviewerMethodology/reviewerMe
 import { createReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
 import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
 import { buildReviewerReasoningEnginePayload } from "../builder/reviewerReasoningEngine.js";
+import { compileReviewerContext } from "../reviewerCompiler/compiler.js";
 import { validateReasonedDecisionAgainstEvidence } from "./reasonedDecisionValidation.js";
 import { logger } from "../../logger.js";
+import { config } from "../../config.js";
 
 export type V3ProviderFlowInput = Readonly<{
   promptInput: V3PromptBuilderInput;
@@ -39,33 +41,63 @@ export function buildV3ProviderUserPrompt(input: V3PromptBuilderInput): string {
   });
   const conceptContext = createPromptConceptContext(input);
   const reviewerAssessment = runReviewerMethodology({ promptInput: input, conceptContext });
-  const reviewerKnowledgeSelection = createEmergencyContextualReviewerKnowledgeSelection({
-    promptInput: input,
-    conceptContext,
-    assessment: reviewerAssessment,
-  });
-  const reviewerKnowledgeRetrieval = createReviewerKnowledgeRetrievalReport({
-    assessment: reviewerAssessment,
-    conceptContext,
-    subjectModule: input.subjectModule,
-    registry: reviewerKnowledgeSelection.reviewerKnowledgeRegistry,
-    topK: Math.max(1, reviewerKnowledgeSelection.routing.selectedReviewerPackIds.length),
-  });
-  const reviewerKnowledgePacks = reviewerKnowledgeRetrieval.selectedPacks;
-  const reviewerReasoningEngine = buildReviewerReasoningEnginePayload(
-    input,
-    conceptContext,
-    reviewerAssessment,
-    reviewerKnowledgePacks,
-    reviewerKnowledgeSelection.knowledgeRegistry,
-    reviewerKnowledgeRetrieval,
-  );
+  const compiledReviewerContext = config.REVIEWER_COMPILER_ENABLED
+    ? (input.compiledReviewerContext ?? compileReviewerContext({
+        promptInput: input,
+        conceptContext,
+        assessment: reviewerAssessment,
+      }).compiledReviewerContext)
+    : null;
+  const reviewerKnowledgeSelection = config.REVIEWER_COMPILER_ENABLED
+    ? null
+    : createEmergencyContextualReviewerKnowledgeSelection({
+        promptInput: input,
+        conceptContext,
+        assessment: reviewerAssessment,
+      });
+  const reviewerKnowledgeRetrieval = config.REVIEWER_COMPILER_ENABLED
+    ? null
+    : createReviewerKnowledgeRetrievalReport({
+        assessment: reviewerAssessment,
+        conceptContext,
+        subjectModule: input.subjectModule,
+        registry: reviewerKnowledgeSelection!.reviewerKnowledgeRegistry,
+        topK: Math.max(1, reviewerKnowledgeSelection!.routing.selectedReviewerPackIds.length),
+      });
+  const reviewerKnowledgePacks = reviewerKnowledgeRetrieval?.selectedPacks ?? [];
+  const reviewerReasoningEngine = config.REVIEWER_COMPILER_ENABLED
+    ? null
+    : buildReviewerReasoningEnginePayload(
+        input,
+        conceptContext,
+        reviewerAssessment,
+        reviewerKnowledgePacks,
+        reviewerKnowledgeSelection!.knowledgeRegistry,
+        reviewerKnowledgeRetrieval!,
+      );
   logger.info("V3 instrumentation EXIT: buildV3ProviderUserPrompt", {
     subjectModuleId: input.subjectModule.id,
     durationMs: Date.now() - startedAt,
   });
 
-  return stableSerializePromptValue({
+  return stableSerializePromptValue(config.REVIEWER_COMPILER_ENABLED && compiledReviewerContext
+    ? {
+        chunkContext: input.chunkContext,
+        glossary: input.glossary,
+        compiledReviewerContext,
+        reviewerAssessment,
+        reviewerMethodology: getDefaultReviewerMethodology(),
+        outputSchema: input.outputSchema,
+        reasoningContract: input.reasoningContract,
+        semanticLayer: input.semanticLayer,
+        storyMemory: input.storyMemory,
+        subjectModule: {
+          id: input.subjectModule.id,
+          scope: input.subjectModule.scope ?? null,
+          titleAr: input.subjectModule.titleAr,
+        },
+      }
+    : {
     chunkContext: input.chunkContext,
     glossary: input.glossary,
     reviewerReasoningEngine,
