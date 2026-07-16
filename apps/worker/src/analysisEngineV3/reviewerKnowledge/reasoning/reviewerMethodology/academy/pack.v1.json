@@ -13,7 +13,7 @@
       "patch": 0
     },
     "title": "Reviewer Methodology Framework",
-    "description": "A shared reviewer methodology pack that teaches how to think before any domain analysis, including implicit meaning, indirect speech, metaphor, and symbolism.",
+    "description": "A shared reviewer methodology pack that teaches how to think before any domain analysis, including implicit meaning, indirect speech, metaphor, symbolism, and evidence intelligence.",
     "supported_concepts": [
       "finding_identification",
       "evidence_collection",
@@ -54,7 +54,24 @@
       "false_negative_detection",
       "reviewer_comment_generation",
       "finding_generation",
-      "report_priority"
+      "report_priority",
+      "evidence_strength",
+      "evidence_quality",
+      "evidence_ranking",
+      "evidence_weight",
+      "evidence_credibility",
+      "evidence_contradictions",
+      "evidence_completeness",
+      "scene_context",
+      "story_context",
+      "character_history",
+      "dialogue_history",
+      "previous_scene",
+      "next_scene",
+      "character_relationships",
+      "scene_intent",
+      "narrative_intent",
+      "evidence_timeline"
     ]
   },
   "pack": {
@@ -102,7 +119,24 @@
       "false_negative_detection",
       "reviewer_comment_generation",
       "finding_generation",
-      "report_priority"
+      "report_priority",
+      "evidence_strength",
+      "evidence_quality",
+      "evidence_ranking",
+      "evidence_weight",
+      "evidence_credibility",
+      "evidence_contradictions",
+      "evidence_completeness",
+      "scene_context",
+      "story_context",
+      "character_history",
+      "dialogue_history",
+      "previous_scene",
+      "next_scene",
+      "character_relationships",
+      "scene_intent",
+      "narrative_intent",
+      "evidence_timeline"
     ],
     "purpose": "Teach reviewers how to think before any domain-specific reasoning begins.",
     "protected_interests": [

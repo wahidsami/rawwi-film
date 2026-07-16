@@ -42,11 +42,15 @@ function testAcademyPack(): void {
 
 function testLessons(): void {
   const lessons = loadReviewerKnowledgeLessonsFromDirectory(LESSON_ROOT);
-  assert.equal(lessons.length, 1);
+  assert.equal(lessons.length, 2);
   assert.equal(lessons[0]?.id, "lesson_001_reviewer_judgment");
   const lessonValidation = validateReviewerKnowledgeLesson(lessons[0]!);
   assert.equal(lessonValidation.valid, true, lessonValidation.issues.map((issue) => issue.message).join("; "));
+  const calibrationLesson = lessons.find((lesson) => lesson.id === "lesson_002_reviewer_judgment_calibration");
+  assert.equal(Boolean(calibrationLesson), true);
+  assert.equal(validateReviewerKnowledgeLesson(calibrationLesson!).valid, true);
   assert.equal(searchLessons(lessons, { concept: "confidence calibration" }).length > 0, true);
+  assert.equal(searchLessons(lessons, { concept: "borderline decisions" }).length > 0, true);
 }
 
 function testPatterns(): void {
@@ -70,7 +74,7 @@ function testBenchmarks(): void {
   const validator = createBenchmarkValidator();
   const validation = validator.validateCases(catalog.cases as never);
   assert.equal(Array.isArray(catalog.cases), true);
-  assert.equal(catalog.cases.length, 10);
+  assert.equal(catalog.cases.length, 16);
   assert.equal(validation.valid, true, validation.issues.map((issue) => issue.message).join("; "));
   assert.equal(validation.issues.length, 0);
 }

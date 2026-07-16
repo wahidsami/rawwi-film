@@ -39,8 +39,10 @@ function testAcademyPack(): void {
 
 function testLessons(): void {
   const lessons = loadReviewerKnowledgeLessonsFromDirectory(LESSON_ROOT);
-  assert.equal(lessons.length, 1);
+  assert.equal(lessons.length, 3);
   assert.equal(lessons.some((lesson) => lesson.id === "lesson_001_reviewer_methodology"), true);
+  assert.equal(lessons.some((lesson) => lesson.id === "lesson_002_evidence_intelligence"), true);
+  assert.equal(lessons.some((lesson) => lesson.id === "lesson_003_multi_step_reasoning"), true);
 }
 
 function testPatterns(): void {
@@ -64,7 +66,7 @@ function testBenchmarks(): void {
   const validator = createBenchmarkValidator();
   const validation = validator.validateCases(catalog.cases as never);
   assert.equal(Array.isArray(catalog.cases), true);
-  assert.equal(catalog.cases.length, 400);
+  assert.equal(catalog.cases.length, 404);
   assert.equal(validation.valid, true, validation.issues.map((issue) => issue.message).join("; "));
   assert.equal(validation.issues.length, 0);
 }

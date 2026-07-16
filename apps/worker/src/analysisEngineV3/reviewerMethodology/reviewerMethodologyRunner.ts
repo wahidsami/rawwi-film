@@ -37,6 +37,10 @@ function dialogueIndicators(text: string): boolean {
 }
 
 function normalizeStoryMemory(storyMemory: V3PromptBuilderInput["storyMemory"]): string | null {
+  if (storyMemory === null || storyMemory === undefined) {
+    return null;
+  }
+
   if (typeof storyMemory === "string") {
     const normalized = normalizeText(storyMemory);
     return normalized.length > 0 ? normalized : null;
@@ -324,13 +328,7 @@ function buildStageResult(
 export function runReviewerMethodology(input: ReviewerMethodologyRunnerInput): ReviewerAssessment {
   const methodology = getDefaultReviewerMethodology();
   const chunkText = normalizeText(input.promptInput.chunkContext.localChunk);
-  const storyMemory = typeof input.promptInput.storyMemory === "string"
-    ? normalizeText(input.promptInput.storyMemory)
-    : normalizeText([
-        input.promptInput.storyMemory.summary ?? "",
-        ...(input.promptInput.storyMemory.notes ?? []),
-        ...(input.promptInput.storyMemory.scenes ?? []),
-      ].join(" | "));
+  const storyMemory = normalizeStoryMemory(input.promptInput.storyMemory);
   const speaker = extractSpeaker(chunkText);
   const target = extractTarget(chunkText);
   const victim = input.conceptContext.conceptIds.length > 0 ? (target ?? speaker) : null;

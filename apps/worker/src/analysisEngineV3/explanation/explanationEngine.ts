@@ -75,6 +75,7 @@ function reviewerOpinions(input: ExplanationEngineInput): readonly ExplanationRe
         rejectedArticles: Object.freeze([...opinion.rejectedArticles]),
         riskLevel: opinion.riskLevel,
         needsHumanReview: opinion.needsHumanReview,
+        selfCritique: opinion.selfCritique ?? null,
       }),
     ),
   );

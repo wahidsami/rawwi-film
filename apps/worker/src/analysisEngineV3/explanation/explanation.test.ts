@@ -242,6 +242,17 @@ function buildDebate(): ReviewerDebatePackage {
         needsHumanReview: false,
         independence: "independent",
         durationMs: 1,
+        selfCritique: {
+          whyCouldIBeWrong: "A stronger contextual reading could exist.",
+          contradictingEvidence: ["possible counter reading"],
+          assumptions: ["Assumed direct profanity"],
+          possibleDisagreement: "Another reviewer could disagree on context.",
+          missedContext: "Missing broader scene context.",
+          confidenceBefore: 0.97,
+          confidenceAfter: 0.94,
+          confidenceDelta: -0.03,
+          reasonChanges: ["Initial reason: direct profanity", "Self-critique: context could soften the reading."],
+        },
       },
       {
         reviewerId: "general_reviewer",
@@ -269,6 +280,17 @@ function buildDebate(): ReviewerDebatePackage {
         needsHumanReview: false,
         independence: "independent",
         durationMs: 1,
+        selfCritique: {
+          whyCouldIBeWrong: "A contextual exception could exist.",
+          contradictingEvidence: ["possible alternate reading"],
+          assumptions: ["Assumed consensus"],
+          possibleDisagreement: "Another reviewer may prioritize a minority context.",
+          missedContext: "Potential broader narrative framing.",
+          confidenceBefore: 0.9,
+          confidenceAfter: 0.87,
+          confidenceDelta: -0.03,
+          reasonChanges: ["Initial reason: consensus", "Self-critique: minority context may matter."],
+        },
       },
     ],
     opinionSummaries: [],
@@ -457,6 +479,8 @@ function testExplanationReferences(): void {
   assert.equal(explanation.summary.evidenceCompleteness > 0, true);
   assert.equal(explanation.summary.reasoningCompleteness > 0, true);
   assert.equal(explanation.findings[0]?.inspectionReferences.includes("arbitration"), true);
+  assert.equal(explanation.reviewerDebate.opinions[0]?.selfCritique?.confidenceBefore, explanation.reviewerDebate.opinions[0]?.confidence);
+  assert.equal(explanation.reviewerDebate.opinions[0]?.selfCritique?.reasonChanges.length > 0, true);
 }
 
 async function main(): Promise<void> {

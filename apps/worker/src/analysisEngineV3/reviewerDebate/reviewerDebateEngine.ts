@@ -224,8 +224,9 @@ function buildSelfCritique(
   reviewerName: string,
   confidenceValue: number,
 ): ReviewerSelfCritique {
+  const applicableExceptions = decision.exceptions.filter((exception) => exception.applies);
   const contradictingEvidence = uniqueStrings([
-    ...decision.exceptions.filter((exception) => exception.applies).map((exception) => exception.reason),
+    ...applicableExceptions.map((exception) => exception.reason),
     ...decision.evidence.candidates.slice(1).map((candidate) => candidate.text),
   ]);
   const assumptions = uniqueStrings([
@@ -238,7 +239,7 @@ function buildSelfCritique(
     Math.max(
       0,
       confidenceValue
-        - (decision.exceptions.some((exception) => exception.applies) ? 0.08 : 0.03)
+        - (applicableExceptions.length > 0 ? 0.08 : 0.03)
         - (decision.evidence.candidates.length === 0 ? 0.05 : 0),
     ),
   );
@@ -248,10 +249,23 @@ function buildSelfCritique(
     `Self-critique: ${reviewerName} noted alternate context and counter-reading risk.`,
     `Confidence adjusted from ${confidenceValue.toFixed(6)} to ${confidenceAfter.toFixed(6)}.`,
   ]);
+  const revisionNeeded = applicableExceptions.length > 0 || confidenceAfter < confidenceValue;
+  const revision = Object.freeze({
+    approved: !revisionNeeded,
+    recommendation: revisionNeeded
+      ? `Revise recommendation: ${reviewerName} should account for the stronger contextual reading before finalizing.`
+      : "Approve the original recommendation.",
+    reason: revisionNeeded
+      ? uniqueStrings([
+          ...applicableExceptions.map((exception) => exception.reason),
+          "A stronger contextual reading or lower post-critique confidence warrants a revised recommendation.",
+        ]).join(" | ")
+      : "No stronger counter-reading was found during self-critique.",
+  });
 
   return Object.freeze({
-    whyCouldIBeWrong: decision.exceptions.some((exception) => exception.applies)
-      ? decision.exceptions.filter((exception) => exception.applies).map((exception) => exception.reason).join(" | ")
+    whyCouldIBeWrong: applicableExceptions.length > 0
+      ? applicableExceptions.map((exception) => exception.reason).join(" | ")
       : "A different reviewer could interpret the same evidence with more contextual caution.",
     contradictingEvidence: Object.freeze(contradictingEvidence),
     assumptions: Object.freeze(assumptions),
@@ -261,6 +275,11 @@ function buildSelfCritique(
     confidenceAfter,
     confidenceDelta,
     reasonChanges: Object.freeze(reasonChanges),
+    critique: applicableExceptions.length > 0
+      ? applicableExceptions.map((exception) => exception.reason).join(" | ")
+      : "A different reviewer could interpret the same evidence with more contextual caution.",
+    revision,
+    finalConfidence: confidenceAfter,
   });
 }
 
@@ -317,6 +336,19 @@ function buildGeneralReviewerOpinion(
       `Initial committee reason: ${primaryDecision.reason}`,
       "Self-critique: committee consensus may still underweight a minority contextual reading.",
     ]),
+    critique: minorityOpinions.length > 0
+      ? `Specialist disagreement exists for ${minorityOpinions[0]?.reviewerName ?? "another reviewer"}; context may support a different reading.`
+      : "Consensus can still miss a subtle contextual exception or broader narrative framing.",
+    revision: Object.freeze({
+      approved: minorityOpinions.length === 0 && disagreementScore < 0.35,
+      recommendation: minorityOpinions.length > 0 || disagreementScore >= 0.35
+        ? "Revise recommendation: committee should account for minority specialist context before finalizing."
+        : "Approve the original recommendation.",
+      reason: minorityOpinions.length > 0
+        ? `Minority opinions identified: ${minorityOpinions.map((opinion) => opinion.reviewerName).join(", ")}.`
+        : "Consensus remains stable after self-critique.",
+    }),
+    finalConfidence: confidence(Math.max(0, averageConfidenceValue - (disagreementScore >= 0.35 ? 0.05 : 0.02))),
   });
 
   return Object.freeze({

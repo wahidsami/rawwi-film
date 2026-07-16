@@ -1,0 +1,372 @@
+{
+  "schema_version": 1,
+  "lesson_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "lesson": {
+    "id": "lesson_003_multi_step_reasoning",
+    "title": "Multi-Step Reasoning",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "language": "en",
+    "summary": "Teach reviewers to reason in ordered steps: observation, hypothesis, supporting evidence, contradicting evidence, alternative interpretation, risk assessment, article selection, rejection, confidence adjustment, and final recommendation.",
+    "learningObjectives": [
+      "Start with observation before forming a hypothesis.",
+      "Compare supporting evidence against contradicting evidence.",
+      "Test alternative interpretations before finalizing a recommendation.",
+      "Explain why a stronger explanation won over weaker alternatives.",
+      "Adjust confidence explicitly after each reasoning step.",
+      "Separate applicable GCAM articles from rejected articles."
+    ],
+    "concepts": [
+      {
+        "id": "evidence_collection",
+        "title": "Evidence Collection",
+        "summary": "Collect the facts needed before forming a hypothesis.",
+        "tags": [
+          "methodology",
+          "reasoning",
+          "sequence"
+        ],
+        "target": null,
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "multi_evidence_reasoning",
+        "title": "Multi Evidence Reasoning",
+        "summary": "Compare multiple pieces of evidence and decide which interpretation is best supported.",
+        "tags": [
+          "methodology",
+          "reasoning",
+          "sequence"
+        ],
+        "target": null,
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "contradiction_resolution",
+        "title": "Contradiction Resolution",
+        "summary": "Resolve supporting and contradicting evidence before finalizing the answer.",
+        "tags": [
+          "methodology",
+          "reasoning",
+          "sequence"
+        ],
+        "target": null,
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "confidence_assessment",
+        "title": "Confidence Assessment",
+        "summary": "Adjust confidence after weighing support, contradiction, and alternative explanations.",
+        "tags": [
+          "methodology",
+          "reasoning",
+          "sequence"
+        ],
+        "target": null,
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "finding_generation",
+        "title": "Finding Generation",
+        "summary": "Turn the reasoned conclusion into a reviewer finding when the evidence is strong enough.",
+        "tags": [
+          "methodology",
+          "reasoning",
+          "sequence"
+        ],
+        "target": null,
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "report_priority",
+        "title": "Report Priority",
+        "summary": "Choose the final recommendation and keep the report aligned to the best explanation.",
+        "tags": [
+          "methodology",
+          "reasoning",
+          "sequence"
+        ],
+        "target": null,
+        "articleIds": [
+          17
+        ]
+      }
+    ],
+    "reviewerQuestions": [
+      {
+        "id": "multi_step_q1",
+        "purpose": "What is the observation?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Begin with the literal observation before any hypothesis is formed.",
+        "evidenceRequirements": [
+          "State the observed fact in the scene."
+        ]
+      },
+      {
+        "id": "multi_step_q2",
+        "purpose": "What hypothesis best explains it?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Propose the best supported explanation without skipping alternatives.",
+        "evidenceRequirements": [
+          "Name the hypothesis and the evidence behind it."
+        ]
+      },
+      {
+        "id": "multi_step_q3",
+        "purpose": "What evidence supports or contradicts it?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Compare supporting evidence against contradicting evidence explicitly.",
+        "evidenceRequirements": [
+          "List at least one supporting clue and one contradicting clue when present."
+        ]
+      },
+      {
+        "id": "multi_step_q4",
+        "purpose": "What alternative interpretation is plausible?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Test alternate readings before committing to the final answer.",
+        "evidenceRequirements": [
+          "Describe the alternative interpretation and why it is weaker or stronger."
+        ]
+      },
+      {
+        "id": "multi_step_q5",
+        "purpose": "What risk remains?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Assess risk, ambiguity, and whether the evidence is still borderline.",
+        "evidenceRequirements": [
+          "State the remaining uncertainty or risk."
+        ]
+      },
+      {
+        "id": "multi_step_q6",
+        "purpose": "What final recommendation should follow?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Select the final recommendation only after confidence is adjusted.",
+        "evidenceRequirements": [
+          "State the final recommendation and confidence adjustment."
+        ]
+      }
+    ],
+    "examples": [
+      "The reviewer observes a line, tests a counterfactual explanation, and only then finalizes the conclusion.",
+      "Supporting evidence survives contradiction checks and becomes the best explanation.",
+      "An alternative interpretation is considered and rejected because the stronger reading is better supported.",
+      "Confidence drops after contradictory evidence appears, even though the first clue looked strong."
+    ],
+    "counterExamples": [
+      "The reviewer jumps from observation directly to conclusion without testing alternatives.",
+      "The reviewer ignores contradicting evidence because it appears later.",
+      "The reviewer treats the first plausible explanation as the best one.",
+      "The reviewer adjusts confidence without explaining why the evidence changed."
+    ],
+    "exceptions": [
+      "quotation",
+      "historical narration",
+      "documentary framing",
+      "educational framing",
+      "dream",
+      "flashback"
+    ],
+    "evidenceRules": {
+      "minimum": [
+        "Start from a traceable observation.",
+        "Compare at least one supporting explanation against at least one alternative when available."
+      ],
+      "strong": [
+        "The hypothesis is supported by multiple aligned clues.",
+        "Contradicting evidence has been checked and answered."
+      ],
+      "weak": [
+        "The hypothesis is plausible but still depends on missing context.",
+        "The evidence supports the idea only weakly."
+      ],
+      "insufficient": [
+        "The reviewer cannot explain why the chosen interpretation wins.",
+        "The explanation skips directly from observation to recommendation."
+      ],
+      "confidenceGuidance": [
+        "High confidence when the best explanation survives counterfactual testing.",
+        "Medium confidence when the strongest reading is supported but not fully closed.",
+        "Low confidence when contradiction or ambiguity remains.",
+        "Review required when no explanation clearly beats the alternatives."
+      ]
+    },
+    "conceptRelationships": [
+      {
+        "fromConceptId": "evidence_collection",
+        "toConceptId": "multi_evidence_reasoning",
+        "relation": "supports",
+        "note": "Observed evidence feeds the comparison stage."
+      },
+      {
+        "fromConceptId": "multi_evidence_reasoning",
+        "toConceptId": "contradiction_resolution",
+        "relation": "supports",
+        "note": "The reviewer compares supporting and contradicting evidence."
+      },
+      {
+        "fromConceptId": "contradiction_resolution",
+        "toConceptId": "confidence_assessment",
+        "relation": "supports",
+        "note": "Confidence changes after contradiction is resolved."
+      },
+      {
+        "fromConceptId": "confidence_assessment",
+        "toConceptId": "finding_generation",
+        "relation": "supports",
+        "note": "The final recommendation depends on the confidence level."
+      },
+      {
+        "fromConceptId": "finding_generation",
+        "toConceptId": "report_priority",
+        "relation": "supports",
+        "note": "The report prioritizes the final recommendation and rejected alternatives."
+      }
+    ],
+    "glossaryReferences": [
+      {
+        "term": "counterfactual reasoning",
+        "conceptId": "multi_evidence_reasoning",
+        "relation": "supports",
+        "note": "Counterfactual reasoning tests alternative explanations."
+      },
+      {
+        "term": "alternative interpretation",
+        "conceptId": "contradiction_resolution",
+        "relation": "supports",
+        "note": "Alternative interpretations are compared before the final conclusion."
+      },
+      {
+        "term": "best explanation",
+        "conceptId": "multi_evidence_reasoning",
+        "relation": "supports",
+        "note": "The best explanation is the one that survives comparison."
+      },
+      {
+        "term": "confidence adjustment",
+        "conceptId": "confidence_assessment",
+        "relation": "supports",
+        "note": "Confidence should change after the evidence is weighed."
+      }
+    ],
+    "gcamMappings": [
+      {
+        "articleId": 4,
+        "articleTitle": "Reviewer Methodology",
+        "articleNumber": "4",
+        "atomNumber": "4-1",
+        "reportTitle": "Observation and hypothesis",
+        "note": "The reasoning begins with an observation."
+      },
+      {
+        "articleId": 11,
+        "articleTitle": "Reviewer Methodology",
+        "articleNumber": "11",
+        "atomNumber": "11-1",
+        "reportTitle": "Evidence comparison",
+        "note": "Supporting and contradicting evidence are compared."
+      },
+      {
+        "articleId": 17,
+        "articleTitle": "Reviewer Methodology",
+        "articleNumber": "17",
+        "atomNumber": "17-1",
+        "reportTitle": "Confidence adjustment",
+        "note": "The final recommendation follows the confidence update."
+      }
+    ],
+    "reportTemplates": [
+      {
+        "findingTitle": "Multi-Step Reasoning Assessment",
+        "reasonTemplate": "Observation: {{observation}}. Hypothesis: {{hypothesis}}. Supporting evidence: {{supportingEvidence}}. Contradicting evidence: {{contradictingEvidence}}. Alternative interpretation: {{alternativeInterpretation}}. Confidence: {{confidence}}.",
+        "recommendationTemplate": "Explain why the best explanation won, which articles were applicable, which were rejected, and how confidence changed.",
+        "severity": "medium",
+        "priority": 3,
+        "reportCategory": "methodology"
+      }
+    ],
+    "benchmarkReferences": [
+      "methodology-bench-401-evidence_strength",
+      "methodology-bench-402-evidence_quality",
+      "methodology-bench-403-contradiction",
+      "methodology-bench-404-weaker_ignored"
+    ],
+    "prerequisites": [
+      "lesson_001_reviewer_methodology",
+      "lesson_002_evidence_intelligence"
+    ],
+    "relatedLessons": [
+      "lesson_001_reviewer_methodology",
+      "lesson_002_evidence_intelligence"
+    ],
+    "metadata": {
+      "subject": "reviewer methodology",
+      "category": "reviewer_methodology",
+      "tags": [
+        "multi-step reasoning",
+        "counterfactual",
+        "alternative interpretation",
+        "confidence",
+        "evidence",
+        "methodology"
+      ],
+      "source": "Prompt C5 - Multi-Step Reasoning",
+      "difficulty": "advanced",
+      "confidence": 0.97,
+      "reasoningSteps": [
+        "observation",
+        "hypothesis",
+        "supporting evidence",
+        "contradicting evidence",
+        "alternative interpretation",
+        "risk assessment",
+        "applicable GCAM articles",
+        "rejected articles",
+        "confidence adjustment",
+        "final recommendation"
+      ],
+      "decisionRules": [
+        "do not jump from observation to conclusion",
+        "compare alternatives before accepting one",
+        "adjust confidence after contradiction checks"
+      ],
+      "decisionExamples": [
+        "The reviewer explains why the direct interpretation wins over the counterfactual reading.",
+        "The reviewer lowers confidence after contradictory evidence appears."
+      ],
+      "decisionAntiPatterns": [
+        "Skipping alternative interpretations",
+        "Choosing the first plausible reading",
+        "Failing to explain confidence changes"
+      ],
+      "decisionExceptions": [
+        "Quotation can preserve the observation while lowering confidence.",
+        "Historical framing can change the risk assessment.",
+        "Dream or flashback context can shift the final recommendation."
+      ],
+      "decisionConfidenceCurves": [
+        "Observation plus corroboration -> confidence rises.",
+        "Observation plus contradiction -> confidence falls.",
+        "Observation without alternatives -> review."
+      ]
+    }
+  }
+}

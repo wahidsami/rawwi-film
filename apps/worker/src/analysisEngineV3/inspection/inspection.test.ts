@@ -585,6 +585,9 @@ function testReviewerDebateStageBuilder(): void {
   const selfCritique = (debateRecord.payloadJson as Record<string, unknown>).self_critique as readonly Record<string, unknown>[];
   assert.equal(selfCritique[0]?.confidence_before, 0.9);
   assert.equal(Array.isArray(selfCritique[0]?.reason_changes), true);
+  assert.equal(typeof selfCritique[0]?.critique, "string");
+  assert.equal(typeof selfCritique[0]?.revision, "object");
+  assert.equal(typeof selfCritique[0]?.final_confidence, "number");
 }
 
 function testArbitrationStageBuilder(): void {

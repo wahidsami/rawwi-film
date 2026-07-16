@@ -179,11 +179,15 @@ function testReviewerKnowledgePackRendered(): void {
   assert(rendered.prompt.indexOf("## Reviewer Questions") < rendered.prompt.indexOf("## Reviewer Knowledge Packs"), "questions should render before packs");
   assert(rendered.prompt.indexOf("## Reviewer Methodology") < rendered.prompt.indexOf("## Reviewer Questions"), "methodology should render before questions");
   assert(rendered.prompt.includes("Reviewer Knowledge Packs"), "reviewer knowledge section should be rendered");
+  assert(rendered.prompt.includes("GPT Reviewer Assistant"), "GPT reviewer assistant should be rendered");
   assert(rendered.prompt.includes("Reviewer Reasoning Engine"), "reviewer reasoning engine should be rendered");
+  assert(rendered.prompt.includes("knowledge_retrieval"), "dynamic knowledge retrieval should be rendered");
+  assert(rendered.prompt.includes("reasoning_pipeline"), "reviewer reasoning pipeline should be rendered");
   assert(rendered.prompt.includes("Default Reviewer Question Set"), "default reviewer question set should render");
   assert(rendered.prompt.includes(getDefaultReviewerQuestionSet().id), "default reviewer question set id should render");
   assert(rendered.prompt.includes("Profanity Reviewer Knowledge Pack"), "profanity pack should be selected for profanity input");
   assert(rendered.prompt.includes("reasoned_decision"), "output schema should request a reasoned decision");
+  assert(rendered.prompt.includes("recommendation"), "output schema should request a recommendation");
   assert(!rendered.prompt.includes('"rules": ['), "subject rule bundles should no longer be rendered directly");
   console.log("✓ reviewer knowledge packs are rendered instead of subject rule bundles");
 }

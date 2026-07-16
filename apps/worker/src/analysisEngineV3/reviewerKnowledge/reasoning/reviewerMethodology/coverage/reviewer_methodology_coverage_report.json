@@ -20,9 +20,9 @@
     ],
     "warnings": [],
     "notes": [
-      "2c3ffa612f310f29a16d9461f8e8c50b3cf26a9517e3f351bd20d29205d4bb6c"
+      "703d2265b6114aa4cb3b235157a3354b4fa62e4ccc56e09635532d55eb13df7f"
     ],
-    "hash": "44a9236eeeffe3dbf5c0a1022cd5ed4677103ba3ac38e128bac36a57733b9b9a"
+    "hash": "98ef481be0774f2da357fb835438f3bb0aed9080e581e23709668dfc2d17f4db"
   },
   "knowledgePack": {
     "title": "Knowledge Pack",
@@ -39,13 +39,13 @@
   },
   "lessons": {
     "title": "Lessons",
-    "present": 14,
-    "expected": 14,
+    "present": 43,
+    "expected": 43,
     "coveragePercent": 100,
     "missing": [],
     "warnings": [],
     "notes": [],
-    "hash": "e76f9e3c84e022aeacb5e6fca83cc350654bceedbaa715282f7ca2a60d14bbe1"
+    "hash": "981b4fe986c2931698c69c9ab9282ce3739ddea87ca202451edae9889873336d"
   },
   "patterns": {
     "title": "Patterns",
@@ -79,9 +79,9 @@
     "missing": [],
     "warnings": [],
     "notes": [
-      "400 benchmark cases loaded"
+      "404 benchmark cases loaded"
     ],
-    "hash": "cbe264e93f07070d0c22c326f8a65dd7d2ca4361cb861a9c24a90f2e6be865b4"
+    "hash": "aff6cda976b2a79de3a7ac5ad7da8c7aed6236e5c9c5a379f72671c629cd28e4"
   },
   "metrics": {
     "conceptCount": 40,
@@ -473,10 +473,16 @@
       {
         "id": "reviewer_questions",
         "title": "Reviewer Questions Coverage",
-        "present": 113,
-        "expected": 113,
+        "present": 217,
+        "expected": 217,
         "coveragePercent": 100,
         "evidence": [
+          "evidence_q1",
+          "evidence_q2",
+          "evidence_q3",
+          "evidence_q4",
+          "evidence_q5",
+          "evidence_q6",
           "methodology_question_confidence",
           "methodology_question_context",
           "methodology_question_evidence",
@@ -487,6 +493,12 @@
           "methodology_question_observation",
           "methodology_question_scene",
           "methodology_question_sentence",
+          "multi_step_q1",
+          "multi_step_q2",
+          "multi_step_q3",
+          "multi_step_q4",
+          "multi_step_q5",
+          "multi_step_q6",
           "q01",
           "q02",
           "q03",
@@ -501,7 +513,12 @@
           "q12",
           "q13",
           "q14",
-          "q15"
+          "q15",
+          "q16",
+          "q17",
+          "q18",
+          "q19",
+          "q20"
         ],
         "missing": []
       },
@@ -547,12 +564,12 @@
         "missing": []
       }
     ],
-    "hash": "319c135a30e81cd947df1e5cbca00edff0410c1aa19045458d177873fd9d7253"
+    "hash": "870edf3182d391ff2cf8b512ff8a9277154eeaf3934916fe2320b6df8966f474"
   },
   "productionReadiness": 100,
   "recommendation": "READY",
   "coverageGaps": [],
   "criticalGaps": [],
   "warnings": [],
-  "hash": "5f5c070b5c77bcb9e344a7bca2069eb8d0ee5b60680968cf6b53458314c0c5cf"
+  "hash": "2ae831cc8cba75550c24b017e197d9d3b93125f3e50427a4c0466d47af73478d"
 }

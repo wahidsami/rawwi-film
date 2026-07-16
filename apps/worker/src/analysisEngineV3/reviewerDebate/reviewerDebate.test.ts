@@ -185,6 +185,8 @@ function testDebatePackageDeterminism(): void {
   assert.equal(first.opinions[0]?.selfCritique?.confidenceBefore, first.opinions[0]?.confidence);
   assert.equal(first.opinions[0]?.selfCritique?.reasonChanges.length > 0, true);
   assert.equal(first.opinions[0]?.selfCritique?.whyCouldIBeWrong.length > 0, true);
+  assert.equal(first.opinions[0]?.selfCritique?.revision?.approved, true);
+  assert.equal(first.opinions[0]?.selfCritique?.finalConfidence, first.opinions[0]?.selfCritique?.confidenceAfter);
 }
 
 async function main(): Promise<void> {

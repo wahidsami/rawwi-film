@@ -17,30 +17,54 @@
     "flashback_context",
     "quotation_context",
     "narration_context",
-    "scene_description_context"
+    "scene_description_context",
+    "context_graph",
+    "scene_graph",
+    "story_graph",
+    "character_graph",
+    "relationship_graph",
+    "timeline_graph",
+    "emotion_graph",
+    "intent_graph",
+    "conversation_graph",
+    "memory_graph",
+    "current_scene",
+    "previous_scene",
+    "next_scene",
+    "story_memory",
+    "character_memory",
+    "conflict_memory",
+    "dialogue_memory",
+    "narrative_memory",
+    "relationship_memory"
   ],
-  "storyContext": "GCAM guidance shows that historical context can still be flagged, protective or educational context changes interpretation, and comedy does not automatically erase a harmful meaning. The universal reviewer context layer must therefore distinguish framing modes before judgment.",
+  "storyContext": "GCAM guidance shows that historical context can still be flagged, protective or educational context changes interpretation, and comedy does not automatically erase a harmful meaning. The universal reviewer context layer must therefore distinguish framing modes before judgment and preserve the current scene, previous scene, next scene, and memory graphs that explain why a line reads the way it does.",
   "evidence": [
     "Historical context → still flagged.",
     "Protective or educational context.",
-    "Comedy → still violation if insulting."
+    "Comedy → still violation if insulting.",
+    "Current scene, previous scene, and next scene can flip the reading.",
+    "Story memory and relationship memory can explain the intended meaning."
   ],
   "reasoning": [
     "Context analysis must treat framing as meaning-shaping information, not as automatic exemption.",
     "Historical and educational framing are explicit GCAM cues that affect interpretation and confidence.",
-    "Comedy, quotation, narration, dream, flashback, documentary style, and scene description are all context signals that the reviewer must evaluate before finalizing a reading."
+    "Comedy, quotation, narration, dream, flashback, documentary style, and scene description are all context signals that the reviewer must evaluate before finalizing a reading.",
+    "Context graphs make that evaluation explicit: scene graph, story graph, character graph, relationship graph, timeline graph, emotion graph, intent graph, conversation graph, and memory graph."
   ],
-  "decision": "Store context analysis as a universal reviewer interpretation that distinguishes historical, educational, documentary, comedic, satirical, dream, flashback, quotation, narration, and scene-description framing before legal judgment is made.",
+  "decision": "Store context analysis as a universal reviewer interpretation that distinguishes historical, educational, documentary, comedic, satirical, dream, flashback, quotation, narration, and scene-description framing before legal judgment is made, while preserving the graph layers that explain the current scene, adjacent scenes, and memory state.",
   "alternativeDecisions": [
     "Treat every framed line as automatically safe.",
     "Treat every framed line as automatically harmful.",
-    "Treat quotation, narration, and scene description as if they were the same thing as direct dialogue."
+    "Treat quotation, narration, and scene description as if they were the same thing as direct dialogue.",
+    "Flatten current scene, previous scene, next scene, and memory into a single sentence reading."
   ],
   "rejectedInterpretations": [
     "Historical context always cancels a finding.",
     "Educational context always cancels a finding.",
     "Comedy automatically removes harmful meaning.",
-    "Quotation is the same as endorsement."
+    "Quotation is the same as endorsement.",
+    "The reviewer can ignore scene graphs and still explain the decision well."
   ],
   "relatedLessons": [
     "lesson_003_understanding_context",
@@ -68,7 +92,8 @@
   "knowledgeDebtReference": "KD-GCAM-CONTEXT-ANALYSIS-001",
   "futureReviewNotes": [
     "If the repository later exposes a dedicated GCAM documentary, dream, flashback, quotation, narration, or scene-description source, split each into its own source-backed note.",
-    "The current GCAM source set explicitly supports historical, educational, and comedy framing observations; the other context modes remain reviewer-methodology framing signals."
+    "The current GCAM source set explicitly supports historical, educational, and comedy framing observations; the other context modes remain reviewer-methodology framing signals.",
+    "If inspection later renders separate graph panes, align them with the current scene, previous scene, next scene, story memory, character memory, conflict memory, dialogue memory, narrative memory, relationship memory, and the graph layers described here."
   ],
   "reviewerId": null,
   "reviewerName": null,

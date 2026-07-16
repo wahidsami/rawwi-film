@@ -6,7 +6,7 @@
   "course": "Universal Reviewer Foundations",
   "lessonNumber": 3,
   "title": "Understanding Context",
-  "summary": "Teach the reviewer that the same sentence may have different meanings depending on its narrative context.",
+  "summary": "Teach the reviewer that the same sentence may have different meanings depending on its narrative context, graph layers, and persistent memory across scenes.",
   "dependsOn": [
     "lesson_001_what_is_a_finding",
     "lesson_002_what_is_evidence"
@@ -16,15 +16,37 @@
     "Separate literal meaning from intended meaning.",
     "Recognize context that changes legal interpretation.",
     "Recognize historical, educational, documentary, comedic, satirical, dream, flashback, quotation, narration, and scene-description framing.",
+    "Understand context as a set of graph layers: scene, story, character, relationship, timeline, emotion, intent, conversation, and memory.",
+    "Distinguish current, previous, and next scenes before finalizing a reading.",
+    "Use story memory, character memory, conflict memory, dialogue memory, narrative memory, and relationship memory to calibrate meaning.",
     "Avoid false positives caused by isolated sentences."
   ],
   "definitions": {
     "context": "Information surrounding a statement that determines its true meaning.",
+    "contextGraph": "The master graph that connects scene, story, character, relationship, timeline, emotion, intent, conversation, and memory layers into one reviewer view.",
     "localContext": "Nearby sentences.",
     "sceneContext": "Events occurring in the same scene.",
     "storyContext": "Events occurring across the screenplay.",
     "speakerContext": "Who is speaking and why.",
     "temporalContext": "Past, present or future events affecting meaning.",
+    "sceneGraph": "The graph of the current scene and the immediate neighboring scenes that alter interpretation.",
+    "storyGraph": "The graph of story-wide events, recalls, and reversals that shape meaning over time.",
+    "characterGraph": "The graph of character history, motive, and behavior that affects how a line should be read.",
+    "relationshipGraph": "The graph of relationships, power dynamics, alliances, and conflicts between characters.",
+    "timelineGraph": "The graph of chronological progression across scenes and flashbacks.",
+    "emotionGraph": "The graph of emotional shifts that explain why a line lands as it does.",
+    "intentGraph": "The graph of speaker intent, including promotion, condemnation, mockery, and normalization.",
+    "conversationGraph": "The graph of turn-taking, reply structure, and speaker-target flow inside dialogue.",
+    "memoryGraph": "The graph of persistent story, character, conflict, dialogue, narrative, and relationship memory.",
+    "currentScene": "The scene being reviewed right now.",
+    "previousScene": "The immediately preceding scene that may change the reading.",
+    "nextScene": "The immediately following scene that may confirm or reverse the reading.",
+    "storyMemory": "Story-level memory that persists beyond one scene.",
+    "characterMemory": "Character history and remembered behavior that shapes interpretation.",
+    "conflictMemory": "The remembered conflict state that explains tension or escalation.",
+    "dialogueMemory": "Previously exchanged dialogue that still affects the current reading.",
+    "narrativeMemory": "Narrative-level memory that links earlier and later meaning.",
+    "relationshipMemory": "Persistent relationship state that can change intent and target interpretation.",
     "historicalContext": "A past-event frame that may still be relevant to GCAM review.",
     "educationalContext": "A teaching frame that can change how a line should be read.",
     "documentaryContext": "A factual reporting frame that still requires context evaluation.",
@@ -40,6 +62,10 @@
     "Never judge a sentence in isolation.",
     "Meaning depends on surrounding events.",
     "Context may completely reverse interpretation.",
+    "Graph layers should be read before final judgment: current scene, previous scene, next scene, story memory, character memory, conflict memory, dialogue memory, narrative memory, and relationship memory.",
+    "The current scene is a local snapshot, not the whole story.",
+    "The previous and next scenes can confirm, weaken, or reverse a reading.",
+    "Inspection should show the graph layers so the reviewer can explain why a line remained an observation, became a possible finding, or became a confirmed finding.",
     "Historical narration is not endorsement.",
     "Educational discussion is not promotion.",
     "Documentary framing still requires evidence review.",
@@ -55,6 +81,9 @@
   "reviewerQuestions": [
     "What happened before this sentence?",
     "What happened after it?",
+    "What does the current scene contribute on its own?",
+    "What does the previous scene contribute to the reading?",
+    "What does the next scene confirm or contradict?",
     "Who is speaking?",
     "Why is it being said?",
     "Is this dialogue or narration?",
@@ -67,6 +96,8 @@
     "Is this a dream or flashback?",
     "Is this a quotation or narration?",
     "Is this scene description carrying the meaning?",
+    "Which memory layer changes the interpretation?",
+    "Which graph layer is decisive here?",
     "Would removing the surrounding scene change the meaning?"
   ],
   "contextCategories": [
@@ -172,9 +203,24 @@
       "classification": "Narration"
     },
     {
+      "text": "المشهد الحالي يبدو عاديًا، لكن المشهد السابق يوضح أن التهديد كان جديًا.",
+      "context": "Current scene plus previous scene memory.",
+      "classification": "Scene graph confirms hidden intent"
+    },
+    {
+      "text": "الآن يتحدث الأب بهدوء، لكن ذاكرة العلاقة تشرح لماذا تبدو الجملة تهديدًا.",
+      "context": "Relationship memory changes the reading.",
+      "classification": "Relationship graph changes interpretation"
+    },
+    {
       "text": "قالها بسخرية واضحة.",
       "context": "Satire or ironic delivery.",
       "classification": "Satire"
+    },
+    {
+      "text": "ما قبلها وما بعدها يغيّران المعنى بالكامل.",
+      "context": "Conversation graph and timeline graph together.",
+      "classification": "Graph-based context resolution"
     }
   ],
   "counterExamples": [
@@ -193,18 +239,29 @@
     {
       "text": "Treating a flashback as the current scene.",
       "reason": "Temporal context is ignored."
+    },
+    {
+      "text": "Treating the current scene as if previous and next scenes do not exist.",
+      "reason": "Scene graph and timeline graph are ignored."
+    },
+    {
+      "text": "Assuming memory layers are findings instead of reviewer support.",
+      "reason": "Memory graph is diagnostic context, not a conclusion."
     }
   ],
   "commonMistakes": [
     "Ignoring scene context.",
     "Ignoring story context.",
     "Ignoring speaker motivation.",
+    "Ignoring current, previous, and next scene differences.",
+    "Ignoring memory layers when they change the reading.",
     "Confusing narration with endorsement.",
     "Ignoring educational purpose.",
     "Ignoring historical framing.",
     "Assuming documentary framing is always neutral.",
     "Ignoring quotation boundaries.",
-    "Ignoring dream or flashback status."
+    "Ignoring dream or flashback status.",
+    "Flattening graph-based context into a single sentence reading."
   ],
   "graduationExam": {
     "minimumScore": 95,

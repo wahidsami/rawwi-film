@@ -55,6 +55,7 @@ export type ReviewerKnowledgeRetrievalInput = Readonly<{
 
 const DEFAULT_TOP_K = 5;
 const retrievalCache = new Map<string, ReviewerKnowledgeRetrievalReport>();
+const packCorpusCache = new WeakMap<ReviewerKnowledgePack, string>();
 
 function normalizeText(value: string | null | undefined): string {
   return typeof value === "string" ? value.normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase() : "";
@@ -122,7 +123,12 @@ function collectSubjectTerms(subjectModule: V3PromptSubjectModule | null | undef
 }
 
 function buildPackCorpus(pack: ReviewerKnowledgePack): string {
-  return buildKnowledgeRankingCorpus([
+  const cached = packCorpusCache.get(pack);
+  if (cached) {
+    return cached;
+  }
+
+  const corpus = buildKnowledgeRankingCorpus([
     pack.id,
     pack.module_id,
     pack.title,
@@ -152,6 +158,9 @@ function buildPackCorpus(pack: ReviewerKnowledgePack): string {
       mapping.note ?? "",
     ]),
   ]);
+
+  packCorpusCache.set(pack, corpus);
+  return corpus;
 }
 
 function scorePack(

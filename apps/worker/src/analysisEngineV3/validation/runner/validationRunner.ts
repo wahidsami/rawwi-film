@@ -7,7 +7,7 @@ import { runEvidenceStage } from "../../pipeline/evidenceStage.js";
 import { runNarrativeStage } from "../../pipeline/narrativeStage.js";
 import { runSemanticStage } from "../../pipeline/semanticStage.js";
 import { createDefaultReviewerKnowledgeRegistry } from "../../reviewerKnowledge/reviewerKnowledgeRegistry.js";
-import { selectReviewerKnowledgePacks } from "../../reviewerKnowledge/reviewerKnowledgeSelector.js";
+import { createReviewerKnowledgeRetrievalReport } from "../../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
 import { runReviewerMethodology } from "../../reviewerMethodology/reviewerMethodologyRunner.js";
 import { buildV3ReasoningTrace } from "../../debug/reasoningTrace.js";
 import type { V3RuntimeFinding } from "../../runtime/runtimeTypes.js";
@@ -210,7 +210,12 @@ function evaluateCase(caseItem: ValidationCase): ValidationCaseResult {
   });
 
   const registry = createDefaultReviewerKnowledgeRegistry();
-  const selectedPacks = selectReviewerKnowledgePacks(assessment, intelligence.conceptContext, registry);
+  const selectedPacks = createReviewerKnowledgeRetrievalReport({
+    assessment,
+    conceptContext: intelligence.conceptContext,
+    subjectModule: caseItem.subjectModule,
+    registry,
+  }).selectedPacks;
   const actualArticleMapping = uniqueSortedNumbers(selectedPacks.flatMap((pack) => pack.article_mapping.map((entry) => entry.article_id)));
   const actualLegalModule = selectedPacks.find((pack) => pack.id !== "v3_00_universal")?.module_id ?? null;
   const actualAtomId = selectedPacks.find((pack) => pack.id !== "v3_00_universal")?.article_mapping.find((entry) => entry.article_id === actualArticleMapping[0])?.atom_ids[0] ?? null;

@@ -5,10 +5,12 @@ import type { LegalModule } from "./legalModule.js";
 import type { LegalModuleInput } from "./legalTypes.js";
 import { LegalModuleLoader } from "./legalModuleLoader.js";
 import type { LegalDecision } from "./legalDecision.js";
+import type { ReviewerDecisionContext, ReviewerDecisionEvaluationInput } from "./reviewerDecisionTypes.js";
 
 export type LegalEngineInput = Readonly<{
   moduleId: string;
   intelligence: LegalModuleInput["intelligence"];
+  reviewerDecision?: ReviewerDecisionContext | null;
 }>;
 
 export class LegalEngine {
@@ -44,9 +46,10 @@ export function createLegalEngine(loader: LegalModuleLoader): LegalEngine {
 }
 
 export function evaluateWithModule(module: LegalModule, input: LegalEngineInput): LegalDecision {
-  const moduleInput: LegalModuleInput = {
+  const moduleInput: ReviewerDecisionEvaluationInput = {
     moduleId: input.moduleId,
     intelligence: input.intelligence,
+    reviewerDecision: input.reviewerDecision ?? null,
   };
 
   if (!module.applies(moduleInput)) {

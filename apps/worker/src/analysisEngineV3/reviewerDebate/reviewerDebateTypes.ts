@@ -32,6 +32,13 @@ export type ReviewerSelfCritique = Readonly<{
   confidenceAfter: number;
   confidenceDelta: number;
   reasonChanges: readonly string[];
+  critique?: string | null;
+  revision?: Readonly<{
+    approved: boolean;
+    recommendation: string;
+    reason: string;
+  }> | null;
+  finalConfidence?: number | null;
 }>;
 
 export type ReviewerDebateKnowledgeSupport = Readonly<{

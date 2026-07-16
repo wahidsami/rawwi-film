@@ -737,6 +737,451 @@
         "min": 0.1,
         "max": 0.4
       }
+    },
+    {
+      "id": "reviewer_judgment-bench-011",
+      "title": "Borderline hesitation",
+      "scriptSnippet": "The reviewer pauses because the call sits right at the boundary of accept and review.",
+      "storyMemory": "The scene is close but not stable enough for a hard call.",
+      "sceneMemory": "The evidence leans one way but still feels borderline.",
+      "neighboringSentences": [
+        "The next sentence does not settle the case.",
+        "The reviewer keeps the call open."
+      ],
+      "glossary": {
+        "title": "Reviewer Judgment Glossary",
+        "entries": [
+          {
+            "term": "borderline decisions",
+            "articleId": 17,
+            "variants": [
+              "borderline decisions"
+            ],
+            "definition": "Cases where the reviewer cannot safely collapse the case into certainty."
+          }
+        ],
+        "notes": [
+          "borderline",
+          "calibration"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_18_reviewer_judgment",
+        "titleAr": "إطار الحكم المراجعي",
+        "scope": "Shared reviewer judgment reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          17
+        ],
+        "notes": [
+          "borderline",
+          "confidence",
+          "review"
+        ]
+      },
+      "expectedConcepts": [
+        "borderline_decisions",
+        "decision_ambiguity"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "borderline",
+        "speaker": "reviewer",
+        "target": "decision",
+        "victim": null,
+        "narrativeIntent": "tentative",
+        "evidenceStrength": 0.58,
+        "contextClassification": "cross_sentence",
+        "literalVsImpliedMeaning": "mixed",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_18_reviewer_judgment",
+      "expectedArticleMapping": [
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_18_reviewer_judgment | disposition=review | articles=17 | concepts=borderline_decisions"
+      },
+      "expectedExplanation": "The reviewer hesitates because the case is borderline and the evidence is not stable enough for a hard answer.",
+      "expectedConfidenceRange": {
+        "min": 0.45,
+        "max": 0.7
+      }
+    },
+    {
+      "id": "reviewer_judgment-bench-012",
+      "title": "False positive guard",
+      "scriptSnippet": "The reviewer refuses to overcall a harmless line as a finding.",
+      "storyMemory": "The story frame suggests caution, not overreaction.",
+      "sceneMemory": "The immediate evidence is too weak to justify a finding.",
+      "neighboringSentences": [
+        "Nothing else in the scene strengthens the clue.",
+        "The reviewer labels the case a false positive risk."
+      ],
+      "glossary": {
+        "title": "Reviewer Judgment Glossary",
+        "entries": [
+          {
+            "term": "false positive library",
+            "articleId": 11,
+            "variants": [
+              "false positive library"
+            ],
+            "definition": "Stored examples that help reviewers avoid overcalling."
+          }
+        ],
+        "notes": [
+          "false_positive",
+          "calibration"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_18_reviewer_judgment",
+        "titleAr": "إطار الحكم المراجعي",
+        "scope": "Shared reviewer judgment reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          11
+        ],
+        "notes": [
+          "false_positive",
+          "reject"
+        ]
+      },
+      "expectedConcepts": [
+        "false_positive_library",
+        "supporting_evidence"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "false_positive_guard",
+        "speaker": "reviewer",
+        "target": "evidence",
+        "victim": null,
+        "narrativeIntent": "insufficient",
+        "evidenceStrength": 0.31,
+        "contextClassification": "insufficient",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_18_reviewer_judgment",
+      "expectedArticleMapping": [
+        11
+      ],
+      "expectedFinding": {
+        "disposition": "reject",
+        "summary": "module=v3_18_reviewer_judgment | disposition=reject | articles=11 | concepts=false_positive_library"
+      },
+      "expectedExplanation": "The reviewer rejects overcalling because the evidence is too weak and the false positive risk is high.",
+      "expectedConfidenceRange": {
+        "min": 0.15,
+        "max": 0.4
+      }
+    },
+    {
+      "id": "reviewer_judgment-bench-013",
+      "title": "False negative guard",
+      "scriptSnippet": "The reviewer notices a subtle but real clue and refuses to miss it.",
+      "storyMemory": "The scene has enough support if the reviewer looks carefully.",
+      "sceneMemory": "The clue is subtle, but the supporting context is present.",
+      "neighboringSentences": [
+        "A later sentence supports the first clue.",
+        "The reviewer avoids a false negative."
+      ],
+      "glossary": {
+        "title": "Reviewer Judgment Glossary",
+        "entries": [
+          {
+            "term": "false negative library",
+            "articleId": 11,
+            "variants": [
+              "false negative library"
+            ],
+            "definition": "Stored examples that help reviewers avoid missing real cases."
+          }
+        ],
+        "notes": [
+          "false_negative",
+          "calibration"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_18_reviewer_judgment",
+        "titleAr": "إطار الحكم المراجعي",
+        "scope": "Shared reviewer judgment reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          11
+        ],
+        "notes": [
+          "false_negative",
+          "review"
+        ]
+      },
+      "expectedConcepts": [
+        "false_negative_library",
+        "contradicting_evidence"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "false_negative_guard",
+        "speaker": "reviewer",
+        "target": "evidence",
+        "victim": null,
+        "narrativeIntent": "tentative",
+        "evidenceStrength": 0.54,
+        "contextClassification": "cross_sentence",
+        "literalVsImpliedMeaning": "mixed",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_18_reviewer_judgment",
+      "expectedArticleMapping": [
+        11
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_18_reviewer_judgment | disposition=review | articles=11 | concepts=false_negative_library"
+      },
+      "expectedExplanation": "The reviewer keeps the case in review so a subtle real clue is not missed.",
+      "expectedConfidenceRange": {
+        "min": 0.35,
+        "max": 0.6
+      }
+    },
+    {
+      "id": "reviewer_judgment-bench-014",
+      "title": "Contradicting evidence",
+      "scriptSnippet": "The first sentence suggests one answer, but the next sentence contradicts it.",
+      "storyMemory": "The story corrects the first impression.",
+      "sceneMemory": "The scene contains opposing cues that must both be weighed.",
+      "neighboringSentences": [
+        "The first cue points one direction.",
+        "The second cue pulls the other way."
+      ],
+      "glossary": {
+        "title": "Reviewer Judgment Glossary",
+        "entries": [
+          {
+            "term": "contradicting evidence",
+            "articleId": 11,
+            "variants": [
+              "contradicting evidence"
+            ],
+            "definition": "Evidence that weakens or reverses an initial reading."
+          }
+        ],
+        "notes": [
+          "contradiction",
+          "calibration"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_18_reviewer_judgment",
+        "titleAr": "إطار الحكم المراجعي",
+        "scope": "Shared reviewer judgment reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          11
+        ],
+        "notes": [
+          "contradiction",
+          "confidence"
+        ]
+      },
+      "expectedConcepts": [
+        "contradicting_evidence",
+        "confidence_calibration"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "contradiction",
+        "speaker": "reviewer",
+        "target": "evidence",
+        "victim": null,
+        "narrativeIntent": "tentative",
+        "evidenceStrength": 0.49,
+        "contextClassification": "cross_sentence",
+        "literalVsImpliedMeaning": "mixed",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_18_reviewer_judgment",
+      "expectedArticleMapping": [
+        11
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_18_reviewer_judgment | disposition=review | articles=11 | concepts=contradicting_evidence"
+      },
+      "expectedExplanation": "The reviewer lowers confidence because later text contradicts the first reading.",
+      "expectedConfidenceRange": {
+        "min": 0.3,
+        "max": 0.55
+      }
+    },
+    {
+      "id": "reviewer_judgment-bench-015",
+      "title": "Decision ambiguity",
+      "scriptSnippet": "The case stays between two plausible answers and the reviewer keeps it open.",
+      "storyMemory": "The narrative has not resolved the dispute.",
+      "sceneMemory": "Both answers remain plausible from the available text.",
+      "neighboringSentences": [
+        "The next sentence still does not settle the case.",
+        "The reviewer remains uncertain."
+      ],
+      "glossary": {
+        "title": "Reviewer Judgment Glossary",
+        "entries": [
+          {
+            "term": "decision ambiguity",
+            "articleId": 17,
+            "variants": [
+              "decision ambiguity"
+            ],
+            "definition": "A case where the reviewer cannot safely choose one answer yet."
+          }
+        ],
+        "notes": [
+          "ambiguity",
+          "calibration"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_18_reviewer_judgment",
+        "titleAr": "إطار الحكم المراجعي",
+        "scope": "Shared reviewer judgment reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          17
+        ],
+        "notes": [
+          "ambiguity",
+          "review"
+        ]
+      },
+      "expectedConcepts": [
+        "decision_ambiguity",
+        "decision_uncertainty"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "ambiguous",
+        "speaker": "reviewer",
+        "target": "decision",
+        "victim": null,
+        "narrativeIntent": "uncertain",
+        "evidenceStrength": 0.44,
+        "contextClassification": "insufficient",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_18_reviewer_judgment",
+      "expectedArticleMapping": [
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_18_reviewer_judgment | disposition=review | articles=17 | concepts=decision_ambiguity"
+      },
+      "expectedExplanation": "The reviewer leaves the case open because two plausible answers remain.",
+      "expectedConfidenceRange": {
+        "min": 0.25,
+        "max": 0.5
+      }
+    },
+    {
+      "id": "reviewer_judgment-bench-016",
+      "title": "Human reviewer philosophy",
+      "scriptSnippet": "A careful reviewer explains that restraint is part of good judgment.",
+      "storyMemory": "The scene is about judgment discipline, not a new finding.",
+      "sceneMemory": "The reviewer describes the philosophy behind being careful.",
+      "neighboringSentences": [
+        "The reviewer explains restraint.",
+        "The reviewer treats caution as a professional virtue."
+      ],
+      "glossary": {
+        "title": "Reviewer Judgment Glossary",
+        "entries": [
+          {
+            "term": "human reviewer philosophy",
+            "articleId": 4,
+            "variants": [
+              "human reviewer philosophy"
+            ],
+            "definition": "The disciplined, cautious approach used by experienced reviewers."
+          }
+        ],
+        "notes": [
+          "philosophy",
+          "calibration"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_18_reviewer_judgment",
+        "titleAr": "إطار الحكم المراجعي",
+        "scope": "Shared reviewer judgment reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          4
+        ],
+        "notes": [
+          "philosophy",
+          "accept"
+        ]
+      },
+      "expectedConcepts": [
+        "human_reviewer_philosophy",
+        "judgment_profiles"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "philosophy",
+        "speaker": "reviewer",
+        "target": "judgment",
+        "victim": null,
+        "narrativeIntent": "observational",
+        "evidenceStrength": 0.78,
+        "contextClassification": "cross_sentence",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_18_reviewer_judgment",
+      "expectedArticleMapping": [
+        4
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_18_reviewer_judgment | disposition=match | articles=4 | concepts=human_reviewer_philosophy"
+      },
+      "expectedExplanation": "The reviewer accepts the philosophy explanation because it describes disciplined judgment rather than overclaiming.",
+      "expectedConfidenceRange": {
+        "min": 0.65,
+        "max": 0.9
+      }
     }
   ]
 }

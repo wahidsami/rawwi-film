@@ -5,7 +5,7 @@ import { runNarrativeStage } from "../pipeline/narrativeStage.js";
 import { runSemanticStage } from "../pipeline/semanticStage.js";
 import type { V3PipelineChunk } from "../pipeline/pipelineTypes.js";
 import { runReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRunner.js";
-import { selectReviewerKnowledgePacks } from "../reviewerKnowledge/reviewerKnowledgeSelector.js";
+import { createReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
 import { createDefaultReviewerKnowledgeRegistry } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
 import type { BenchmarkActualFinding, BenchmarkCase, BenchmarkCaseMismatch, BenchmarkCaseResult, BenchmarkReport } from "./benchmarkTypes.js";
 import { createBenchmarkValidator } from "./benchmarkValidator.js";
@@ -148,7 +148,12 @@ function evaluateCase(caseItem: BenchmarkCase): BenchmarkCaseResult {
   });
 
   const registry = createDefaultReviewerKnowledgeRegistry();
-  const packs = selectReviewerKnowledgePacks(assessment, intelligence.conceptContext, registry);
+  const packs = createReviewerKnowledgeRetrievalReport({
+    assessment,
+    conceptContext: intelligence.conceptContext,
+    subjectModule: caseItem.subjectModule,
+    registry,
+  }).selectedPacks;
   const selectedPackIds = packs.map((pack) => pack.id);
   const selectedPack = packs.find((pack) => normalizeLower(pack.id) !== "v3_00_universal") ?? packs[0] ?? null;
   const articleIds = uniqueSortedNumbers(packs.flatMap((pack) => pack.article_mapping.map((entry) => entry.article_id)));

@@ -23,6 +23,7 @@ import { runEvidenceStage } from "./evidenceStage.js";
 import { runNarrativeStage } from "./narrativeStage.js";
 import { createV3PipelineResult } from "./pipelineResult.js";
 import { runSemanticStage } from "./semanticStage.js";
+import { buildReviewerDecisionContext } from "../legal/reviewerDecisionPreparation.js";
 import type { V3PipelineInput, V3PipelineStageTrace } from "./pipelineTypes.js";
 import type { V3PipelineResult } from "./pipelineResult.js";
 
@@ -94,11 +95,15 @@ export function runV3ReasoningPipeline(input: V3PipelineInput): V3PipelineResult
 
   const registry = buildRegistry(input.registry ?? null);
   const engine = createLegalEngine(createLegalModuleLoader(registry));
+  const reviewerDecision = buildReviewerDecisionContext({
+    intelligence,
+  });
   const legalDecision = freezeStage(
     markStage("legal", () =>
       engine.evaluate({
         moduleId: context.moduleId,
         intelligence,
+        reviewerDecision,
       }),
     ),
   );

@@ -124,6 +124,7 @@ function testResponseMapper(): void {
           risk_analysis: "Low risk because the evidence is direct.",
           narrative_analysis: "Direct dialogue with no exception cues.",
           human_like_explanation: "A human reviewer would treat this as a straightforward profanity case.",
+          recommendation: "Support the finding while keeping the legal engine authoritative.",
           confidence: 0.94,
         },
       },
@@ -135,6 +136,7 @@ function testResponseMapper(): void {
   assert.equal(mapped.semantic.semanticMeaning, "The evidence is direct dialogue.");
   assert.equal(mapped.context.neighboringSentences.length, 2);
   assert.equal(mapped.reasonedDecision.reasoning, "The line is explicit profanity.");
+  assert.equal(mapped.reasonedDecision.recommendation, "Support the finding while keeping the legal engine authoritative.");
   console.log("✓ response mapper normalizes GPT JSON");
 }
 
@@ -162,6 +164,7 @@ async function testProviderFlowWithMockProvider(): Promise<void> {
             risk_analysis: "Low risk because the evidence is direct.",
             narrative_analysis: "Direct dialogue with no exception cues.",
             human_like_explanation: "A human reviewer would treat this as a straightforward profanity case.",
+            recommendation: "Support the finding while keeping the legal engine authoritative.",
             confidence: 0.94,
           },
         }),
@@ -185,6 +188,7 @@ async function testProviderFlowWithMockProvider(): Promise<void> {
   assert.equal(result.narrative.dialogue, true);
   assert.equal(result.evidence.candidates[0]?.text, "damn");
   assert.equal(result.reasonedDecision.reasoning, "The line is explicit profanity.");
+  assert.equal(result.reasonedDecision.recommendation, "Support the finding while keeping the legal engine authoritative.");
   assert.equal(result.rawResponse.responseId, "resp_123");
   console.log("✓ provider flow uses the abstraction and preserves hashes");
 }

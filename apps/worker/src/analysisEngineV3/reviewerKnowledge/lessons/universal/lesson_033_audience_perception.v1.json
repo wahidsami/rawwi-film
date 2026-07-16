@@ -1,0 +1,231 @@
+{
+  "id": "lesson_033_audience_perception",
+  "title": "Audience Perception",
+  "version": "1.0.0",
+  "language": "en",
+  "category": "universal",
+  "lessonNumber": 33,
+  "summary": "Teach the reviewer how to reason about Audience Perception, including definition, examples, counter examples, GCAM relevance, decision impact, failure examples, confidence impact, relationships, precedents, and knowledge dependencies.",
+  "learningObjectives": [
+    "Define Audience Perception in reviewer terms.",
+    "Identify when Audience Perception changes the meaning of a scene.",
+    "Distinguish literal, contextual, and symbolic uses of Audience Perception.",
+    "Explain how Audience Perception affects confidence and decision making.",
+    "Recognize failure modes and false positives for Audience Perception."
+  ],
+  "definitions": {
+    "finding": "A supported conclusion about Audience Perception must be grounded in the screenplay text.",
+    "evidence": "Specific words, dialogue or narration that support the lesson.",
+    "assumption": "A conclusion that is not supported by explicit or contextual evidence.",
+    "context": "Information surrounding the evidence that changes its meaning.",
+    "topic": "Audience Perception",
+    "focus": "how the audience is expected to read the scene and how framing shifts confidence",
+    "gcamRelevance": "Use this lesson to decide whether the scene should be treated as literal evidence, narrative framing, or contextual explanation before any GCAM subject mapping.",
+    "decisionImpact": "This lesson changes whether the reviewer should accept, review, or reject the interpretation based on the narrative frame.",
+    "confidenceImpact": "Confidence rises when the frame is stable and evidence is explicit; it falls when the scene is ambiguous, quoted, symbolic, or educational.",
+    "failureExamples": [
+      "Treating explanation as endorsement.",
+      "Treating a framed scene as a literal claim.",
+      "Treating a symbolic or quoted line as an actual event."
+    ],
+    "relationships": [
+      "lesson_003_understanding_context",
+      "lesson_006_intent_recognition",
+      "lesson_008_narrative_structure",
+      "lesson_010_exception_recognition",
+      "lesson_014_cross_sentence_reasoning"
+    ],
+    "precedents": [
+      "lesson_003_understanding_context",
+      "lesson_007_confidence_assessment",
+      "lesson_014_cross_sentence_reasoning"
+    ],
+    "knowledgeDependencies": [
+      "lesson_001_what_is_a_finding",
+      "lesson_002_what_is_evidence",
+      "lesson_003_understanding_context",
+      "lesson_004_speaker_identification",
+      "lesson_005_target_identification",
+      "lesson_006_intent_recognition",
+      "lesson_007_confidence_assessment",
+      "lesson_008_narrative_structure",
+      "lesson_009_concept_relationships",
+      "lesson_010_exception_recognition",
+      "lesson_011_multiple_findings",
+      "lesson_012_evidence_prioritization",
+      "lesson_013_contradiction_resolution",
+      "lesson_014_cross_sentence_reasoning"
+    ]
+  },
+  "reviewerPrinciples": [
+    "Start from the exact words before inferring theme or intention.",
+    "Separate literal content from narrative framing.",
+    "Reduce confidence when the scene is ambiguous or layered.",
+    "Use context, not assumption, to decide meaning.",
+    "Preserve alternative interpretations when the evidence is not stable."
+  ],
+  "reviewerQuestions": [
+    "What is the exact Audience Perception signal in the scene?",
+    "Does context make the signal literal, educational, symbolic, or promotional?",
+    "Should confidence increase, decrease, or stay neutral after this lesson?"
+  ],
+  "decisionTree": [
+    {
+      "step": 1,
+      "question": "Does the scene contain the relevant signal?",
+      "yes": 2,
+      "no": "Reject Lesson"
+    },
+    {
+      "step": 2,
+      "question": "Is the signal supported by context?",
+      "yes": 3,
+      "no": "Needs Review"
+    },
+    {
+      "step": 3,
+      "question": "Is the meaning stable after checking framing?",
+      "yes": 4,
+      "no": "Needs Review"
+    },
+    {
+      "step": 4,
+      "question": "Can another reviewer reproduce the same reading?",
+      "yes": "Lesson Applied",
+      "no": "Needs Review"
+    }
+  ],
+  "evidenceRules": {
+    "minimum": [
+      "One clear signal of Audience Perception."
+    ],
+    "strong": [
+      "Multiple consistent signals of Audience Perception.",
+      "Scene context reinforces the interpretation."
+    ],
+    "weak": [
+      "A single ambiguous signal.",
+      "Meaning depends heavily on surrounding context."
+    ],
+    "insufficient": [
+      "Speculation without supporting context.",
+      "Assuming the topic from a lone word or mood."
+    ],
+    "confidenceGuidance": [
+      "95: Explicit and stable.",
+      "80: Clear but contextual.",
+      "60: Partly supported and still open to debate.",
+      "40: Weak or unstable evidence.",
+      "0: No reliable interpretation."
+    ]
+  },
+  "examples": [
+    {
+      "text": "The screenplay uses Audience Perception to shape interpretation of the scene.",
+      "result": "Use Audience Perception to judge the scene, not the isolated line."
+    },
+    {
+      "text": "A reviewer uses Audience Perception to decide whether context changes the meaning of the evidence.",
+      "result": "Context can raise or lower confidence."
+    },
+    {
+      "text": "The script shows why how the audience is expected to read the scene and how framing shifts confidence matters before the final judgment.",
+      "result": "Meaning depends on the surrounding frame."
+    }
+  ],
+  "counterExamples": [
+    {
+      "text": "Treating Audience Perception as automatic evidence without context.",
+      "reason": "The lesson is not a keyword rule."
+    },
+    {
+      "text": "Ignoring quotation, documentary, educational, or historical framing.",
+      "reason": "The frame can change the decision."
+    },
+    {
+      "text": "Forcing a high-confidence conclusion when the scene remains ambiguous.",
+      "reason": "Confidence must follow evidence."
+    }
+  ],
+  "exceptions": [
+    "Educational context",
+    "Documentary context",
+    "Historical context",
+    "Quotation",
+    "Dream",
+    "Flashback"
+  ],
+  "commonMistakes": [
+    "Confusing topic mention with final reviewer judgment.",
+    "Ignoring the surrounding scene or story frame.",
+    "Overstating confidence when the evidence is weak.",
+    "Treating commentary as endorsement.",
+    "Failing to preserve a valid alternative interpretation."
+  ],
+  "confidenceGuidance": {
+    "high": "Use high confidence when the lesson signal is explicit and stable.",
+    "medium": "Use medium confidence when the lesson signal is clear but contextual.",
+    "low": "Use low confidence when the lesson signal is indirect or contested.",
+    "uncertain": "Use uncertain when the lesson signal cannot be supported reliably."
+  },
+  "reportTemplate": {
+    "findingTitle": "Audience Perception lesson",
+    "reasonTemplate": "The reviewer uses this lesson to understand how how the audience is expected to read the scene and how framing shifts confidence changes interpretation.",
+    "recommendationTemplate": "Apply the lesson before finalizing the interpretation."
+  },
+  "gcamMapping": [],
+  "benchmarkReferences": [
+    "lesson_033_audience_perception_bench_001",
+    "lesson_033_audience_perception_bench_002",
+    "lesson_033_audience_perception_bench_003"
+  ],
+  "metadata": {
+    "author": "Raawi Academy",
+    "reviewLevel": "Professional Education",
+    "priority": 33,
+    "category": "psychology",
+    "subject": "reviewer education",
+    "difficulty": "foundation",
+    "confidence": 0.92,
+    "searchableTerms": [
+      "Audience Perception",
+      "psychology",
+      "how the audience is expected to read the scene and how framing shifts confidence",
+      "reviewer academy",
+      "gcam",
+      "education"
+    ],
+    "gcamRelevance": "Pre-GCAM reasoning for Audience Perception",
+    "decisionImpact": "Determines whether the reviewer should accept, review, or reject the interpretation.",
+    "confidenceImpact": "Raises or lowers reviewer confidence depending on narrative clarity.",
+    "relationships": [
+      "lesson_003_understanding_context",
+      "lesson_006_intent_recognition",
+      "lesson_008_narrative_structure",
+      "lesson_010_exception_recognition",
+      "lesson_014_cross_sentence_reasoning"
+    ],
+    "precedents": [
+      "lesson_003_understanding_context",
+      "lesson_007_confidence_assessment",
+      "lesson_014_cross_sentence_reasoning"
+    ],
+    "knowledgeDependencies": [
+      "lesson_001_what_is_a_finding",
+      "lesson_002_what_is_evidence",
+      "lesson_003_understanding_context",
+      "lesson_004_speaker_identification",
+      "lesson_005_target_identification",
+      "lesson_006_intent_recognition",
+      "lesson_007_confidence_assessment",
+      "lesson_008_narrative_structure",
+      "lesson_009_concept_relationships",
+      "lesson_010_exception_recognition",
+      "lesson_011_multiple_findings",
+      "lesson_012_evidence_prioritization",
+      "lesson_013_contradiction_resolution",
+      "lesson_014_cross_sentence_reasoning"
+    ],
+    "lessonType": "education"
+  }
+}

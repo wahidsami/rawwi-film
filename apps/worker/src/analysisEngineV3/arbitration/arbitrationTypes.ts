@@ -51,6 +51,24 @@ export type ArbitrationDecisionPackage = Readonly<{
   rejectedReasons: readonly string[];
   confidence: number;
   confidenceAdjustment: number;
+  confidenceCalibration?: Readonly<{
+    baseConfidence: number;
+    semanticConfidence: number;
+    knowledgeConfidence: number;
+    precedentAgreement: number;
+    reviewerAgreement: number;
+    evidenceQuality: number;
+    counterEvidence: number;
+    narrativeAmbiguity: number;
+    consensusScore: number;
+    disagreementScore: number;
+    positiveAverage: number;
+    negativeAverage: number;
+    adjustedSignal: number;
+    confidence: number;
+    adjustment: number;
+    cappedAtMaximum: boolean;
+  }> | null;
   consensusScore: number;
   agreementMatrix: readonly ReviewerDebatePairwiseAssessment[];
   disagreementMatrix: readonly ReviewerDebatePairwiseAssessment[];

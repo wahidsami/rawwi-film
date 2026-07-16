@@ -28,11 +28,11 @@ function testManifestDiscovery(): void {
 
   assert.equal(manifest.schema_version, 1);
   assert.equal(manifest.academies.length, 14);
-  assert.equal(manifest.lessons.length, 16);
+  assert.equal(manifest.lessons.length, 45);
   assert.equal(manifest.summary.missing_lesson_count, 0);
   assert.equal(manifest.summary.manifest_hash.length, 64);
   assert.equal(manifest.summary.unlocked_academy_count, 1);
-  assert.equal(manifest.academies.find((academy) => academy.academy_id === "v3_00_universal")?.lesson_count, 14);
+  assert.equal(manifest.academies.find((academy) => academy.academy_id === "v3_00_universal")?.lesson_count, 43);
   assert.equal(manifest.academies.find((academy) => academy.academy_id === "v3_00_universal")?.completion_percent, 100);
   assert.equal(manifest.academies.find((academy) => academy.academy_id === "v3_00_universal")?.unlocked, true);
   assert.equal(manifest.academies.find((academy) => academy.academy_id === "v3_03_security")?.lesson_count, 0);
@@ -93,8 +93,8 @@ function testManifestAutoDiscoversFutureLessons(): void {
     const validation = validateAcademyManifest(manifest);
     const universal = manifest.academies.find((academy) => academy.academy_id === "v3_00_universal");
 
-    assert.equal(manifest.lessons.length, 17);
-    assert.equal(universal?.lesson_count, 15);
+    assert.equal(manifest.lessons.length, 46);
+    assert.equal(universal?.lesson_count, 44);
     assert.equal(manifest.summary.missing_lesson_count, 0);
     assert.equal(validation.valid, false);
     assert.equal(validation.issues.some((issue) => issue.code === "lesson.0.academy_id"), true);

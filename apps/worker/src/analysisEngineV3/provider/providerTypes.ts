@@ -41,6 +41,7 @@ export type V3ReasonedDecisionResult = Readonly<{
   riskAnalysis: string;
   narrativeAnalysis: string;
   humanLikeExplanation: string;
+  recommendation: string;
 }>;
 
 export type V3Provider = Readonly<{

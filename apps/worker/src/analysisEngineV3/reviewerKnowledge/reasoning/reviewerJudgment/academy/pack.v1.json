@@ -13,14 +13,28 @@
       "patch": 0
     },
     "title": "Reviewer Judgment Framework",
-    "description": "A shared reviewer judgment pack for competing interpretations, evidence sufficiency, confidence calibration, reviewer disagreement, narrative justification, and final reviewer decision making.",
+    "description": "A shared reviewer judgment pack for competing interpretations, evidence sufficiency, confidence calibration, reviewer disagreement, narrative justification, final reviewer decision making, and reviewer calibration against false positives, false negatives, ambiguity, and borderline calls.",
     "supported_concepts": [
       "competing_interpretations",
       "evidence_sufficiency",
       "confidence_calibration",
       "reviewer_disagreement",
       "narrative_justification",
-      "final_reviewer_decision"
+      "final_reviewer_decision",
+      "judgment_profiles",
+      "false_positive_library",
+      "false_negative_library",
+      "edge_cases",
+      "gcam_interpretation_notes",
+      "human_reviewer_philosophy",
+      "risk_tolerance",
+      "severity_calibration",
+      "decision_confidence",
+      "contradicting_evidence",
+      "supporting_evidence",
+      "decision_uncertainty",
+      "decision_ambiguity",
+      "borderline_decisions"
     ]
   },
   "pack": {
@@ -33,9 +47,23 @@
       "confidence_calibration",
       "reviewer_disagreement",
       "narrative_justification",
-      "final_reviewer_decision"
+      "final_reviewer_decision",
+      "judgment_profiles",
+      "false_positive_library",
+      "false_negative_library",
+      "edge_cases",
+      "gcam_interpretation_notes",
+      "human_reviewer_philosophy",
+      "risk_tolerance",
+      "severity_calibration",
+      "decision_confidence",
+      "contradicting_evidence",
+      "supporting_evidence",
+      "decision_uncertainty",
+      "decision_ambiguity",
+      "borderline_decisions"
     ],
-    "purpose": "Teach reviewers how experienced GCAM reviewers compare interpretations, judge evidence sufficiency, calibrate confidence, resolve disagreement, justify narrative outcomes, and make a final decision.",
+    "purpose": "Teach reviewers how experienced GCAM reviewers compare interpretations, judge evidence sufficiency, calibrate confidence, resolve disagreement, justify narrative outcomes, reason about borderline calls, and make a final decision with human-style risk tolerance.",
     "protected_interests": [
       "Reviewer consistency",
       "Decision quality",
@@ -48,7 +76,21 @@
       "confidence_calibration",
       "reviewer_disagreement",
       "narrative_justification",
-      "final_reviewer_decision"
+      "final_reviewer_decision",
+      "judgment_profiles",
+      "false_positive_library",
+      "false_negative_library",
+      "edge_cases",
+      "gcam_interpretation_notes",
+      "human_reviewer_philosophy",
+      "risk_tolerance",
+      "severity_calibration",
+      "decision_confidence",
+      "contradicting_evidence",
+      "supporting_evidence",
+      "decision_uncertainty",
+      "decision_ambiguity",
+      "borderline_decisions"
     ],
     "required_evidence": [
       "Literal evidence from the current chunk",
@@ -68,7 +110,11 @@
       "Calibrate confidence to corroboration and contradiction.",
       "Resolve disagreement before producing a final decision.",
       "Use narrative justification when the story changes the meaning of a harmful-looking line.",
-      "Record the final decision only after the reviewer has exhausted the relevant context."
+      "Record the final decision only after the reviewer has exhausted the relevant context.",
+      "Identify why the reviewer hesitated before a borderline decision.",
+      "Distinguish a true false positive from a cautious rejection.",
+      "Distinguish a true false negative from an overconfident acceptance.",
+      "Keep severity and confidence separate when the evidence is mixed."
     ],
     "legal_exceptions": [
       "quotation",
@@ -88,13 +134,15 @@
       "The reviewer lowers confidence when a later sentence contradicts the first reading.",
       "The reviewer keeps the case as review until the context becomes sufficient.",
       "The reviewer explains why the story changes the final outcome.",
-      "The reviewer resolves disagreement instead of pretending it does not exist."
+      "The reviewer resolves disagreement instead of pretending it does not exist.",
+      "The reviewer records a borderline call instead of forcing certainty."
     ],
     "negative_examples": [
       "The reviewer accepts the first plausible reading.",
       "The reviewer treats weak evidence as decisive.",
       "The reviewer ignores disagreement between scenes.",
-      "The reviewer applies a final judgment before checking narrative justification."
+      "The reviewer applies a final judgment before checking narrative justification.",
+      "The reviewer hides hesitation and pretends the call was obvious."
     ],
     "common_false_positives": [
       "Choosing the first plausible interpretation",
@@ -102,7 +150,9 @@
       "Ignoring contradictory later context",
       "Collapsing review disagreement into one false answer",
       "Using narrative justification as an excuse to skip evidence",
-      "Producing a final decision before evidence sufficiency is checked"
+      "Producing a final decision before evidence sufficiency is checked",
+      "Calling a cautious rejection a true finding",
+      "Calling a borderline case a full certainty"
     ],
     "glossary_relationships": [
       {
@@ -174,7 +224,9 @@
       "Show how confidence changed when the context changed.",
       "Name legitimate reviewer disagreement instead of hiding it.",
       "If narrative justification changes the result, say so explicitly.",
-      "Finalize the report only after the judgment process is complete."
+      "Finalize the report only after the judgment process is complete.",
+      "Explain why the reviewer hesitated, rejected, or accepted the case.",
+      "Separate severity from confidence when reporting borderline decisions."
     ]
   }
 }

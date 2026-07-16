@@ -1,7 +1,7 @@
 import type { LegalDecision } from "./legalDecision.js";
 import type { LegalExceptionResult, LegalFinding } from "./legalResult.js";
 import type { LegalModule } from "./legalModule.js";
-import type { ReviewerDecisionContext, ReviewerDecisionEvaluationInput, ReviewerDecisionModuleSurface } from "./reviewerDecisionTypes.js";
+import type { ReviewerDecisionContext, ReviewerDecisionEvaluationInput, ReviewerDecisionModuleSurface, ReviewerDecisionReasoning } from "./reviewerDecisionTypes.js";
 
 export type ReviewerDecisionModuleInput = ReviewerDecisionEvaluationInput;
 
@@ -72,6 +72,10 @@ export abstract class ReviewerDecisionModuleBase implements ReviewerDecisionModu
 
   protected getRelationshipReasoning(input: ReviewerDecisionModuleInput): readonly string[] {
     return this.getKnowledgeContext(input)?.relationshipReasoning ?? [];
+  }
+
+  protected getReasoning(input: ReviewerDecisionModuleInput): ReviewerDecisionReasoning | null {
+    return this.getKnowledgeContext(input)?.reasoning ?? null;
   }
 }
 

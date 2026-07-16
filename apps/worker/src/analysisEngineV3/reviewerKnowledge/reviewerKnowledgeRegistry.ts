@@ -8,6 +8,7 @@ import { loadReviewerAcademyPacks } from "./academy/reviewerAcademyLoader.js";
 const READER_DIRECTORY = dirname(fileURLToPath(import.meta.url));
 const ACADEMY_DIRECTORY = join(READER_DIRECTORY, "academy");
 const DEFAULT_PACKS: readonly ReviewerKnowledgePack[] = Object.freeze([]);
+let cachedDefaultReviewerKnowledgeRegistry: ReviewerKnowledgeRegistry | null = null;
 
 export class ReviewerKnowledgeRegistry {
   private readonly packs = new Map<string, ReviewerKnowledgePack>();
@@ -42,7 +43,12 @@ export function createReviewerKnowledgeRegistry(entries?: readonly ReviewerKnowl
 }
 
 export function createDefaultReviewerKnowledgeRegistry(): ReviewerKnowledgeRegistry {
-  return new ReviewerKnowledgeRegistry(loadReviewerAcademyPacks(ACADEMY_DIRECTORY));
+  if (cachedDefaultReviewerKnowledgeRegistry) {
+    return cachedDefaultReviewerKnowledgeRegistry;
+  }
+
+  cachedDefaultReviewerKnowledgeRegistry = new ReviewerKnowledgeRegistry(loadReviewerAcademyPacks(ACADEMY_DIRECTORY));
+  return cachedDefaultReviewerKnowledgeRegistry;
 }
 
 export async function createReviewerKnowledgeRegistryFromDirectory(directoryPath: string): Promise<ReviewerKnowledgeRegistry> {

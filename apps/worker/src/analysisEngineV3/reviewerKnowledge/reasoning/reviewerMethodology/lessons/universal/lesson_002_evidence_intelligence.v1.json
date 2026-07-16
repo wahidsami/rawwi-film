@@ -1,0 +1,578 @@
+{
+  "schema_version": 1,
+  "lesson_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "lesson": {
+    "id": "lesson_002_evidence_intelligence",
+    "title": "Evidence Intelligence",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "language": "en",
+    "summary": "Teach reviewers how to judge evidence strength, quality, ranking, weight, credibility, contradictions, and completeness before any final reviewer decision is made.",
+    "learningObjectives": [
+      "Evaluate evidence strength and quality separately.",
+      "Rank competing evidence by credibility and support.",
+      "Use scene context, story context, and character history when weighing evidence.",
+      "Explain why stronger evidence was chosen over weaker evidence.",
+      "Explain why weaker evidence was ignored or downgraded.",
+      "Identify contradictions and evidence gaps without forcing a conclusion."
+    ],
+    "concepts": [
+      {
+        "id": "evidence_strength",
+        "title": "Evidence Strength",
+        "summary": "How directly and firmly the evidence supports the reviewer conclusion.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "strength"
+        ],
+        "target": "Evidence",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "evidence_quality",
+        "title": "Evidence Quality",
+        "summary": "How precise, complete, and traceable the evidence is.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "quality"
+        ],
+        "target": "Evidence",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "evidence_ranking",
+        "title": "Evidence Ranking",
+        "summary": "How the reviewer orders stronger and weaker evidence before reaching a decision.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "ranking"
+        ],
+        "target": "Evidence",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "evidence_weight",
+        "title": "Evidence Weight",
+        "summary": "The relative importance assigned to a piece of evidence after comparison.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "weight"
+        ],
+        "target": "Evidence",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "evidence_credibility",
+        "title": "Evidence Credibility",
+        "summary": "How trustworthy the evidence source is within the scene or story frame.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "credibility"
+        ],
+        "target": "Evidence",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "evidence_contradictions",
+        "title": "Evidence Contradictions",
+        "summary": "Conflicting cues that weaken the primary reading and may force review instead of a finding.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "contradiction"
+        ],
+        "target": "Evidence",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "evidence_completeness",
+        "title": "Evidence Completeness",
+        "summary": "Whether enough of the scene, context, and surrounding story is present to support the conclusion.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "completeness"
+        ],
+        "target": "Evidence",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "scene_context",
+        "title": "Scene Context",
+        "summary": "The immediate scene information that changes how a candidate should be judged.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "context"
+        ],
+        "target": "Context",
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "story_context",
+        "title": "Story Context",
+        "summary": "The broader story frame that can raise or lower confidence in a candidate.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "context"
+        ],
+        "target": "Context",
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "character_history",
+        "title": "Character History",
+        "summary": "Past behavior and prior scenes that help the reviewer judge a candidate consistently.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "history"
+        ],
+        "target": "Context",
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "dialogue_history",
+        "title": "Dialogue History",
+        "summary": "Earlier dialogue that can support, weaken, or reverse a candidate reading.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "dialogue"
+        ],
+        "target": "Context",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "previous_scene",
+        "title": "Previous Scene",
+        "summary": "Earlier scene information that can explain why the current candidate exists.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "scene"
+        ],
+        "target": "Context",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "next_scene",
+        "title": "Next Scene",
+        "summary": "Later scene information that can confirm or contradict the current candidate.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "scene"
+        ],
+        "target": "Context",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "character_relationships",
+        "title": "Character Relationships",
+        "summary": "Relationship dynamics that shape who is speaking, who is targeted, and why the evidence matters.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "relationship"
+        ],
+        "target": "Context",
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "scene_intent",
+        "title": "Scene Intent",
+        "summary": "What the scene is trying to do inside the story and how that affects evidence choice.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "intent"
+        ],
+        "target": "Intent",
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "narrative_intent",
+        "title": "Narrative Intent",
+        "summary": "Whether the narrative is supporting, hiding, explaining, or challenging the candidate.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "intent"
+        ],
+        "target": "Intent",
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "evidence_timeline",
+        "title": "Evidence Timeline",
+        "summary": "The order in which evidence appears and how later evidence can re-rank earlier evidence.",
+        "tags": [
+          "evidence",
+          "intelligence",
+          "timeline"
+        ],
+        "target": "Evidence",
+        "articleIds": [
+          17
+        ]
+      }
+    ],
+    "reviewerQuestions": [
+      {
+        "id": "evidence_q1",
+        "purpose": "Which evidence is strongest?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Rank the evidence rather than counting it.",
+        "evidenceRequirements": [
+          "Identify the strongest support and why it wins."
+        ]
+      },
+      {
+        "id": "evidence_q2",
+        "purpose": "Why was stronger evidence chosen?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Explain the comparison that led to the final choice.",
+        "evidenceRequirements": [
+          "Explain why the selected evidence outranks alternatives."
+        ]
+      },
+      {
+        "id": "evidence_q3",
+        "purpose": "Why was weaker evidence ignored?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Acknowledge weaker evidence without promoting it too far.",
+        "evidenceRequirements": [
+          "State why the weaker evidence was not sufficient."
+        ]
+      },
+      {
+        "id": "evidence_q4",
+        "purpose": "Is the evidence contradictory?",
+        "expectedAnswerFormat": "Yes/No with explanation.",
+        "reasoningGuidance": "Describe any contradiction and its effect on confidence.",
+        "evidenceRequirements": [
+          "Name the contradiction or say it is absent."
+        ]
+      },
+      {
+        "id": "evidence_q5",
+        "purpose": "Does the evidence feel complete?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Use scene, story, and character context to judge completeness.",
+        "evidenceRequirements": [
+          "Explain what context is still missing, if any."
+        ]
+      },
+      {
+        "id": "evidence_q6",
+        "purpose": "What confidence should the reviewer carry forward?",
+        "expectedAnswerFormat": "Confidence label.",
+        "reasoningGuidance": "Match confidence to strength, quality, credibility, and contradictions.",
+        "evidenceRequirements": [
+          "State the confidence level and why."
+        ]
+      }
+    ],
+    "examples": [
+      "A direct quote outranks a vague implication.",
+      "A later sentence confirms the first clue and raises confidence.",
+      "A weaker clue is ignored because a stronger scene cue exists.",
+      "The reviewer cites scene context to explain why the candidate was chosen."
+    ],
+    "counterExamples": [
+      "The reviewer counts weak clues instead of ranking them.",
+      "The reviewer ignores a stronger sentence because it appears later.",
+      "The reviewer promotes a candidate despite unresolved contradiction.",
+      "The reviewer treats missing context as if it were confirmation."
+    ],
+    "exceptions": [
+      "educational context",
+      "documentary context",
+      "historical context",
+      "quotation",
+      "dream",
+      "flashback"
+    ],
+    "evidenceRules": {
+      "minimum": [
+        "At least one traceable evidence candidate must exist.",
+        "The reviewer must explain why this candidate is stronger than the alternatives."
+      ],
+      "strong": [
+        "The best candidate is explicit and corroborated by context.",
+        "The best candidate survives contradiction checks."
+      ],
+      "weak": [
+        "A candidate is plausible but poorly supported.",
+        "A candidate depends on context that is not fully present."
+      ],
+      "insufficient": [
+        "Speculation without traceable support.",
+        "A candidate selected only because no better option was checked."
+      ],
+      "confidenceGuidance": [
+        "High confidence when the strongest candidate is explicit, credible, and complete.",
+        "Medium confidence when the best candidate is supported but still contextual.",
+        "Low confidence when contradictions or missing context remain.",
+        "Review required when evidence remains too weak to rank safely."
+      ]
+    },
+    "conceptRelationships": [
+      {
+        "fromConceptId": "evidence_strength",
+        "toConceptId": "evidence_quality",
+        "relation": "supports",
+        "note": "Strong evidence should also be high quality."
+      },
+      {
+        "fromConceptId": "evidence_quality",
+        "toConceptId": "evidence_credibility",
+        "relation": "supports",
+        "note": "Quality and credibility move together when evidence is reliable."
+      },
+      {
+        "fromConceptId": "evidence_ranking",
+        "toConceptId": "evidence_weight",
+        "relation": "supports",
+        "note": "Ranking determines the final weight."
+      },
+      {
+        "fromConceptId": "evidence_contradictions",
+        "toConceptId": "evidence_completeness",
+        "relation": "supports",
+        "note": "Contradiction often reveals missing context."
+      },
+      {
+        "fromConceptId": "scene_context",
+        "toConceptId": "story_context",
+        "relation": "supports",
+        "note": "Scene context is checked before broader story context."
+      },
+      {
+        "fromConceptId": "previous_scene",
+        "toConceptId": "next_scene",
+        "relation": "supports",
+        "note": "Earlier and later scenes bracket the candidate."
+      },
+      {
+        "fromConceptId": "scene_intent",
+        "toConceptId": "narrative_intent",
+        "relation": "supports",
+        "note": "Scene purpose informs narrative intent."
+      },
+      {
+        "fromConceptId": "character_history",
+        "toConceptId": "character_relationships",
+        "relation": "supports",
+        "note": "Character history and relationships shape evidence choice."
+      }
+    ],
+    "glossaryReferences": [
+      {
+        "term": "evidence strength",
+        "conceptId": "evidence_strength",
+        "relation": "supports",
+        "note": "Evidence should be ranked by strength."
+      },
+      {
+        "term": "evidence quality",
+        "conceptId": "evidence_quality",
+        "relation": "supports",
+        "note": "Precision and completeness matter."
+      },
+      {
+        "term": "evidence credibility",
+        "conceptId": "evidence_credibility",
+        "relation": "supports",
+        "note": "Trustworthiness affects ranking."
+      },
+      {
+        "term": "evidence timeline",
+        "conceptId": "evidence_timeline",
+        "relation": "supports",
+        "note": "Later evidence can change the ranking."
+      }
+    ],
+    "gcamMappings": [
+      {
+        "articleId": 11,
+        "articleTitle": "Evidence Sufficiency",
+        "articleNumber": "11",
+        "atomNumber": "11-1",
+        "reportTitle": "Evidence Intelligence",
+        "note": "Strength, quality, ranking, and contradictions all affect sufficiency."
+      },
+      {
+        "articleId": 17,
+        "articleTitle": "Confidence and Exceptions",
+        "articleNumber": "17",
+        "atomNumber": "17-1",
+        "reportTitle": "Evidence Intelligence",
+        "note": "Completeness and context determine confidence."
+      }
+    ],
+    "reportTemplates": [
+      {
+        "findingTitle": "Evidence Intelligence",
+        "reasonTemplate": "Explain why this evidence was chosen, why stronger evidence existed, why weaker evidence was ignored, and how context changed the final ranking.",
+        "recommendationTemplate": "Report the evidence ranking explicitly before finalizing the decision.",
+        "severity": "medium",
+        "priority": 2,
+        "reportCategory": "reviewer_methodology"
+      }
+    ],
+    "benchmarkReferences": [
+      "evidence_intelligence-bench-001",
+      "evidence_intelligence-bench-002",
+      "evidence_intelligence-bench-003",
+      "evidence_intelligence-bench-004"
+    ],
+    "prerequisites": [
+      "lesson_001_reviewer_methodology"
+    ],
+    "relatedLessons": [
+      "lesson_001_reviewer_methodology"
+    ],
+    "metadata": {
+      "subject": "reviewer intelligence",
+      "category": "reviewer_methodology",
+      "tags": [
+        "evidence",
+        "intelligence",
+        "ranking",
+        "credibility",
+        "context",
+        "methodology"
+      ],
+      "source": "Prompt C3 - Evidence Intelligence",
+      "difficulty": "advanced",
+      "confidence": 0.96,
+      "evidenceStrength": [
+        "direct evidence",
+        "corroborated evidence"
+      ],
+      "evidenceQuality": [
+        "traceable",
+        "complete",
+        "reproducible"
+      ],
+      "evidenceRanking": [
+        "stronger evidence wins",
+        "weaker evidence is ignored when unsupported"
+      ],
+      "evidenceWeight": [
+        "weight follows strength and credibility"
+      ],
+      "evidenceCredibility": [
+        "source trustworthiness",
+        "scene consistency"
+      ],
+      "evidenceContradictions": [
+        "later contradiction lowers confidence"
+      ],
+      "evidenceCompleteness": [
+        "scene + story + character context"
+      ],
+      "sceneContext": [
+        "immediate scene cues"
+      ],
+      "storyContext": [
+        "broader narrative frame"
+      ],
+      "characterHistory": [
+        "prior behavior and scene history"
+      ],
+      "dialogueHistory": [
+        "prior dialogue can confirm or contradict"
+      ],
+      "previousScene": [
+        "prior scene can change ranking"
+      ],
+      "nextScene": [
+        "later scene can reverse the first read"
+      ],
+      "characterRelationships": [
+        "speaker target and relational dynamics"
+      ],
+      "sceneIntent": [
+        "scene purpose affects evidence choice"
+      ],
+      "narrativeIntent": [
+        "story intent affects evidence choice"
+      ],
+      "evidenceTimeline": [
+        "order of evidence appearance"
+      ],
+      "decisionRules": [
+        "rank stronger evidence first",
+        "defer when contradiction remains",
+        "report why weaker evidence was ignored"
+      ],
+      "decisionExamples": [
+        "The reviewer chooses the direct quote over an indirect hint.",
+        "The reviewer rejects the weaker clue because a later sentence contradicts it."
+      ],
+      "decisionAntiPatterns": [
+        "Treating quantity as strength",
+        "Choosing a weak clue because it appears first",
+        "Collapsing credibility into confidence without explanation"
+      ],
+      "decisionExceptions": [
+        "Educational context can lower false positives.",
+        "Documentary framing can shift ranking.",
+        "Quotation can preserve evidence while lowering confidence."
+      ],
+      "decisionConfidenceCurves": [
+        "Strong direct evidence -> high confidence.",
+        "Contradiction -> lower confidence.",
+        "Missing context -> review."
+      ]
+    }
+  }
+}

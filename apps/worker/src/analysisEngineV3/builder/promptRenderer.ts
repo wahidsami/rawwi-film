@@ -10,8 +10,7 @@ import { createPromptConceptContext, runReviewerMethodology } from "../reviewerM
 import { getDefaultReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRegistry.js";
 import { renderReviewerMethodologySection } from "../reviewerMethodology/reviewerMethodologyRenderer.js";
 import { getDefaultReviewerQuestionSet, renderReviewerQuestionSetSection, createDefaultReviewerQuestionRegistry } from "../reviewerQuestions/index.js";
-import { selectReviewerKnowledgePacks } from "../reviewerKnowledge/reviewerKnowledgeSelector.js";
-import { createDefaultReviewerKnowledgeRegistry } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
+import { createReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
 import { renderReviewerKnowledgePacksSection } from "../reviewerKnowledge/reviewerKnowledgeRenderer.js";
 import { buildReviewerReasoningEnginePayload } from "./reviewerReasoningEngine.js";
 
@@ -70,12 +69,17 @@ export function renderV3Prompt(input: V3PromptBuilderInput): string {
   const context = normalizePromptBuilderInput(input);
   const conceptContext = createPromptConceptContext(context);
   const reviewerAssessment = runReviewerMethodology({ promptInput: context, conceptContext });
-  const universalKnowledgePack = createDefaultReviewerKnowledgeRegistry().load("v3_00_universal");
   const reviewerQuestionRegistry = createDefaultReviewerQuestionRegistry();
+  const knowledgeRetrieval = createReviewerKnowledgeRetrievalReport({
+    assessment: reviewerAssessment,
+    conceptContext,
+    subjectModule: context.subjectModule,
+  });
+  const universalKnowledgePack = knowledgeRetrieval.selectedPacks.find((pack) => pack.id === "v3_00_universal") ?? null;
   const reviewerQuestionSet = universalKnowledgePack?.default_question_set_id
     ? reviewerQuestionRegistry.load(universalKnowledgePack.default_question_set_id) ?? getDefaultReviewerQuestionSet()
     : getDefaultReviewerQuestionSet();
-  const reviewerKnowledgePacks = selectReviewerKnowledgePacks(reviewerAssessment, conceptContext);
+  const reviewerKnowledgePacks = knowledgeRetrieval.selectedPacks;
   const reviewerReasoningEngine = buildReviewerReasoningEnginePayload(context, conceptContext, reviewerAssessment, reviewerKnowledgePacks);
   const reviewerMethodology = getDefaultReviewerMethodology();
 
@@ -84,6 +88,7 @@ export function renderV3Prompt(input: V3PromptBuilderInput): string {
     renderReviewerMethodologySection(reviewerMethodology, reviewerAssessment),
     renderReviewerQuestionSetSection(reviewerQuestionSet),
     renderReviewerKnowledgePacksSection(reviewerKnowledgePacks),
+    renderStableJsonSection("GPT Reviewer Assistant", reviewerReasoningEngine.gpt_reviewer_assistant ?? {}),
     renderStableJsonSection("Reviewer Reasoning Engine", reviewerReasoningEngine),
     renderReasoningStageAssembly(context.reasoningContract),
     renderDecisionGraphSection(context.decisionGraph),

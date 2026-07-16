@@ -2,7 +2,7 @@ import type { AnalysisResponse } from "../engine/analysisResponse.js";
 import type { V3RuntimeDiagnostics } from "../runtime/runtimeDiagnostics.js";
 import type { V3RuntimeFinding } from "../runtime/runtimeTypes.js";
 import type { ArbitrationDecisionPackage } from "../arbitration/arbitrationTypes.js";
-import type { ReviewerDebateOpinion, ReviewerDebatePackage } from "../reviewerDebate/reviewerDebateTypes.js";
+import type { ReviewerDebateOpinion, ReviewerDebatePackage, ReviewerSelfCritique } from "../reviewerDebate/reviewerDebateTypes.js";
 
 export type ExplanationKnowledgeBundle = Readonly<{
   lessons: readonly string[];
@@ -33,6 +33,7 @@ export type ExplanationReviewerOpinion = Readonly<{
   rejectedArticles: readonly number[];
   riskLevel: ReviewerDebateOpinion["riskLevel"];
   needsHumanReview: boolean;
+  selfCritique?: ReviewerSelfCritique | null;
 }>;
 
 export type ExplanationFinding = Readonly<{

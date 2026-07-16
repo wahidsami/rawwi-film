@@ -145,6 +145,7 @@ function normalizeReasonedDecisionResult(value: unknown): V3ReasonedDecisionResu
     riskAnalysis: String(input.riskAnalysis ?? input.risk_analysis ?? ""),
     narrativeAnalysis: String(input.narrativeAnalysis ?? input.narrative_analysis ?? ""),
     humanLikeExplanation: String(input.humanLikeExplanation ?? input.human_like_explanation ?? ""),
+    recommendation: String(input.recommendation ?? input.recommendation_result ?? input.recommendationResult ?? ""),
   });
 }
 

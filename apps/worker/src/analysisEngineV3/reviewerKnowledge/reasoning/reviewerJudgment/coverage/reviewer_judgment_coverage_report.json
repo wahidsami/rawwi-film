@@ -20,9 +20,9 @@
     ],
     "warnings": [],
     "notes": [
-      "d1931fa2a828910d9f8bf00313d55762903300b2412b4f6d798c5f1c13663586"
+      "fa574a3665b488b1a4254c6b126d9ae327e25a1f7ecbab6625c3c2283189c23c"
     ],
-    "hash": "681357fa4e2342fc68593aef60820e15a2a8411035f9e9116d0d02c28154f0a0"
+    "hash": "166773cc949da0aeb5dad40ee147c765b6fd02f0b90865e85094cd96fda18c63"
   },
   "knowledgePack": {
     "title": "Knowledge Pack",
@@ -39,13 +39,13 @@
   },
   "lessons": {
     "title": "Lessons",
-    "present": 14,
-    "expected": 14,
+    "present": 43,
+    "expected": 43,
     "coveragePercent": 100,
     "missing": [],
     "warnings": [],
     "notes": [],
-    "hash": "e76f9e3c84e022aeacb5e6fca83cc350654bceedbaa715282f7ca2a60d14bbe1"
+    "hash": "981b4fe986c2931698c69c9ab9282ce3739ddea87ca202451edae9889873336d"
   },
   "patterns": {
     "title": "Patterns",
@@ -79,9 +79,9 @@
     "missing": [],
     "warnings": [],
     "notes": [
-      "10 benchmark cases loaded"
+      "16 benchmark cases loaded"
     ],
-    "hash": "4502ac2beace0d60a6e056d2149067987c2a08e6bf4aa2d244031dc5c32557bb"
+    "hash": "cf8c81bc720afd900d0cca37a0bac84676cf145abb598fd9d8b13cfd462b01c8"
   },
   "metrics": {
     "conceptCount": 6,
@@ -250,12 +250,13 @@
       {
         "id": "false_negatives",
         "title": "False Negatives Coverage",
-        "present": 4,
-        "expected": 4,
+        "present": 5,
+        "expected": 5,
         "coveragePercent": 100,
         "evidence": [
           "the reviewer accepts the first plausible reading.",
           "the reviewer applies a final judgment before checking narrative justification.",
+          "the reviewer hides hesitation and pretends the call was obvious.",
           "the reviewer ignores disagreement between scenes.",
           "the reviewer treats weak evidence as decisive."
         ],
@@ -264,10 +265,12 @@
       {
         "id": "false_positives",
         "title": "False Positives Coverage",
-        "present": 6,
-        "expected": 6,
+        "present": 8,
+        "expected": 8,
         "coveragePercent": 100,
         "evidence": [
+          "calling a borderline case a full certainty",
+          "calling a cautious rejection a true finding",
           "choosing the first plausible interpretation",
           "collapsing review disagreement into one false answer",
           "ignoring contradictory later context",
@@ -388,10 +391,16 @@
       {
         "id": "reviewer_questions",
         "title": "Reviewer Questions Coverage",
-        "present": 109,
-        "expected": 109,
+        "present": 207,
+        "expected": 207,
         "coveragePercent": 100,
         "evidence": [
+          "calibration_q1",
+          "calibration_q2",
+          "calibration_q3",
+          "calibration_q4",
+          "calibration_q5",
+          "calibration_q6",
           "judgment_question_confidence",
           "judgment_question_decision",
           "judgment_question_disagreement",
@@ -412,7 +421,12 @@
           "q12",
           "q13",
           "q14",
-          "q15"
+          "q15",
+          "q16",
+          "q17",
+          "q18",
+          "q19",
+          "q20"
         ],
         "missing": []
       },
@@ -454,12 +468,12 @@
         "missing": []
       }
     ],
-    "hash": "1582fe0c0c9def13ef49aa6823b02cc506dd5aee808c3c61870f30dee8b82954"
+    "hash": "2a3b51a016dad0d8d3118e3ec5270110b52f7e86b55ce226c8cc906857b62420"
   },
   "productionReadiness": 100,
   "recommendation": "READY",
   "coverageGaps": [],
   "criticalGaps": [],
   "warnings": [],
-  "hash": "d08a2b47405a5c07be17d2e16baa8875c76409531239db3c44b98d83f85d143f"
+  "hash": "7313cb95047fd3524ed1b20f0ec176963aa88b25be2edef05b0dd4e35e54923e"
 }

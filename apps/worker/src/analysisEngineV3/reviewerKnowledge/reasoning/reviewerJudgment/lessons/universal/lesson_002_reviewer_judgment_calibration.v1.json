@@ -1,0 +1,563 @@
+{
+  "schema_version": 1,
+  "lesson_version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "lesson": {
+    "id": "lesson_002_reviewer_judgment_calibration",
+    "title": "Reviewer Judgment Calibration",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    },
+    "language": "en",
+    "summary": "Teach reviewers how experienced human reviewers think about hesitation, acceptance, rejection, borderline calls, severity, risk tolerance, contradiction, and confidence calibration.",
+    "learningObjectives": [
+      "Recognize judgment profiles and how they shape reviewer behavior.",
+      "Explain why a reviewer hesitated, accepted, or rejected a case.",
+      "Distinguish true false positives from cautious rejections.",
+      "Distinguish true false negatives from overconfident acceptances.",
+      "Calibrate confidence, severity, and risk tolerance separately.",
+      "Preserve borderline decisions instead of collapsing them into certainty."
+    ],
+    "concepts": [
+      {
+        "id": "judgment_profiles",
+        "title": "Judgment Profiles",
+        "summary": "Reviewer behavior patterns that describe how a human reviewer tends to hesitate, accept, reject, or escalate.",
+        "tags": [
+          "reviewer_judgment",
+          "profile",
+          "calibration"
+        ],
+        "target": "Judgment",
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "false_positive_library",
+        "title": "False Positive Library",
+        "summary": "Known cases where overcalling a finding would be a mistake.",
+        "tags": [
+          "reviewer_judgment",
+          "false_positive",
+          "calibration"
+        ],
+        "target": "Decision",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "false_negative_library",
+        "title": "False Negative Library",
+        "summary": "Known cases where undercalling a finding would be a mistake.",
+        "tags": [
+          "reviewer_judgment",
+          "false_negative",
+          "calibration"
+        ],
+        "target": "Decision",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "edge_cases",
+        "title": "Edge Cases",
+        "summary": "Borderline situations that should not be flattened into simple yes or no decisions.",
+        "tags": [
+          "reviewer_judgment",
+          "edge_case",
+          "borderline"
+        ],
+        "target": "Decision",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "gcam_interpretation_notes",
+        "title": "GCAM Interpretation Notes",
+        "summary": "Notes that explain how judgment calibration affects GCAM interpretation and final mapping.",
+        "tags": [
+          "reviewer_judgment",
+          "gcam",
+          "interpretation"
+        ],
+        "target": "Interpretation",
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "human_reviewer_philosophy",
+        "title": "Human Reviewer Philosophy",
+        "summary": "Principles that describe how experienced reviewers think about doubt, restraint, and responsibility.",
+        "tags": [
+          "reviewer_judgment",
+          "philosophy",
+          "human"
+        ],
+        "target": "Judgment",
+        "articleIds": [
+          4
+        ]
+      },
+      {
+        "id": "risk_tolerance",
+        "title": "Risk Tolerance",
+        "summary": "How much uncertainty the reviewer will tolerate before escalating or rejecting.",
+        "tags": [
+          "reviewer_judgment",
+          "risk",
+          "calibration"
+        ],
+        "target": "Decision",
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "severity_calibration",
+        "title": "Severity Calibration",
+        "summary": "How the reviewer matches seriousness to the actual strength and scope of the evidence.",
+        "tags": [
+          "reviewer_judgment",
+          "severity",
+          "calibration"
+        ],
+        "target": "Decision",
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "confidence_calibration",
+        "title": "Confidence Calibration",
+        "summary": "How confidence should rise or fall when the evidence becomes stronger, weaker, or contradictory.",
+        "tags": [
+          "reviewer_judgment",
+          "confidence",
+          "calibration"
+        ],
+        "target": "Confidence",
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "decision_confidence",
+        "title": "Decision Confidence",
+        "summary": "The final confidence attached to a reviewer decision after weighing support and contradiction.",
+        "tags": [
+          "reviewer_judgment",
+          "decision",
+          "confidence"
+        ],
+        "target": "Confidence",
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "contradicting_evidence",
+        "title": "Contradicting Evidence",
+        "summary": "Evidence that pulls the reviewer away from an overly simple conclusion.",
+        "tags": [
+          "reviewer_judgment",
+          "evidence",
+          "contradiction"
+        ],
+        "target": "Evidence",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "supporting_evidence",
+        "title": "Supporting Evidence",
+        "summary": "Evidence that legitimately supports the reviewer decision and should be cited explicitly.",
+        "tags": [
+          "reviewer_judgment",
+          "evidence",
+          "support"
+        ],
+        "target": "Evidence",
+        "articleIds": [
+          11
+        ]
+      },
+      {
+        "id": "decision_uncertainty",
+        "title": "Decision Uncertainty",
+        "summary": "The degree of unresolved doubt that remains after review.",
+        "tags": [
+          "reviewer_judgment",
+          "uncertainty",
+          "calibration"
+        ],
+        "target": "Decision",
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "decision_ambiguity",
+        "title": "Decision Ambiguity",
+        "summary": "Cases where more than one answer remains plausible.",
+        "tags": [
+          "reviewer_judgment",
+          "ambiguity",
+          "borderline"
+        ],
+        "target": "Decision",
+        "articleIds": [
+          17
+        ]
+      },
+      {
+        "id": "borderline_decisions",
+        "title": "Borderline Decisions",
+        "summary": "Calls that sit at the boundary between accept, reject, and review.",
+        "tags": [
+          "reviewer_judgment",
+          "borderline",
+          "decision"
+        ],
+        "target": "Decision",
+        "articleIds": [
+          17
+        ]
+      }
+    ],
+    "reviewerQuestions": [
+      {
+        "id": "calibration_q1",
+        "purpose": "Why did the reviewer hesitate?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Explain what was missing, contradictory, or borderline.",
+        "evidenceRequirements": [
+          "Cite the evidence that caused hesitation."
+        ]
+      },
+      {
+        "id": "calibration_q2",
+        "purpose": "Why did the reviewer accept or reject?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Separate the outcome from the confidence level.",
+        "evidenceRequirements": [
+          "Name the support or the missing support."
+        ]
+      },
+      {
+        "id": "calibration_q3",
+        "purpose": "Is this a false positive or false negative risk?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Use caution to distinguish overcalling from undercalling.",
+        "evidenceRequirements": [
+          "Identify the risk direction and why it matters."
+        ]
+      },
+      {
+        "id": "calibration_q4",
+        "purpose": "Should severity change with confidence?",
+        "expectedAnswerFormat": "Yes/No with explanation.",
+        "reasoningGuidance": "Keep severity and confidence separate unless the evidence clearly supports both.",
+        "evidenceRequirements": [
+          "Explain whether severity and confidence move together."
+        ]
+      },
+      {
+        "id": "calibration_q5",
+        "purpose": "What is the borderline decision?",
+        "expectedAnswerFormat": "One label.",
+        "reasoningGuidance": "Use review when the answer is not stable enough for a final call.",
+        "evidenceRequirements": [
+          "State the borderline outcome explicitly."
+        ]
+      },
+      {
+        "id": "calibration_q6",
+        "purpose": "What confidence curve should the reviewer use?",
+        "expectedAnswerFormat": "Short answer.",
+        "reasoningGuidance": "Show how confidence shifts as support, contradiction, and ambiguity change.",
+        "evidenceRequirements": [
+          "Describe the confidence trajectory."
+        ]
+      }
+    ],
+    "examples": [
+      "The reviewer hesitates because the scene is borderline and the target cue is weak.",
+      "The reviewer accepts only after contradiction is resolved and the support is stable.",
+      "The reviewer rejects because the case looks like a false positive risk.",
+      "The reviewer keeps a weak case in review to avoid a false negative."
+    ],
+    "counterExamples": [
+      "The reviewer forces certainty in a borderline case.",
+      "The reviewer treats a cautious rejection as a final finding.",
+      "The reviewer turns a weak clue into a strong conclusion.",
+      "The reviewer hides uncertainty instead of reporting it."
+    ],
+    "exceptions": [
+      "quotation",
+      "historical narration",
+      "documentary framing",
+      "educational framing",
+      "fiction",
+      "dream",
+      "flashback",
+      "satire",
+      "humor",
+      "self defense",
+      "law enforcement"
+    ],
+    "evidenceRules": {
+      "minimum": [
+        "At least one explicit clue or one valid contextual clue must exist.",
+        "The reviewer must explain why hesitation remains if the case is borderline."
+      ],
+      "strong": [
+        "Multiple clues point the same way.",
+        "Contradicting evidence has been checked and addressed."
+      ],
+      "weak": [
+        "A single clue without corroboration.",
+        "A plausible reading that remains unstable."
+      ],
+      "insufficient": [
+        "Speculation without support.",
+        "A forced conclusion before contradiction is resolved."
+      ],
+      "confidenceGuidance": [
+        "High confidence when the call is stable and corroborated.",
+        "Medium confidence when the call is plausible but still debated.",
+        "Low confidence when contradiction or ambiguity remains strong.",
+        "Review required when hesitation cannot be resolved."
+      ]
+    },
+    "conceptRelationships": [
+      {
+        "fromConceptId": "judgment_profiles",
+        "toConceptId": "human_reviewer_philosophy",
+        "relation": "supports",
+        "note": "Profiles are shaped by how a human reviewer thinks."
+      },
+      {
+        "fromConceptId": "false_positive_library",
+        "toConceptId": "false_negative_library",
+        "relation": "supports",
+        "note": "A reviewer must balance overcalling and undercalling."
+      },
+      {
+        "fromConceptId": "edge_cases",
+        "toConceptId": "borderline_decisions",
+        "relation": "supports",
+        "note": "Edge cases often become borderline decisions."
+      },
+      {
+        "fromConceptId": "supporting_evidence",
+        "toConceptId": "contradicting_evidence",
+        "relation": "supports",
+        "note": "Support must be weighed against contradiction."
+      },
+      {
+        "fromConceptId": "confidence_calibration",
+        "toConceptId": "decision_confidence",
+        "relation": "supports",
+        "note": "Confidence calibration produces the final confidence."
+      },
+      {
+        "fromConceptId": "decision_ambiguity",
+        "toConceptId": "decision_uncertainty",
+        "relation": "supports",
+        "note": "Ambiguity creates uncertainty."
+      },
+      {
+        "fromConceptId": "gcam_interpretation_notes",
+        "toConceptId": "severity_calibration",
+        "relation": "supports",
+        "note": "GCAM interpretation affects how severity is framed."
+      }
+    ],
+    "glossaryReferences": [
+      {
+        "term": "false positive library",
+        "conceptId": "false_positive_library",
+        "relation": "supports",
+        "note": "Examples that guard against overcalling."
+      },
+      {
+        "term": "false negative library",
+        "conceptId": "false_negative_library",
+        "relation": "supports",
+        "note": "Examples that guard against undercalling."
+      },
+      {
+        "term": "borderline decision",
+        "conceptId": "borderline_decisions",
+        "relation": "supports",
+        "note": "The answer is close enough to require reviewer caution."
+      },
+      {
+        "term": "confidence curve",
+        "conceptId": "decision_confidence",
+        "relation": "supports",
+        "note": "Confidence should change with evidence quality."
+      }
+    ],
+    "gcamMappings": [
+      {
+        "articleId": 4,
+        "articleTitle": "Comparison and Review",
+        "articleNumber": "4",
+        "atomNumber": "4-1",
+        "reportTitle": "Reviewer Judgment Calibration",
+        "note": "Judgment profiles and hesitation analysis begin with comparison."
+      },
+      {
+        "articleId": 11,
+        "articleTitle": "Evidence Sufficiency",
+        "articleNumber": "11",
+        "atomNumber": "11-1",
+        "reportTitle": "Reviewer Judgment Calibration",
+        "note": "False positive and false negative handling depend on evidence sufficiency."
+      },
+      {
+        "articleId": 17,
+        "articleTitle": "Confidence and Exceptions",
+        "articleNumber": "17",
+        "atomNumber": "17-1",
+        "reportTitle": "Reviewer Judgment Calibration",
+        "note": "Confidence calibration, severity calibration, and borderlines map here."
+      }
+    ],
+    "reportTemplates": [
+      {
+        "findingTitle": "Reviewer Judgment Calibration",
+        "reasonTemplate": "Explain why the reviewer hesitated, accepted, rejected, or escalated, and how confidence changed with support and contradiction.",
+        "recommendationTemplate": "Preserve the calibration reasoning in the report instead of collapsing borderline calls.",
+        "severity": "medium",
+        "priority": 1,
+        "reportCategory": "reviewer_judgment"
+      }
+    ],
+    "benchmarkReferences": [
+      "reviewer_judgment-bench-011",
+      "reviewer_judgment-bench-012",
+      "reviewer_judgment-bench-013",
+      "reviewer_judgment-bench-014",
+      "reviewer_judgment-bench-015",
+      "reviewer_judgment-bench-016"
+    ],
+    "prerequisites": [
+      "lesson_001_reviewer_judgment"
+    ],
+    "relatedLessons": [
+      "lesson_001_reviewer_judgment"
+    ],
+    "metadata": {
+      "subject": "reviewer intelligence",
+      "category": "reviewer_judgment",
+      "tags": [
+        "reviewer_judgment",
+        "calibration",
+        "confidence",
+        "risk",
+        "borderline",
+        "false_positive",
+        "false_negative"
+      ],
+      "source": "Prompt C2 - Reviewer Judgment Calibration",
+      "difficulty": "advanced",
+      "confidence": 0.97,
+      "judgmentProfiles": [
+        "hesitant reviewer",
+        "strict reviewer",
+        "cautious reviewer",
+        "high-confidence reviewer"
+      ],
+      "falsePositiveLibrary": [
+        "Borderline clue that should remain review.",
+        "Overcalled evidence that lacks corroboration."
+      ],
+      "falseNegativeLibrary": [
+        "Weak-looking case that still deserves acceptance.",
+        "Under-called evidence that should have been escalated."
+      ],
+      "edgeCases": [
+        "Borderline decisions",
+        "Contradicting evidence",
+        "Ambiguous narrative framing"
+      ],
+      "gcamInterpretationNotes": [
+        "Confidence should follow the evidence, not the urgency of the decision.",
+        "Severity must be justified independently from certainty."
+      ],
+      "humanReviewerPhilosophy": [
+        "Be cautious when the evidence is borderline.",
+        "Do not hide hesitation.",
+        "Prefer review over overclaiming."
+      ],
+      "riskTolerance": [
+        "Low risk tolerance for uncertain findings.",
+        "Higher risk tolerance for clearly corroborated calls."
+      ],
+      "severityCalibration": [
+        "Severity rises only when evidence and context are stable.",
+        "Severity should not be inflated by a weak signal."
+      ],
+      "confidenceCalibration": [
+        "Confidence decreases when contradiction appears.",
+        "Confidence rises when support accumulates."
+      ],
+      "decisionConfidence": [
+        "Final confidence should reflect the resolved evidence state."
+      ],
+      "contradictingEvidence": [
+        "Evidence that weakens the first reading."
+      ],
+      "supportingEvidence": [
+        "Evidence that strengthens the chosen reading."
+      ],
+      "decisionUncertainty": [
+        "Uncertainty remains when the evidence is incomplete."
+      ],
+      "decisionAmbiguity": [
+        "Ambiguity exists when more than one reading survives."
+      ],
+      "borderlineDecisions": [
+        "Cases near the boundary between accept, reject, and review."
+      ],
+      "decisionRules": [
+        "Compare support before deciding.",
+        "Separate confidence from severity.",
+        "Escalate when contradiction remains unresolved."
+      ],
+      "decisionExamples": [
+        "A reviewer hesitates because the case is borderline.",
+        "A reviewer accepts after contradiction is resolved.",
+        "A reviewer rejects a likely false positive."
+      ],
+      "decisionAntiPatterns": [
+        "Treating uncertainty as certainty.",
+        "Forcing a final decision too early.",
+        "Confusing cautious review with rejection."
+      ],
+      "decisionExceptions": [
+        "Quoted speech may reduce confidence.",
+        "Documentary framing may change the outcome.",
+        "Historical narration may justify a different judgment."
+      ],
+      "decisionConfidenceCurves": [
+        "Low evidence -> low confidence.",
+        "Added contradiction -> lower confidence.",
+        "Stable corroboration -> higher confidence."
+      ]
+    }
+  }
+}

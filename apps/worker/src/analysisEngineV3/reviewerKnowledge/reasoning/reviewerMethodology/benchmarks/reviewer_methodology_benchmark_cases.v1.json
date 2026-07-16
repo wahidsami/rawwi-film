@@ -26803,6 +26803,302 @@
         "min": 0.72,
         "max": 1
       }
+    },
+    {
+      "id": "methodology-bench-401-evidence_strength",
+      "title": "Evidence strength ranking",
+      "scriptSnippet": "A reviewer chooses the direct quote because it is stronger than the weak hint.",
+      "storyMemory": "The scene contains both a direct and indirect clue.",
+      "sceneMemory": "The direct clue is more reliable than the hint.",
+      "neighboringSentences": [
+        "The direct clue is explicit.",
+        "The hint is weaker and more ambiguous."
+      ],
+      "glossary": {
+        "title": "Methodology Glossary",
+        "entries": [
+          {
+            "term": "evidence_strength",
+            "articleId": 11,
+            "variants": [
+              "evidence strength"
+            ],
+            "definition": "How firmly a piece of evidence supports the interpretation."
+          }
+        ],
+        "notes": [
+          "strength",
+          "ranking"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          11
+        ],
+        "notes": [
+          "evidence",
+          "ranking"
+        ]
+      },
+      "expectedConcepts": [
+        "evidence_strength",
+        "evidence_ranking"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "ranking",
+        "speaker": "reviewer",
+        "target": "evidence",
+        "victim": null,
+        "narrativeIntent": "observational",
+        "evidenceStrength": 0.94,
+        "contextClassification": "cross_sentence",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        11
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_15_reviewer_methodology | disposition=match | articles=11 | concepts=evidence_strength"
+      },
+      "expectedExplanation": "The reviewer chooses the direct evidence because it is stronger and more credible than the weaker hint.",
+      "expectedConfidenceRange": {
+        "min": 0.78,
+        "max": 1
+      }
+    },
+    {
+      "id": "methodology-bench-402-evidence_quality",
+      "title": "Evidence quality and completeness",
+      "scriptSnippet": "A reviewer prefers the fully contextual clue because it is complete and traceable.",
+      "storyMemory": "The broader story confirms the clue instead of leaving it isolated.",
+      "sceneMemory": "The clue has context, source, and continuity.",
+      "neighboringSentences": [
+        "The next scene reinforces the clue.",
+        "The earlier scene gives the clue a clear source."
+      ],
+      "glossary": {
+        "title": "Methodology Glossary",
+        "entries": [
+          {
+            "term": "evidence_quality",
+            "articleId": 11,
+            "variants": [
+              "evidence quality"
+            ],
+            "definition": "How complete, precise, and traceable the evidence is."
+          }
+        ],
+        "notes": [
+          "quality",
+          "completeness"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          11
+        ],
+        "notes": [
+          "quality",
+          "complete"
+        ]
+      },
+      "expectedConcepts": [
+        "evidence_quality",
+        "evidence_completeness"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "quality",
+        "speaker": "reviewer",
+        "target": "evidence",
+        "victim": null,
+        "narrativeIntent": "observational",
+        "evidenceStrength": 0.9,
+        "contextClassification": "cross_scene",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        11
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_15_reviewer_methodology | disposition=match | articles=11 | concepts=evidence_quality"
+      },
+      "expectedExplanation": "The reviewer prefers the more complete and traceable clue because evidence quality is higher.",
+      "expectedConfidenceRange": {
+        "min": 0.75,
+        "max": 1
+      }
+    },
+    {
+      "id": "methodology-bench-403-contradiction",
+      "title": "Contradicting evidence lowers confidence",
+      "scriptSnippet": "A strong clue appears, then a later sentence contradicts it.",
+      "storyMemory": "The story corrects the first interpretation.",
+      "sceneMemory": "Later context weakens the initial guess.",
+      "neighboringSentences": [
+        "The first clue looks strong.",
+        "The later sentence reverses the reading."
+      ],
+      "glossary": {
+        "title": "Methodology Glossary",
+        "entries": [
+          {
+            "term": "evidence_contradictions",
+            "articleId": 11,
+            "variants": [
+              "evidence contradictions"
+            ],
+            "definition": "Conflicting cues that reduce certainty."
+          }
+        ],
+        "notes": [
+          "contradiction",
+          "confidence"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          11
+        ],
+        "notes": [
+          "contradiction",
+          "confidence"
+        ]
+      },
+      "expectedConcepts": [
+        "evidence_contradictions",
+        "evidence_timeline"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "contradiction",
+        "speaker": "reviewer",
+        "target": "evidence",
+        "victim": null,
+        "narrativeIntent": "tentative",
+        "evidenceStrength": 0.51,
+        "contextClassification": "cross_sentence",
+        "literalVsImpliedMeaning": "mixed",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        11
+      ],
+      "expectedFinding": {
+        "disposition": "review",
+        "summary": "module=v3_15_reviewer_methodology | disposition=review | articles=11 | concepts=evidence_contradictions"
+      },
+      "expectedExplanation": "The reviewer lowers confidence because later evidence contradicts the first clue.",
+      "expectedConfidenceRange": {
+        "min": 0.35,
+        "max": 0.65
+      }
+    },
+    {
+      "id": "methodology-bench-404-weaker_ignored",
+      "title": "Weaker evidence ignored",
+      "scriptSnippet": "A reviewer ignores a weak clue because a stronger alternative exists.",
+      "storyMemory": "The story gives a stronger line later in the scene.",
+      "sceneMemory": "The weak clue is not enough once the stronger cue appears.",
+      "neighboringSentences": [
+        "The weak clue appears first.",
+        "The stronger cue appears later and wins."
+      ],
+      "glossary": {
+        "title": "Methodology Glossary",
+        "entries": [
+          {
+            "term": "evidence_weight",
+            "articleId": 17,
+            "variants": [
+              "evidence weight"
+            ],
+            "definition": "The relative importance assigned after comparison."
+          }
+        ],
+        "notes": [
+          "weight",
+          "credibility"
+        ]
+      },
+      "subjectModule": {
+        "id": "v3_15_reviewer_methodology",
+        "titleAr": "إطار منهجية المراجعة",
+        "scope": "Shared reviewer methodology reasoning",
+        "rules": [],
+        "exclusions": [],
+        "requiredEvidence": [],
+        "decisionTree": [],
+        "examples": [],
+        "nonExamples": [],
+        "articleIds": [
+          17
+        ],
+        "notes": [
+          "weight",
+          "credibility"
+        ]
+      },
+      "expectedConcepts": [
+        "evidence_weight",
+        "evidence_credibility"
+      ],
+      "expectedReviewerAssessment": {
+        "narrativeUnderstanding": "weighting",
+        "speaker": "reviewer",
+        "target": "evidence",
+        "victim": null,
+        "narrativeIntent": "observational",
+        "evidenceStrength": 0.88,
+        "contextClassification": "cross_scene",
+        "literalVsImpliedMeaning": "literal",
+        "exceptionSignals": []
+      },
+      "expectedLegalModule": "v3_15_reviewer_methodology",
+      "expectedArticleMapping": [
+        17
+      ],
+      "expectedFinding": {
+        "disposition": "match",
+        "summary": "module=v3_15_reviewer_methodology | disposition=match | articles=17 | concepts=evidence_weight"
+      },
+      "expectedExplanation": "The reviewer ignores the weaker clue because the stronger alternative is more credible and better supported.",
+      "expectedConfidenceRange": {
+        "min": 0.7,
+        "max": 1
+      }
     }
   ]
 }
