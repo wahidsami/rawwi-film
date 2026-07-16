@@ -5,7 +5,14 @@ import { logger } from "../../logger.js";
 import { ensureReviewerAcademyRegistry } from "./compilerLoader.js";
 import { resolveReviewerCompilerSelection } from "./compilerResolver.js";
 import { createCompiledReviewerContextPromptSection, summarizeCompilerOutput } from "./compilerRenderer.js";
-import type { ReviewerCompiledContext, ReviewerCompilerOutput, ReviewerAcademyManual } from "./compilerTypes.js";
+import type {
+  ReviewerAcademyArticle,
+  ReviewerAcademyAtom,
+  ReviewerAcademyManual,
+  ReviewerCompiledContext,
+  ReviewerCompiledReviewerPackage,
+  ReviewerCompilerOutput,
+} from "./compilerTypes.js";
 
 export type ReviewerCompilerInput = Readonly<{
   promptInput: V3PromptBuilderInput;
@@ -17,9 +24,93 @@ function normalizeFolderName(value: string): string {
   return value.normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase();
 }
 
+function uniqueBy<T>(values: readonly T[], keyOf: (value: T) => string): readonly T[] {
+  const seen = new Set<string>();
+  const result: T[] = [];
+  for (const value of values) {
+    const key = keyOf(value);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(value);
+  }
+  return Object.freeze(result);
+}
+
 function selectManualsByFolder(manualsByFolder: Readonly<Record<string, readonly ReviewerAcademyManual[]>>, folders: readonly string[]): readonly ReviewerAcademyManual[] {
   const selected = folders.flatMap((folder) => manualsByFolder[normalizeFolderName(folder)] ?? []);
   return Object.freeze(selected.slice().sort((left, right) => left.relativePath.localeCompare(right.relativePath)));
+}
+
+function selectArticlesByFolder(articlesByReviewer: Readonly<Record<string, readonly ReviewerAcademyArticle[]>>, folders: readonly string[]): readonly ReviewerAcademyArticle[] {
+  const selected = folders.flatMap((folder) => articlesByReviewer[normalizeFolderName(folder)] ?? []);
+  return Object.freeze(selected.slice().sort((left, right) => left.articleId.localeCompare(right.articleId)));
+}
+
+function selectAtomsByArticles(atomsByArticle: Readonly<Record<string, readonly ReviewerAcademyAtom[]>>, articleIds: readonly string[]): readonly ReviewerAcademyAtom[] {
+  const selected = articleIds.flatMap((articleId) => atomsByArticle[articleId] ?? []);
+  return Object.freeze(uniqueBy(selected, (atom) => atom.atomId).slice().sort((left, right) => left.atomId.localeCompare(right.atomId)));
+}
+
+function estimateArticleFootprint(article: ReviewerAcademyArticle): number {
+  return [
+    article.articleId,
+    article.reviewer,
+    article.title,
+    article.protectedInterest,
+    article.purpose,
+    article.neighboringArticles.join(", "),
+    article.atoms.join(", "),
+    article.inherits.join(", "),
+  ].join(" ").length;
+}
+
+function estimateAtomFootprint(atom: ReviewerAcademyAtom): number {
+  return [
+    atom.atomId,
+    atom.articleId,
+    atom.reviewer,
+    atom.title,
+    atom.protectedInterest,
+    atom.inherits.join(", "),
+  ].join(" ").length;
+}
+
+function resolveReviewerDisplayName(registry: ReturnType<typeof ensureReviewerAcademyRegistry>, folder: string): string {
+  const normalized = normalizeFolderName(folder);
+  const match = Object.keys(registry.relationshipMap.reviewers).find((reviewer) => normalizeFolderName(reviewer) === normalized);
+  return match ?? folder;
+}
+
+function buildReviewerPackages(registry: ReturnType<typeof ensureReviewerAcademyRegistry>, folders: readonly string[]): readonly ReviewerCompiledReviewerPackage[] {
+  const normalizedFolders = uniqueBy(
+    folders.map((folder) => normalizeFolderName(folder)).filter((folder) => folder !== "universal"),
+    (folder) => folder,
+  );
+
+  const packages = normalizedFolders.map((folder) => {
+    const manuals = Object.freeze([...(registry.manualsByFolder[folder] ?? [])].sort((left, right) => left.relativePath.localeCompare(right.relativePath)));
+    const articles = selectArticlesByFolder(registry.articlesByReviewer, [folder]);
+    const atoms = selectAtomsByArticles(registry.atomsByArticle, articles.map((article) => article.articleId));
+    const loadedCharacterCount = manuals.reduce((total, manual) => total + manual.characterCount, 0)
+      + articles.reduce((total, article) => total + estimateArticleFootprint(article), 0)
+      + atoms.reduce((total, atom) => total + estimateAtomFootprint(atom), 0);
+    const estimatedTokenCount = Math.max(1, Math.ceil(loadedCharacterCount / 4));
+
+    return Object.freeze({
+      reviewer: resolveReviewerDisplayName(registry, folder),
+      folder,
+      manuals,
+      articles,
+      atoms,
+      loadedManualCount: manuals.length,
+      loadedCharacterCount,
+      loadedArticleCount: articles.length,
+      loadedAtomCount: atoms.length,
+      estimatedTokenCount,
+    });
+  });
+
+  return Object.freeze(packages.sort((left, right) => left.folder.localeCompare(right.folder)));
 }
 
 function buildCompiledReviewerContext(input: ReviewerCompilerInput, registry: ReturnType<typeof ensureReviewerAcademyRegistry>): ReviewerCompilerOutput {
@@ -29,18 +120,40 @@ function buildCompiledReviewerContext(input: ReviewerCompilerInput, registry: Re
     assessment: input.assessment,
   });
 
+  const selectedFolders = resolution.selectedFolders.filter((folder) => normalizeFolderName(folder) !== "universal");
   const universalManuals = Object.freeze([...(registry.universalManuals ?? [])]);
-  const selectedReviewerManuals = selectManualsByFolder(registry.manualsByFolder, resolution.selectedFolders.filter((folder) => normalizeFolderName(folder) !== "universal"));
+  const selectedReviewerManuals = selectManualsByFolder(registry.manualsByFolder, selectedFolders);
+  const selectedReviewerPackages = buildReviewerPackages(registry, selectedFolders);
+  const selectedArticles = Object.freeze(
+    uniqueBy(
+      selectedReviewerPackages.flatMap((reviewerPackage) => reviewerPackage.articles),
+      (article) => article.articleId,
+    ).slice().sort((left, right) => left.articleId.localeCompare(right.articleId)),
+  );
+  const selectedAtoms = Object.freeze(
+    uniqueBy(
+      selectedReviewerPackages.flatMap((reviewerPackage) => reviewerPackage.atoms),
+      (atom) => atom.atomId,
+    ).slice().sort((left, right) => left.atomId.localeCompare(right.atomId)),
+  );
   const rejectedReviewerManuals = Object.freeze(
     registry.reviewerFolders
-      .filter((folder) => !resolution.selectedFolders.some((selectedFolder) => normalizeFolderName(selectedFolder) === normalizeFolderName(folder)))
+      .filter((folder) => !selectedFolders.some((selectedFolder) => normalizeFolderName(selectedFolder) === normalizeFolderName(folder)))
       .flatMap((folder) => registry.manualsByFolder[folder] ?? []),
   );
+
   const loadedManuals = Object.freeze([...universalManuals, ...selectedReviewerManuals]);
-  const loadedCharacterCount = loadedManuals.reduce((total, manual) => total + manual.characterCount, 0);
-  const estimatedTokenCount = loadedManuals.reduce((total, manual) => total + manual.estimatedTokenCount, 0);
-  const manualPromptCharacterCount = loadedManuals.reduce((total, manual) => total + manual.content.length + manual.title.length, 0);
-  const manualPromptTokenEstimate = Math.max(1, Math.ceil(manualPromptCharacterCount / 4));
+  const loadedReviewerCount = selectedReviewerPackages.length;
+  const loadedArticleCount = selectedArticles.length;
+  const loadedAtomCount = selectedAtoms.length;
+  const loadedCharacterCount = loadedManuals.reduce((total, manual) => total + manual.characterCount, 0)
+    + selectedArticles.reduce((total, article) => total + estimateArticleFootprint(article), 0)
+    + selectedAtoms.reduce((total, atom) => total + estimateAtomFootprint(atom), 0);
+  const estimatedTokenCount = Math.max(1, Math.ceil(loadedCharacterCount / 4));
+  const promptSectionCharacterCount = loadedManuals.reduce((total, manual) => total + manual.content.length + manual.title.length, 0)
+    + selectedArticles.reduce((total, article) => total + estimateArticleFootprint(article), 0)
+    + selectedAtoms.reduce((total, atom) => total + estimateAtomFootprint(atom), 0);
+  const promptSectionTokenEstimate = Math.max(1, Math.ceil(promptSectionCharacterCount / 4));
 
   const selection = Object.freeze({
     selectedReviewerIds: resolution.routing.selectedReviewerIds,
@@ -65,11 +178,17 @@ function buildCompiledReviewerContext(input: ReviewerCompilerInput, registry: Re
     universalManuals,
     selectedReviewerManuals,
     rejectedReviewerManuals,
+    selectedReviewerPackages,
+    selectedArticles,
+    selectedAtoms,
     loadedManualCount: loadedManuals.length,
+    loadedReviewerCount,
+    loadedArticleCount,
+    loadedAtomCount,
     loadedCharacterCount,
     estimatedTokenCount,
-    promptCharacterCount: manualPromptCharacterCount,
-    promptTokenEstimate: manualPromptTokenEstimate,
+    promptCharacterCount: promptSectionCharacterCount,
+    promptTokenEstimate: promptSectionTokenEstimate,
     promptPreview: "",
   } satisfies ReviewerCompiledContext;
 
@@ -104,6 +223,9 @@ export function compileReviewerContext(input: ReviewerCompilerInput): ReviewerCo
     chunkId: input.promptInput.chunkContext.metadata?.chunk_id ?? null,
     loadedDomains: output.routing.selectedAcademyFolders,
     loadedManualCount: output.compiledReviewerContext.loadedManualCount,
+    loadedReviewerCount: output.compiledReviewerContext.loadedReviewerCount,
+    loadedArticleCount: output.compiledReviewerContext.loadedArticleCount,
+    loadedAtomCount: output.compiledReviewerContext.loadedAtomCount,
     compiledCharacterCount: output.compiledReviewerContext.loadedCharacterCount,
     tokenEstimate: output.compiledReviewerContext.promptTokenEstimate,
     promptLengthChars: output.compiledReviewerContext.promptCharacterCount,
