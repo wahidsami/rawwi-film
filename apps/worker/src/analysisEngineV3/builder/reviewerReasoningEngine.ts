@@ -867,7 +867,7 @@ export function buildReviewerReasoningEnginePayload(
           knowledge_confidence: knowledgeRetrieval.knowledgeConfidence,
         knowledge_source: knowledgeRetrieval.knowledgeSource,
         cache_key: knowledgeRetrieval.cacheKey,
-        cache_hit: knowledgeRetrieval.cacheHit,
+        cache_hit: false,
         retrieved_packs: Object.freeze(knowledgeRetrieval.retrievedPacks.map((item) => Object.freeze({
           id: item.id,
           title: item.title,
@@ -900,7 +900,7 @@ export function buildReviewerReasoningEnginePayload(
           memory_confidence: knowledgeRetrieval.decisionMemoryRetrieval.memoryConfidence,
           memory_source: knowledgeRetrieval.decisionMemoryRetrieval.memorySource,
           cache_key: knowledgeRetrieval.decisionMemoryRetrieval.cacheKey,
-          cache_hit: knowledgeRetrieval.decisionMemoryRetrieval.cacheHit,
+          cache_hit: false,
           retrieved_memories: knowledgeRetrieval.decisionMemoryRetrieval.retrievedMemories.map((memory) => Object.freeze({
             id: memory.id,
             source_id: memory.sourceId,

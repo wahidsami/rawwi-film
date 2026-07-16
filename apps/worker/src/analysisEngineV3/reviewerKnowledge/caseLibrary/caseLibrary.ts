@@ -173,11 +173,35 @@ function buildDecisionCase(record: DecisionRecord): CaseLibraryCase {
 
 function buildCaseEntries(gcamRecords: readonly GcamKnowledgeRecord[], decisionRecords: readonly DecisionRecord[]): readonly CaseLibraryEntry[] {
   const articles = gcamRecords.filter((record): record is GcamArticleRecord => record.kind === "article");
+  const gcamByArticleId = new Map<number, GcamKnowledgeRecord[]>();
+  for (const record of gcamRecords) {
+    for (const articleId of record.links.articleIds) {
+      const bucket = gcamByArticleId.get(articleId);
+      if (bucket) {
+        bucket.push(record);
+      } else {
+        gcamByArticleId.set(articleId, [record]);
+      }
+    }
+  }
+
+  const decisionByArticleId = new Map<number, DecisionRecord[]>();
+  for (const record of decisionRecords) {
+    for (const mapping of record.gcamMappings) {
+      const bucket = decisionByArticleId.get(mapping.article_id);
+      if (bucket) {
+        bucket.push(record);
+      } else {
+        decisionByArticleId.set(mapping.article_id, [record]);
+      }
+    }
+  }
+
   const entries: CaseLibraryEntry[] = [];
 
   for (const article of articles) {
-    const relatedGcam = gcamRecords.filter((record) => record.links.articleIds.includes(article.articleId));
-    const relatedDecisionRecords = decisionRecords.filter((record) => record.gcamMappings.some((mapping) => mapping.article_id === article.articleId));
+    const relatedGcam = gcamByArticleId.get(article.articleId) ?? [];
+    const relatedDecisionRecords = decisionByArticleId.get(article.articleId) ?? [];
     const cases = [
       ...relatedGcam.map((record) => buildGcamCase(record)),
       ...relatedDecisionRecords.map((record) => buildDecisionCase(record)),
@@ -295,14 +319,21 @@ function computeValidation(entries: readonly CaseLibraryEntry[]): CaseLibraryVal
   });
 }
 
+let cachedDefaultCaseLibraryRegistry: CaseLibraryRegistry | null = null;
+
 export function createCaseLibraryRegistry(inputs: Partial<{ gcamRecords: readonly GcamKnowledgeRecord[]; decisionRecords: readonly DecisionRecord[] }> = {}): CaseLibraryRegistry {
+  const useDefaultInputs = (inputs.gcamRecords === undefined || inputs.gcamRecords === null) && (inputs.decisionRecords === undefined || inputs.decisionRecords === null);
+  if (useDefaultInputs && cachedDefaultCaseLibraryRegistry) {
+    return cachedDefaultCaseLibraryRegistry;
+  }
+
   const gcamRegistry = createGcamKnowledgeRegistry();
   const gcamRecords = inputs.gcamRecords ?? gcamRegistry.listAll();
   const decisionRecords = inputs.decisionRecords ?? createDecisionRecordRegistry().list();
   const entries = buildCaseEntries(gcamRecords, decisionRecords);
   const validation = computeValidation(entries);
 
-  return Object.freeze({
+  const registry = Object.freeze({
     entries,
     validation,
     hash: hashStableCaseLibraryValue({
@@ -332,6 +363,12 @@ export function createCaseLibraryRegistry(inputs: Partial<{ gcamRecords: readonl
           .sort((left, right) => right.score - left.score || left.entry.articleId - right.entry.articleId),
       ),
   });
+
+  if (useDefaultInputs) {
+    cachedDefaultCaseLibraryRegistry = registry;
+  }
+
+  return registry;
 }
 
 export function createDefaultCaseLibraryRegistry(): CaseLibraryRegistry {

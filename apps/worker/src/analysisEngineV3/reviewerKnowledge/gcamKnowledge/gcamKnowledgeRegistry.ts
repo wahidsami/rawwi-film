@@ -3,6 +3,9 @@ import type { GcamKnowledgeCatalog, GcamKnowledgeKind, GcamKnowledgeRecord, Gcam
 import { createGcamKnowledgeLoader } from "./gcamKnowledgeLoader.js";
 import { validateGcamKnowledgeCatalog } from "./gcamKnowledgeValidator.js";
 
+const DEFAULT_CATALOG_ROOT = null;
+let cachedDefaultGcamKnowledgeRegistry: GcamKnowledgeRegistry | null = null;
+
 function listAllRecords(catalog: GcamKnowledgeCatalog): readonly GcamKnowledgeRecord[] {
   return Object.freeze([
     ...catalog.articles,
@@ -20,6 +23,10 @@ function listAllRecords(catalog: GcamKnowledgeCatalog): readonly GcamKnowledgeRe
 }
 
 export function createGcamKnowledgeRegistry(catalog: GcamKnowledgeCatalog | null = null): GcamKnowledgeRegistry {
+  if (catalog === DEFAULT_CATALOG_ROOT && cachedDefaultGcamKnowledgeRegistry) {
+    return cachedDefaultGcamKnowledgeRegistry;
+  }
+
   const resolvedCatalog = catalog ?? createGcamKnowledgeLoader().load();
   const validation = validateGcamKnowledgeCatalog(resolvedCatalog);
   const hash = hashGcamKnowledgeValue({
@@ -28,7 +35,7 @@ export function createGcamKnowledgeRegistry(catalog: GcamKnowledgeCatalog | null
   });
   const allRecords = listAllRecords(resolvedCatalog);
 
-  return Object.freeze({
+  const registry = Object.freeze({
     catalog: resolvedCatalog,
     validation,
     hash,
@@ -36,5 +43,10 @@ export function createGcamKnowledgeRegistry(catalog: GcamKnowledgeCatalog | null
     listByKind: (kind: GcamKnowledgeKind) => Object.freeze(allRecords.filter((record) => record.kind === kind)),
     get: (id: string) => allRecords.find((record) => normalizeGcamKnowledgeKey(record.id) === normalizeGcamKnowledgeKey(id)) ?? null,
   });
-}
 
+  if (catalog === DEFAULT_CATALOG_ROOT) {
+    cachedDefaultGcamKnowledgeRegistry = registry;
+  }
+
+  return registry;
+}

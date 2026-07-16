@@ -150,12 +150,19 @@ function scoreEntry(entry: DecisionMemoryEntry, query: DecisionMemorySearchQuery
   };
 }
 
+let cachedDefaultDecisionMemoryRegistry: DecisionMemoryRegistry | null = null;
+
 export function createDecisionMemoryRegistry(inputs?: Partial<DecisionMemoryInputs>): DecisionMemoryRegistry {
+  const useDefaultInputs = inputs == null || Object.keys(inputs).length === 0;
+  if (useDefaultInputs && cachedDefaultDecisionMemoryRegistry) {
+    return cachedDefaultDecisionMemoryRegistry;
+  }
+
   const decisionRecords = inputs?.decisionRecords ?? createDecisionRecordRegistry().list();
   const entries = Object.freeze(decisionRecords.map((record) => buildEntry(record)).sort((left, right) => left.id.localeCompare(right.id)));
   const validation = computeValidation(entries);
 
-  return Object.freeze({
+  const registry = Object.freeze({
     entries,
     validation,
     hash: hashDecisionMemoryValue({ entries, validation }),
@@ -176,6 +183,12 @@ export function createDecisionMemoryRegistry(inputs?: Partial<DecisionMemoryInpu
           .sort((left, right) => right.score - left.score || left.entry.id.localeCompare(right.entry.id)),
       ),
   });
+
+  if (useDefaultInputs) {
+    cachedDefaultDecisionMemoryRegistry = registry;
+  }
+
+  return registry;
 }
 
 export function createDefaultDecisionMemoryRegistry(): DecisionMemoryRegistry {

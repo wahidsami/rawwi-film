@@ -9,11 +9,15 @@ import type {
   DecisionRecord,
   DecisionRecordRegistry,
   DecisionRecordRegistryValidation,
+  DecisionRecordSearchQuery,
 } from "./decisionRecordTypes.js";
 
 function hashText(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
 }
+
+const DEFAULT_ROOT_DIR = join(dirname(fileURLToPath(import.meta.url)), "examples");
+let cachedDefaultDecisionRecordRegistry: DecisionRecordRegistry | null = null;
 
 function sortRecords(records: readonly DecisionRecord[]): readonly DecisionRecord[] {
   return Object.freeze(
@@ -33,9 +37,11 @@ function computeRegistryValidation(records: readonly DecisionRecord[], rootDir: 
   });
 }
 
-export function createDecisionRecordRegistry(
-  rootDir = join(dirname(fileURLToPath(import.meta.url)), "examples"),
-): DecisionRecordRegistry {
+export function createDecisionRecordRegistry(rootDir = DEFAULT_ROOT_DIR): DecisionRecordRegistry {
+  if (rootDir === DEFAULT_ROOT_DIR && cachedDefaultDecisionRecordRegistry) {
+    return cachedDefaultDecisionRecordRegistry;
+  }
+
   let records = sortRecords(loadDecisionRecordsFromExamples(rootDir));
   let validation = computeRegistryValidation(records, rootDir);
 
@@ -44,7 +50,7 @@ export function createDecisionRecordRegistry(
     validation = computeRegistryValidation(records, rootDir);
   };
 
-  return Object.freeze({
+  const registry = Object.freeze({
     rootDir,
     get records(): readonly DecisionRecord[] {
       return Object.freeze([...records]);
@@ -65,6 +71,12 @@ export function createDecisionRecordRegistry(
       records = Object.freeze(records.filter((record) => record.id !== id));
       refresh();
     },
-    search: (query) => searchDecisionRecords(records, query),
+    search: (query: DecisionRecordSearchQuery) => searchDecisionRecords(records, query),
   });
+
+  if (rootDir === DEFAULT_ROOT_DIR) {
+    cachedDefaultDecisionRecordRegistry = registry;
+  }
+
+  return registry;
 }
