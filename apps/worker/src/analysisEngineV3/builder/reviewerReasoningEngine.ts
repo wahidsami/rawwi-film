@@ -639,6 +639,21 @@ export function buildReviewerReasoningEnginePayload(
   logger.info("V3 instrumentation ENTER: buildReviewerReasoningEnginePayload", {
     selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
   });
+  let stepStartedAt = startedAt;
+  const logStep = (step: string, details: Record<string, unknown> = {}): void => {
+    const now = Date.now();
+    logger.info("V3 instrumentation STEP: buildReviewerReasoningEnginePayload", {
+      step,
+      elapsedMs: now - stepStartedAt,
+      selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
+      ...details,
+    });
+    stepStartedAt = now;
+  };
+
+  logger.info("V3 instrumentation ENTER: lesson engine search", {
+    selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
+  });
   const lessonEngine = getLessonEngine();
   const queryTerms = knowledgeRetrieval.queryTerms;
   const lessonSearchResults = lessonEngine.search({
@@ -647,6 +662,13 @@ export function buildReviewerReasoningEnginePayload(
     subject: input.subjectModule.scope ?? input.subjectModule.titleAr,
     gcamArticle: input.subjectModule.articleIds?.[0] ?? null,
   }).slice(0, 5);
+  logStep("lesson_engine_search", {
+    lessonCount: lessonSearchResults.length,
+  });
+
+  logger.info("V3 instrumentation ENTER: lesson summaries", {
+    lessonCount: lessonSearchResults.length,
+  });
   const lessonSummaries = lessonSearchResults.map((result) => ({
     id: result.lesson.id,
     title: result.lesson.title,
@@ -678,7 +700,13 @@ export function buildReviewerReasoningEnginePayload(
     score: result.score,
     reasons: [...result.reasons],
   }));
+  logStep("lesson_summaries", {
+    lessonCount: lessonSummaries.length,
+  });
 
+  logger.info("V3 instrumentation ENTER: blueprint scoring", {
+    selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
+  });
   const blueprints = scoreRegistryEntries(knowledgeRegistry.entries, queryTerms, ["blueprint_document", "blueprint_entry"], 6).map((entry) => ({
     id: entry.id,
     title: entry.title,
@@ -691,7 +719,13 @@ export function buildReviewerReasoningEnginePayload(
     reasons: [...entry.reasons],
     related_ids: [...entry.relatedIds],
   }));
+  logStep("blueprint_scoring", {
+    blueprintCount: blueprints.length,
+  });
 
+  logger.info("V3 instrumentation ENTER: pattern scoring", {
+    selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
+  });
   const patterns = scoreRegistryEntries(knowledgeRegistry.entries, queryTerms, ["pattern_document", "pattern_entry"], 6).map((entry) => ({
     id: entry.id,
     title: entry.title,
@@ -704,7 +738,13 @@ export function buildReviewerReasoningEnginePayload(
     reasons: [...entry.reasons],
     related_ids: [...entry.relatedIds],
   }));
+  logStep("pattern_scoring", {
+    patternCount: patterns.length,
+  });
 
+  logger.info("V3 instrumentation ENTER: decision record scoring", {
+    selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
+  });
   const decisionRecords = scoreRegistryEntries(knowledgeRegistry.entries, queryTerms, ["decision_record"], 6).map((entry) => ({
     id: entry.id,
     title: entry.title,
@@ -717,11 +757,45 @@ export function buildReviewerReasoningEnginePayload(
     reasons: [...entry.reasons],
     relatedIds: [...entry.relatedIds],
   }));
+  logStep("decision_record_scoring", {
+    decisionRecordCount: decisionRecords.length,
+  });
 
+  logger.info("V3 instrumentation ENTER: selected pack normalization", {
+    selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
+  });
   const selectedPacks = selectedReviewerKnowledge.map((pack) => normalizePackView(pack));
+  logStep("selected_pack_normalization", {
+    selectedPackCount: selectedPacks.length,
+  });
+
+  logger.info("V3 instrumentation ENTER: relationship summaries", {
+    selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
+  });
   const relationships = buildRelationshipSummaries(selectedReviewerKnowledge, lessonSearchResults.map((result) => result.lesson));
+  logStep("relationship_summaries", {
+    relationshipCount: relationships.length,
+  });
+
+  logger.info("V3 instrumentation ENTER: case selection", {
+    selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
+  });
   const cases = selectCases(queryTerms, input, assessment);
+  logStep("case_selection", {
+    caseCount: cases.length,
+  });
+
+  logger.info("V3 instrumentation ENTER: precedent selection", {
+    selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
+  });
   const precedents = selectPrecedents(queryTerms, input, assessment);
+  logStep("precedent_selection", {
+    precedentCount: precedents.length,
+  });
+
+  logger.info("V3 instrumentation ENTER: reasoning pipeline build", {
+    selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
+  });
   const reasoningPipeline = buildPromptReviewerDecisionPipeline(
     input,
     conceptContext,
@@ -732,6 +806,15 @@ export function buildReviewerReasoningEnginePayload(
     decisionRecords,
     knowledgeRetrieval,
   );
+  logStep("reasoning_pipeline_build", {
+    stageCount: Array.isArray((reasoningPipeline as Record<string, unknown>).stages)
+      ? ((reasoningPipeline as Record<string, readonly unknown[]>).stages ?? []).length
+      : 0,
+  });
+
+  logger.info("V3 instrumentation ENTER: GPT reviewer assistant build", {
+    selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
+  });
   const gptReviewerAssistant = buildGptReviewerAssistant(
     input,
     conceptContext,
@@ -742,7 +825,13 @@ export function buildReviewerReasoningEnginePayload(
     decisionRecords,
     reasoningPipeline,
   );
+  logStep("gpt_reviewer_assistant_build", {
+    reviewerCount: gptReviewerAssistant.reviewerCount ?? null,
+  });
 
+  logger.info("V3 instrumentation ENTER: payload construction", {
+    selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,
+  });
   const payload = Object.freeze({
     semantic: Object.freeze({
       concept_ids: [...conceptContext.conceptIds],
@@ -879,6 +968,12 @@ export function buildReviewerReasoningEnginePayload(
       confidence: "Provide a calibrated confidence value between 0 and 1.",
       recommendation: "State the reviewer recommendation only as reasoning support for the legal engine.",
     }),
+  });
+  logStep("payload_construction", {
+    selectedPackCount: selectedPacks.length,
+    blueprintCount: blueprints.length,
+    patternCount: patterns.length,
+    decisionRecordCount: decisionRecords.length,
   });
   logger.info("V3 instrumentation EXIT: buildReviewerReasoningEnginePayload", {
     selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,

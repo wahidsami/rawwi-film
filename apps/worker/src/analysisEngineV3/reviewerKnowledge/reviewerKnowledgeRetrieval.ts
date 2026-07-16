@@ -276,17 +276,59 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
     subjectModuleId: input.subjectModule?.id ?? null,
     topK: input.topK ?? DEFAULT_TOP_K,
   });
+  let stepStartedAt = startedAt;
+  const logStep = (step: string, details: Record<string, unknown> = {}): void => {
+    const now = Date.now();
+    logger.info("V3 instrumentation STEP: createReviewerKnowledgeRetrievalReport", {
+      step,
+      elapsedMs: now - stepStartedAt,
+      subjectModuleId: input.subjectModule?.id ?? null,
+      ...details,
+    });
+    stepStartedAt = now;
+  };
+
+  logger.info("V3 instrumentation ENTER: registry resolution", {
+    subjectModuleId: input.subjectModule?.id ?? null,
+  });
   const registry = input.registry ?? createDefaultReviewerKnowledgeRegistry();
+  logStep("registry_resolution", {
+    selectedRegistrySize: registry.list().length,
+    registrySource: input.registry ? "provided" : "default",
+  });
+
+  logger.info("V3 instrumentation ENTER: query term build", {
+    subjectModuleId: input.subjectModule?.id ?? null,
+  });
   const topK = Math.max(1, input.topK ?? DEFAULT_TOP_K);
   const queryTerms = buildQueryTerms(input);
   const subjectTerms = collectSubjectTerms(input.subjectModule);
   const conceptTerms = collectConceptTerms(input.conceptContext);
   const subjectArticleIds = buildSubjectArticleIds(input.subjectModule);
+  logStep("query_term_build", {
+    queryTermCount: queryTerms.length,
+    subjectTermCount: subjectTerms.length,
+    conceptTermCount: conceptTerms.length,
+    subjectArticleCount: subjectArticleIds.length,
+  });
+
+  logger.info("V3 instrumentation ENTER: decision memory retrieval", {
+    subjectModuleId: input.subjectModule?.id ?? null,
+    topK,
+  });
   const decisionMemoryRetrieval = createDecisionMemoryRetrievalReport({
     assessment: input.assessment,
     conceptContext: input.conceptContext,
     subjectModule: input.subjectModule ?? null,
     topK,
+  });
+  logStep("decision_memory_retrieval", {
+    retrievedMemoryCount: decisionMemoryRetrieval.retrievedMemories.length,
+    rejectedMemoryCount: decisionMemoryRetrieval.rejectedMemories.length,
+  });
+
+  logger.info("V3 instrumentation ENTER: cache lookup", {
+    subjectModuleId: input.subjectModule?.id ?? null,
   });
   const cacheKey = hashCacheKey(input, registry, queryTerms, decisionMemoryRetrieval.cacheKey);
   const cached = retrievalCache.get(cacheKey);
@@ -294,6 +336,10 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
     const cachedReport = Object.freeze({
       ...cached,
       cacheHit: true,
+    });
+    logStep("cache_lookup_hit", {
+      cacheKey,
+      selectedPackCount: cachedReport.selectedPacks.length,
     });
     logger.info("V3 instrumentation EXIT: createReviewerKnowledgeRetrievalReport", {
       subjectModuleId: input.subjectModule?.id ?? null,
@@ -303,13 +349,26 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
     });
     return cachedReport;
   }
+  logStep("cache_lookup_miss", { cacheKey });
 
+  logger.info("V3 instrumentation ENTER: registry scoring", {
+    subjectModuleId: input.subjectModule?.id ?? null,
+    registrySize: registry.list().length,
+  });
   const universalPack = registry.load("v3_00_universal");
   const scored = registry.list()
     .filter((pack) => normalizeText(pack.id) !== "v3_00_universal")
     .map((pack) => scorePack(pack, queryTerms, conceptTerms, subjectTerms, subjectArticleIds))
     .sort((left, right) => right.score - left.score || left.id.localeCompare(right.id));
+  logStep("registry_scoring", {
+    universalPackLoaded: universalPack !== null,
+    scoredPackCount: scored.length,
+  });
 
+  logger.info("V3 instrumentation ENTER: pack selection", {
+    subjectModuleId: input.subjectModule?.id ?? null,
+    topK,
+  });
   const selected = new Map<string, ReviewerKnowledgeRetrievalItem>();
   if (universalPack) {
     selected.set(universalPack.id, Object.freeze({
@@ -330,7 +389,14 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
     if (selected.size >= topK) break;
     selected.set(item.id, Object.freeze({ ...item, selected: true }));
   }
+  logStep("pack_selection", {
+    selectedCount: selected.size,
+    topK,
+  });
 
+  logger.info("V3 instrumentation ENTER: pack materialization", {
+    subjectModuleId: input.subjectModule?.id ?? null,
+  });
   const selectedIds = new Set([...selected.keys()]);
   const retrievedPacks = Object.freeze([
     ...(universalPack ? [selected.get(universalPack.id)!] : []),
@@ -346,12 +412,27 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
     const rightScore = rightSelected?.score ?? 0;
     return rightScore - leftScore || left.id.localeCompare(right.id);
   }));
+  logStep("pack_materialization", {
+    selectedPackCount: selectedPacks.length,
+    retrievedPackCount: retrievedPacks.length,
+    rejectedPackCount: rejectedPacks.length,
+  });
 
+  logger.info("V3 instrumentation ENTER: knowledge scoring", {
+    subjectModuleId: input.subjectModule?.id ?? null,
+  });
   const knowledgeConfidence = computeKnowledgeConfidence([...selected.values()].filter((item) => normalizeText(item.id) !== "v3_00_universal"));
   const knowledgeScore = selected.size > 0
     ? clampScore([...selected.values()].reduce((max, item) => Math.max(max, item.score), 0))
     : 0;
+  logStep("knowledge_scoring", {
+    knowledgeConfidence,
+    knowledgeScore,
+  });
 
+  logger.info("V3 instrumentation ENTER: report construction", {
+    subjectModuleId: input.subjectModule?.id ?? null,
+  });
   const report = Object.freeze({
     queryTerms,
     selectedPacks,
@@ -367,6 +448,11 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
     decisionMemoryRetrieval,
   });
   retrievalCache.set(cacheKey, report);
+  logStep("report_construction", {
+    selectedPackCount: report.selectedPacks.length,
+    knowledgeConfidence: report.knowledgeConfidence,
+    knowledgeScore: report.knowledgeScore,
+  });
   logger.info("V3 instrumentation EXIT: createReviewerKnowledgeRetrievalReport", {
     subjectModuleId: input.subjectModule?.id ?? null,
     selectedPackCount: report.selectedPacks.length,
