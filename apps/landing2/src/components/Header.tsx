@@ -9,6 +9,11 @@ export default function Header() {
   const { t, language, setLanguage } = useLanguage();
   const location = useLocation();
   const isHomePage = location.pathname === '/';
+  const appPublicUrl = import.meta.env.VITE_APP_PUBLIC_URL?.trim().replace(/\/$/, '');
+  const beneficiaryLoginUrl = import.meta.env.VITE_BENEFICIARY_LOGIN_URL?.trim()
+    || (appPublicUrl ? `${appPublicUrl}/client/login` : '/client/login');
+  const logoUrl = `${import.meta.env.BASE_URL}colorlogo.png`;
+  const logoWhiteUrl = `${import.meta.env.BASE_URL}whitelogo.png`;
 
   const toggleLanguage = () => {
     setLanguage(language === 'ar' ? 'en' : 'ar');
@@ -35,7 +40,7 @@ export default function Header() {
           
             <Link to="/" className="flex-shrink-0 flex items-center gap-2">
               <img 
-                src={isHeaderSolid ? "/colorlogo.png" : "/whitelogo.png"} 
+                src={isHeaderSolid ? logoUrl : logoWhiteUrl} 
                 alt="Saudi Film Commission Logo" 
                 className="h-10 md:h-12 w-auto transition-opacity" 
               />
@@ -59,14 +64,14 @@ export default function Header() {
               <Globe className="w-4 h-4" />
               <span>{language === 'ar' ? 'EN' : 'AR'}</span>
             </button>
-            <button className={`flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-md transition-colors ${
+            <a href={beneficiaryLoginUrl} className={`flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-md transition-colors ${
               isHeaderSolid 
                 ? 'bg-sfc-navy text-white hover:bg-sfc-navy/90' 
                 : 'bg-white text-sfc-navy hover:bg-white/90'
             }`}>
               <User className="w-4 h-4" />
               <span>{t('login')}</span>
-            </button>
+            </a>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -93,10 +98,10 @@ export default function Header() {
               <Globe className="w-4 h-4" />
               <span>{language === 'ar' ? 'English (EN)' : 'العربية (AR)'}</span>
             </button>
-            <button className="flex items-center gap-2 text-sm font-medium px-4 py-2 bg-sfc-navy text-white rounded-md w-full justify-center">
+            <a href={beneficiaryLoginUrl} className="flex items-center gap-2 text-sm font-medium px-4 py-2 bg-sfc-navy text-white rounded-md w-full justify-center">
               <User className="w-4 h-4" />
               <span>{t('login')}</span>
-            </button>
+            </a>
           </div>
         </div>
       )}

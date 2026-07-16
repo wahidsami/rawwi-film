@@ -2,6 +2,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Footer() {
   const { t } = useLanguage();
+  const logoUrl = `${import.meta.env.BASE_URL}whitelogo.png`;
 
   return (
     <footer className="bg-sfc-navy pt-20 pb-8 text-white/80 border-t-4 border-sfc-green">
@@ -13,7 +14,7 @@ export default function Footer() {
           {/* Col 1: Brand */}
           <div className="flex flex-col">
             <div className="mb-8">
-              <img src="/whitelogo.png" alt="Saudi Film Commission Logo" className="h-12 md:h-16 w-auto opacity-90" />
+              <img src={logoUrl} alt="Saudi Film Commission Logo" className="h-12 md:h-16 w-auto opacity-90" />
             </div>
             <p className="text-sm leading-relaxed mb-6 font-light">
               {t('footerDesc')}

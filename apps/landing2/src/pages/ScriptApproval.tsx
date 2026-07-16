@@ -5,6 +5,9 @@ import scriptImg from '../assets/images/about_img_1784138196047.jpg';
 
 export default function ScriptApproval() {
   const { t } = useLanguage();
+  const appPublicUrl = import.meta.env.VITE_APP_PUBLIC_URL?.trim().replace(/\/$/, '');
+  const beneficiaryLoginUrl = import.meta.env.VITE_BENEFICIARY_LOGIN_URL?.trim()
+    || (appPublicUrl ? `${appPublicUrl}/client/login` : '/client/login');
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -227,10 +230,10 @@ export default function ScriptApproval() {
               
               {/* Action Card */}
               <div className="bg-white p-6 rounded-xl shadow-subtle border border-gray-100">
-                <button className="w-full flex items-center justify-center gap-2 bg-sfc-green text-white font-bold py-4 px-6 rounded-lg hover:bg-sfc-green/90 transition-colors focus:ring-4 focus:ring-sfc-green/20 outline-none mb-6 text-lg">
+                <a href={beneficiaryLoginUrl} className="w-full flex items-center justify-center gap-2 bg-sfc-green text-white font-bold py-4 px-6 rounded-lg hover:bg-sfc-green/90 transition-colors focus:ring-4 focus:ring-sfc-green/20 outline-none mb-6 text-lg">
                   <span>{t('startService')}</span>
                   <ArrowRight className="w-5 h-5 rtl:rotate-180" />
-                </button>
+                </a>
                 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between pb-4 border-b border-gray-100">

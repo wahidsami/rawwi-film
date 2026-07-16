@@ -14,6 +14,8 @@ export function ClientLogin() {
   const { login } = useAuthStore();
   const { t, lang, toggleLang } = useLangStore();
   const navigate = useNavigate();
+  const appPublicUrl = import.meta.env.VITE_APP_PUBLIC_URL?.trim().replace(/\/$/, '');
+  const landingUrl = appPublicUrl || '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,9 +71,9 @@ export function ClientLogin() {
                 <Button type="submit" className="w-full" isLoading={isLoading}>{t('login')}</Button>
 
                 <div className="text-center pt-1">
-                  <Link to="/" className="text-sm text-text-muted hover:text-text-main">
+                  <a href={landingUrl} className="text-sm text-text-muted hover:text-text-main">
                     {lang === 'ar' ? 'العودة للرئيسية' : 'Back to main'}
-                  </Link>
+                  </a>
                 </div>
               </form>
             </div>
