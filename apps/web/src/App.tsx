@@ -40,6 +40,7 @@ import { CertificateVerify } from '@/pages/CertificateVerify';
 import { ContactUs } from '@/pages/ContactUs';
 import { ENABLE_QUICK_ANALYSIS } from '@/lib/env';
 import { Landing } from '@/pages/Landing';
+import { ScriptApproval } from '@/pages/ScriptApproval';
 
 const LANG_INIT_KEY = 'raawi-lang-initialized';
 
@@ -64,6 +65,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/services/script-approval" element={<ScriptApproval />} />
         <Route path="/contact-us" element={<ContactUs />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

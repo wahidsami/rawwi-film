@@ -24,26 +24,26 @@ import { useAuthStore } from '@/store/authStore';
 const heroSlides = [
   {
     id: 1,
-    titleAr: 'انضم إلى منصة راوي الآن',
-    titleEn: 'Join Raawi film platform now',
-    subtitleAr: 'راوي يساعدك في إيصال نصوصك السينمائية بسرعة أكبر إلى هيئة الأفلام.',
-    subtitleEn: 'Raawi helps you to get your film scripts faster to the film commission',
+    titleAr: 'انضم إلى منصة هيئة الأفلام الآن',
+    titleEn: 'Join the Film Commission platform now',
+    subtitleAr: 'هيئة الأفلام تساعدك في إيصال نصوصك السينمائية بسرعة أكبر للمراجعة والاعتماد.',
+    subtitleEn: 'The Film Commission helps you get your film scripts reviewed and approved faster.',
     image: '/slide01.jpg',
   },
   {
     id: 2,
-    titleAr: 'راوي سيساعدك!',
-    titleEn: 'Raawi will help!',
-    subtitleAr: 'راوي ينظم ملفات نصوص الأفلام والمسلسلات، ويعرض الملاحظات، ويساعدك للوصول إلى أفضل نسخة.',
-    subtitleEn: 'Raawi organizes your film and series scripts files, show you issues and help you to achieve perfection',
+    titleAr: 'هيئة الأفلام ستساعدك!',
+    titleEn: 'The Film Commission will help!',
+    subtitleAr: 'هيئة الأفلام تنظم ملفات نصوص الأفلام والمسلسلات، وتعرض الملاحظات، وتساعدك للوصول إلى أفضل نسخة.',
+    subtitleEn: 'The Film Commission organizes your film and series scripts, shows issues, and helps you reach the best version.',
     image: '/slide02.jpg',
   },
   {
     id: 3,
     titleAr: 'شهادة النص... بسرعة',
-    titleEn: 'Script certificate...so fast',
-    subtitleAr: 'راوي يصدر شهادة اعتماد النص الخاصة بك بسرعة غير مسبوقة.',
-    subtitleEn: 'Raawi issues your script approval certificate faster than ever',
+    titleEn: 'Script certificate... so fast',
+    subtitleAr: 'هيئة الأفلام تصدر شهادة اعتماد النص الخاصة بك بسرعة غير مسبوقة.',
+    subtitleEn: 'The Film Commission issues your script approval certificate faster than ever.',
     image: '/slide03.jpg',
   },
 ];
@@ -68,8 +68,8 @@ const aboutCards = [
   {
     titleAr: 'إصدار الشهادات بسرعة',
     titleEn: 'Fast Certificate issuing',
-    bodyAr: 'راوي يساعدك في إصدار شهادة اعتماد النص تلقائيًا بمجرد الموافقة عليه.',
-    bodyEn: 'Raawi helps you to get your script approval certificate automatically once it was approved',
+    bodyAr: 'هيئة الأفلام تساعدك في إصدار شهادة اعتماد النص تلقائيًا بمجرد الموافقة عليه.',
+    bodyEn: 'The Film Commission helps you get your script approval certificate automatically once it is approved.',
     image:
       'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
   },
@@ -236,7 +236,7 @@ export function Landing() {
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#141414]/95 backdrop-blur-sm">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 lg:px-10">
           <div className="flex items-center gap-3">
-            <img src="/raawilogonew.png" alt="Raawi" className="h-14 w-auto object-contain" />
+            <img src="/colorlogo.png" alt="Film Commission" className="h-14 w-auto object-contain" />
           </div>
 
           <nav className="hidden items-center gap-10 xl:flex">
@@ -250,7 +250,7 @@ export function Landing() {
               onMouseLeave={() => setShowIncentiveDropdown(false)}
             >
               <a href="#about" className="group relative flex items-center gap-1 text-white transition hover:text-white/90">
-                <span>{isArabic ? 'مميزات راوي' : 'Raawi features'}</span>
+                <span>{isArabic ? 'مميزات هيئة الأفلام' : 'Film Commission features'}</span>
                 <ChevronDown className={`h-4 w-4 transition ${showIncentiveDropdown ? 'rotate-180' : ''}`} />
                 <span className="absolute inset-x-0 -bottom-2 h-px w-0 bg-red-600 transition-all duration-300 group-hover:w-full" />
               </a>
@@ -260,7 +260,7 @@ export function Landing() {
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600/20 text-red-300">
                       <DollarSign className="h-4 w-4" />
                     </div>
-                    <span>{isArabic ? 'عن راوي' : 'About Raawi'}</span>
+                    <span>{isArabic ? 'عن هيئة الأفلام' : 'About the Film Commission'}</span>
                   </a>
                   <a href="#contact" className="flex items-center gap-3 px-4 py-3 text-sm text-white transition hover:bg-red-950/30">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600/20 text-red-300">
@@ -298,11 +298,12 @@ export function Landing() {
               <>
                 <Link
                   to="/client/login"
-                  className="hidden text-sky-300 transition hover:text-sky-200 md:inline-flex"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20"
                   aria-label={isArabic ? 'تسجيل دخول المستفيدين' : 'Beneficiary login'}
                   title={isArabic ? 'تسجيل دخول المستفيدين' : 'Beneficiary login'}
                 >
-                  <UserRound className="h-5 w-5" />
+                  <UserRound className="h-4 w-4" />
+                  <span>{isArabic ? 'دخول المستفيدين' : 'Beneficiary Login'}</span>
                 </Link>
               </>
             )}
@@ -349,9 +350,9 @@ export function Landing() {
                     <ChevronLeft className={`h-5 w-5 ${isArabic ? 'rotate-180' : ''}`} />
                   </Button>
                 ) : (
-                  <Link to="/portal/register">
+                  <Link to="/services/script-approval">
                     <Button size="lg" className="gap-3 bg-[#76B6B7] text-black hover:bg-[#5a9fa0]">
-                      <span>{isArabic ? 'اكتشف المزيد' : 'Discover more'}</span>
+                      <span>{isArabic ? 'اعتماد النص' : 'Script Approval'}</span>
                       <ChevronLeft className={`h-5 w-5 ${isArabic ? 'rotate-180' : ''}`} />
                     </Button>
                   </Link>
@@ -398,11 +399,11 @@ export function Landing() {
                 <Clapperboard className="h-5 w-5 text-red-400" />
                 <span className="text-lg text-red-300">{isArabic ? 'نبذة عنا' : 'About us'}</span>
               </div>
-              <h2 className="mb-6 text-5xl text-white md:text-6xl">{isArabic ? 'منصة راوي' : 'Raawi Platform'}</h2>
+              <h2 className="mb-6 text-5xl text-white md:text-6xl">{isArabic ? 'منصة هيئة الأفلام' : 'Film Commission Platform'}</h2>
               <p className="mx-auto max-w-4xl text-2xl text-gray-300">
                 {isArabic
                   ? 'منصة تتبع هيئة الأفلام لتسهيل مراجعة النصوص السينمائية ومساعدة الشركات على فهم الملاحظات مبكرًا.'
-                  : 'A Film Commission-aligned platform that helps production companies review scripts and understand issues earlier.'}
+                  : 'A Film Commission platform that helps production companies review scripts and understand issues earlier.'}
               </p>
             </div>
 
@@ -611,7 +612,7 @@ export function Landing() {
             <div className="mb-16 text-center">
               <h2 className="mb-4 text-5xl text-white md:text-6xl">{isArabic ? 'آخر الأخبار' : 'Latest news'}</h2>
               <p className="mx-auto max-w-3xl text-xl text-gray-400">
-                {isArabic ? 'تابع آخر التطورات في منصة راوي وتجربة العمل السينمائي.' : 'Follow the latest updates around Raawi and script workflows.'}
+                {isArabic ? 'تابع آخر التطورات في منصة هيئة الأفلام وتجربة العمل السينمائي.' : 'Follow the latest updates around the Film Commission and script workflows.'}
               </p>
             </div>
 
@@ -683,14 +684,14 @@ export function Landing() {
               <h2 className="mb-4 text-5xl text-white md:text-6xl">{isArabic ? 'ابدأ الآن' : 'Get started now'}</h2>
               <p className="max-w-2xl text-xl leading-8 text-gray-300">
                 {isArabic
-                  ? 'راوي هي أداتك المثالية لتنظيم نصوصك وتحريرها والحصول على الموافقات.'
-                  : 'Raawi is your ultimate tool to organize, edit and get approovals for your scripts'}
+                  ? 'هيئة الأفلام هي أداتك المثالية لتنظيم نصوصك وتحريرها والحصول على الموافقات.'
+                  : 'The Film Commission is your ultimate tool to organize, edit, and get approvals for your scripts'}
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link to="/portal/register">
+                <Link to="/client/login">
                   <Button size="lg" className="gap-2 bg-[#76B6B7] text-black hover:bg-[#5a9fa0]">
                     <UserPlus className="h-5 w-5" />
-                      {isArabic ? 'سجّل الآن' : 'Register now'}
+                      {isArabic ? 'دخول المستفيدين' : 'Beneficiary login'}
                   </Button>
                 </Link>
                   <Link to="/client/login">
@@ -703,7 +704,7 @@ export function Landing() {
               </div>
 
               <div className="rounded-[32px] border border-white/10 bg-black/35 p-6 shadow-[0_30px_100px_rgba(0,0,0,0.35)] backdrop-blur">
-                <h3 className="mb-4 text-2xl text-white">{isArabic ? 'مزايا راوي للمستفيدين' : 'Raawi features for beneficiaries'}</h3>
+                <h3 className="mb-4 text-2xl text-white">{isArabic ? 'مزايا هيئة الأفلام للمستفيدين' : 'Film Commission features for beneficiaries'}</h3>
                 <ul className="space-y-3 text-white/80">
                   <li>{isArabic ? 'تسجيل مجاني وسريع للشركات.' : 'Fast and free company registration.'}</li>
                   <li>{isArabic ? 'رفع النصوص ومتابعة حالتها خطوة بخطوة.' : 'Submit scripts and track status step by step.'}</li>
@@ -721,17 +722,17 @@ export function Landing() {
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
           <div className="grid gap-12 py-16 md:grid-cols-2 lg:grid-cols-4">
             <div className="text-right">
-              <img src="/raawilogonew.png" alt="Raawi Logo" className="mb-4 h-14 w-auto object-contain" />
-              <h3 className="mb-2 text-xl text-white">{isArabic ? 'عن منصة راوي' : 'About Raawi'}</h3>
+              <img src="/whitelogo.png" alt="Film Commission Logo" className="mb-4 h-14 w-auto object-contain" />
+              <h3 className="mb-2 text-xl text-white">{isArabic ? 'عن منصة هيئة الأفلام' : 'About the Film Commission'}</h3>
               <p className="leading-relaxed text-gray-400">
-                {isArabic ? 'منصة راوي تضع بين يديك أداة قوية لتحليل النصوص ومتابعتها داخل المملكة العربية السعودية.' : 'Raawi provides a focused environment for script analysis and review.'}
+                {isArabic ? 'منصة هيئة الأفلام تضع بين يديك أداة قوية لتحليل النصوص ومتابعتها داخل المملكة العربية السعودية.' : 'The Film Commission provides a focused environment for script analysis and review.'}
               </p>
             </div>
             <div className="text-right">
               <h3 className="mb-2 text-xl text-white">{isArabic ? 'روابط سريعة' : 'Quick links'}</h3>
               <ul className="space-y-2 text-gray-400">
                 <li><a href="#hero" className="transition hover:text-red-400">{isArabic ? 'الرئيسية' : 'Home'}</a></li>
-                <li><a href="#about" className="transition hover:text-red-400">{isArabic ? 'عن راوي' : 'About'}</a></li>
+                <li><a href="#about" className="transition hover:text-red-400">{isArabic ? 'عن هيئة الأفلام' : 'About'}</a></li>
                 <li><a href="#locations" className="transition hover:text-red-400">{isArabic ? 'مواقع التصوير' : 'Locations'}</a></li>
                 <li><a href="#films" className="transition hover:text-red-400">{isArabic ? 'الأفلام' : 'Films'}</a></li>
               </ul>
@@ -740,7 +741,7 @@ export function Landing() {
               <h3 className="mb-2 text-xl text-white">{isArabic ? 'الوصول السريع' : 'Quick access'}</h3>
               <ul className="space-y-2 text-gray-400">
                 <li><Link to="/client/login" className="transition hover:text-red-400">{isArabic ? 'دخول المستفيدين' : 'Beneficiary login'}</Link></li>
-                <li><Link to="/portal/register" className="transition hover:text-red-400">{isArabic ? 'تسجيل شركة جديدة' : 'Register company'}</Link></li>
+                <li><Link to="/client/login" className="transition hover:text-red-400">{isArabic ? 'دخول المستفيدين' : 'Beneficiary login'}</Link></li>
                 <li><a href="#contact" className="transition hover:text-red-400">{isArabic ? 'ابدأ الآن' : 'Get started'}</a></li>
               </ul>
             </div>
@@ -758,7 +759,7 @@ export function Landing() {
 
           <div className="border-t border-red-900/20 py-8">
             <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-              <p className="text-center text-sm text-gray-500">{isArabic ? '© 2026 راوي — جميع الحقوق محفوظة' : '© 2026 Raawi — All rights reserved'}</p>
+              <p className="text-center text-sm text-gray-500">{isArabic ? '© 2026 هيئة الأفلام — جميع الحقوق محفوظة' : '© 2026 Film Commission — All rights reserved'}</p>
               <a href="#hero" className="inline-flex items-center gap-2 text-sm text-white/70 transition hover:text-white">
                 <span>{isArabic ? 'العودة للأعلى' : 'Back to top'}</span>
                 <ArrowLeft className={`h-4 w-4 ${isArabic ? 'rotate-90' : '-rotate-90'}`} />
@@ -770,3 +771,5 @@ export function Landing() {
     </div>
   );
 }
+
+
