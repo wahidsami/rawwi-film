@@ -30,10 +30,6 @@ function buildCombinedText(input: ReviewerDecisionModuleInput): string {
     input.intelligence.context.chunkContext,
     input.intelligence.context.neighboringSentences.join(" "),
     input.intelligence.evidence.candidates.map((candidate) => candidate.text).join(" "),
-    input.intelligence.storyMemory ?? "",
-    input.intelligence.glossary.title,
-    ...input.intelligence.glossary.entries.map((entry) => entry.term),
-    ...input.intelligence.glossary.entries.map((entry) => entry.definition ?? ""),
   ].join(" ");
 }
 
@@ -118,7 +114,7 @@ function inferArticleIds(input: ReviewerDecisionModuleInput, combinedText: strin
   if (containsAny(combinedText, RELIGION_RULES.prophetAnchors) || containsAny(combinedText, RELIGION_RULES.companionAnchors) || containsAny(combinedText, RELIGION_RULES.scholarAnchors)) {
     ids.add(2);
   }
-  if (hasReligionConcept(input) || containsAny(combinedText, RELIGION_RULES.religionAnchors) || containsAny(combinedText, RELIGION_RULES.unityAnchors) || containsAny(combinedText, RELIGION_RULES.sectarianAnchors) || containsAny(combinedText, RELIGION_RULES.hateSpeechAnchors) || isLiteralReligionAttack(combinedText)) {
+  if (containsAny(combinedText, RELIGION_RULES.religionAnchors) || containsAny(combinedText, RELIGION_RULES.unityAnchors) || containsAny(combinedText, RELIGION_RULES.sectarianAnchors) || containsAny(combinedText, RELIGION_RULES.hateSpeechAnchors) || isLiteralReligionAttack(combinedText)) {
     ids.add(3);
   }
 
@@ -169,7 +165,7 @@ export class ReligionReviewerDecisionModule extends ReviewerDecisionModuleBase {
     if (!input.intelligence.evidence.admissible) return false;
 
     const combinedText = buildCombinedText(input);
-    return hasReligionConcept(input) || isReligionAnchor(combinedText) || isLiteralReligionAttack(primary.text);
+    return isReligionAnchor(combinedText) || isLiteralReligionAttack(primary.text);
   }
 
   evaluate(input: ReviewerDecisionModuleInput): LegalDecision {
@@ -183,7 +179,7 @@ export class ReligionReviewerDecisionModule extends ReviewerDecisionModuleBase {
     const court = isCourtContext(combinedText);
     const condemnation = isCondemnationContext(input, combinedText);
     const review = isReviewContext(input, combinedText);
-    const anchor = hasReligionConcept(input) || isReligionAnchor(combinedText) || isLiteralReligionAttack(combinedText);
+    const anchor = isReligionAnchor(combinedText) || isLiteralReligionAttack(combinedText);
     const literal = primary ? isLiteralReligionAttack(primary.text) : false;
     const applies = Boolean(primary && input.intelligence.evidence.admissible && anchor);
 
@@ -239,7 +235,7 @@ export class ReligionReviewerDecisionModule extends ReviewerDecisionModuleBase {
     if (!primary || !input.intelligence.evidence.admissible) return [];
 
     const combinedText = buildCombinedText(input);
-    const anchor = hasReligionConcept(input) || isReligionAnchor(combinedText) || isLiteralReligionAttack(primary.text);
+    const anchor = isReligionAnchor(combinedText) || isLiteralReligionAttack(primary.text);
     if (!anchor) return [];
 
     const quote = isQuoteContext(input, combinedText);
@@ -372,7 +368,7 @@ export class ReligionReviewerDecisionModule extends ReviewerDecisionModuleBase {
     if (!primary) return null;
     if (!input.intelligence.evidence.admissible) return null;
     const combinedText = buildCombinedText(input);
-    const anchor = hasReligionConcept(input) || isReligionAnchor(combinedText) || isLiteralReligionAttack(primary.text);
+    const anchor = isReligionAnchor(combinedText) || isLiteralReligionAttack(primary.text);
     if (!anchor) return null;
     if (exceptions.some((exception) => exception.applies && exception.disposition === "block")) return null;
 

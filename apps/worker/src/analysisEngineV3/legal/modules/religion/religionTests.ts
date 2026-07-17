@@ -328,6 +328,26 @@ function testNoReligion(): void {
   console.log("✓ no religion signal");
 }
 
+function testViolenceDoesNotBecomeReligionFromMemory(): void {
+  const decision = evaluate(
+    makeInput("حاضر. فهد يتمتم بشتائم: يا… موتو و خلصوني منكم", {
+      storyMemory: "Earlier scene discussed religion and sacred symbols.",
+      context: createLegalContextResult({
+        storyMemory: "Earlier scene discussed religion and sacred symbols.",
+        sceneMemory: "Domestic argument.",
+        localContext: "حاضر. فهد يتمتم بشتائم: يا… موتو و خلصوني منكم",
+        chunkContext: "Chunk 4",
+        neighboringSentences: ["الجارة تحذر من العنف الأسري.", "المشهد يتصاعد نحو تهديد."],
+        narrativeContext: "Domestic violence context.",
+        confidence: 0.92,
+      }),
+    }),
+  );
+  assert.equal(decision.status, "reject");
+  assert.equal(decision.finding, null);
+  console.log("✓ violence does not become religion from memory");
+}
+
 function testDeterministicOutput(): void {
   const first = evaluate(makeInput("هذا الدين باطل"));
   const second = evaluate(makeInput("هذا الدين باطل"));
@@ -344,6 +364,7 @@ async function main(): Promise<void> {
   testCondemnationOfReligionHarm();
   testFictionalMockeryNeedsReview();
   testNoReligion();
+  testViolenceDoesNotBecomeReligionFromMemory();
   testDeterministicOutput();
   console.log("\nAll religion module tests passed.");
 }
