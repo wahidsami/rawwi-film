@@ -135,8 +135,10 @@ function makeBaseInput(): V3PromptBuilderInput {
     outputSchema: {
       title: "Output Contract",
       fields: [
-        { name: "findings", description: "Structured findings." },
-        { name: "reasoning_trace", description: "Trace of reasoning stages." },
+        { name: "narrative", description: "Narrative interpretation." },
+        { name: "evidence", description: "Quoted evidence." },
+        { name: "semantic", description: "Semantic interpretation." },
+        { name: "context", description: "Scene context." },
         {
           name: "reasoned_decision",
           description: "Why, evidence, counterargument, applicable articles, rejected articles, and confidence.",
@@ -144,8 +146,10 @@ function makeBaseInput(): V3PromptBuilderInput {
       ],
       notes: ["Render the JSON contract exactly once."],
       example: {
-        findings: [],
-        reasoning_trace: [],
+        narrative: {},
+        evidence: {},
+        semantic: {},
+        context: {},
         reasoned_decision: {
           why: "Explain the reviewer conclusion.",
           evidence: ["Support the decision with the chunk and precedent evidence."],

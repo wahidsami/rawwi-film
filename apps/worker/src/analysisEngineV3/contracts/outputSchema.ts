@@ -23,15 +23,21 @@ export type V3OutputSchemaField = {
 };
 
 export const V3_OUTPUT_SCHEMA_FIELDS: V3OutputSchemaField[] = [
-  { name: "findings", description: "Array of candidate findings emitted by the reasoning engine." },
-  { name: "reasoning_trace", description: "Placeholder trace showing the reasoning stages that were considered." },
+  { name: "narrative", description: "Narrative interpretation object with speaker, listener, target, scene type, and confidence." },
+  { name: "evidence", description: "Evidence object containing exact quoted evidence candidates and the primary candidate index." },
+  { name: "semantic", description: "Semantic interpretation object with meaning, role, target, victim, and confidence." },
+  { name: "context", description: "Context object with scene memory, neighboring sentences, and narrative context." },
+  { name: "reasoned_decision", description: "Article-by-article legal reasoning with PASS or FAIL evaluations and recommendations." },
 ];
 
 export function renderV3OutputSchemaContract(): string {
   return [
     "Output Schema Contract (placeholder):",
-    "- findings: []",
-    "- reasoning_trace: []",
-    "- The concrete output shape will remain compatible with the existing post-processing pipeline.",
+    "- narrative: { speaker, listener, target, narrativeVoice, sceneType, narrativeIntent, storyPosition, relationship, emotionalTone, condemnation, approval, neutrality, historicalContext, dream, flashback, comedy, satire, threat, instruction, news, documentary, dialogue, narration, sceneDescription, confidence, notes }",
+    "- evidence: { candidates: [{ text, startOffset, endOffset, confidence, source, notes }], primaryCandidateIndex, admissible, confidence, notes }",
+    "- semantic: { semanticMeaning, narrativeIntent, conversationRole, sceneRole, speaker, listener, target, victim, emotion, riskContext, confidence, notes }",
+    "- context: { storyMemory, sceneMemory, localContext, chunkContext, neighboringSentences, narrativeContext, confidence, notes }",
+    "- reasoned_decision: { reasoning, alternativeInterpretations, confidence, articleEvaluations: [{ articleId, status, evidence, reason, confidence }], supportingEvidence, contradictingEvidence, applicableArticles, rejectedArticles, riskAnalysis, narrativeAnalysis, humanLikeExplanation, recommendation }",
+    "- The parser consumes this canonical shape directly and normalizes snake_case or camelCase aliases for compatibility.",
   ].join("\n");
 }
