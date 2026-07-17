@@ -3,10 +3,14 @@ import { buildReviewerReasoningEnginePayload } from "../builder/reviewerReasonin
 import { createDefaultAnalysisEngineConfig } from "../engine/analysisConfig.js";
 import type { AnalysisRequest } from "../engine/analysisRequest.js";
 import type { AnalysisResponse } from "../engine/analysisResponse.js";
+import type { V3PromptBuilderInput } from "../builder/builderTypes.js";
 import { buildV3ProviderUserPrompt } from "../provider/provider.js";
 import { createV3ProviderFactory } from "../provider/providerFactory.js";
 import { mapV3ProviderResponse } from "../provider/responseMapper.js";
+import type { V3ProviderRawResponse } from "../provider/providerTypes.js";
 import { createPromptConceptContext, runReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRunner.js";
+import { getDefaultReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRegistry.js";
+import { getDefaultReviewerQuestionSet } from "../reviewerQuestions/index.js";
 import { buildIntelligenceContext } from "../intelligence/intelligenceBuilder.js";
 import { PROFANITY_MODULE } from "../legal/modules/profanity/profanityModule.js";
 import { RELIGION_MODULE } from "../legal/modules/religion/religionModule.js";
@@ -27,6 +31,7 @@ import { createLegalModuleLoader } from "../legal/legalModuleLoader.js";
 import { LegalModuleRegistry } from "../legal/legalModuleRegistry.js";
 import type { V3PromptGlossary, V3PromptOutputSchema, V3PromptSubjectModule } from "../builder/builderTypes.js";
 import type { V3RuntimeAdapterRequest, V3RuntimeAdapterOptions, V3RuntimeAdapterResult } from "./runtimeTypes.js";
+import type { ReviewerScopeValidatorResult } from "./reviewerScopeValidator.js";
 import { createV3RuntimeDiagnostics } from "./runtimeDiagnostics.js";
 import { buildRuntimeTruthLayerMeta } from "./reportMapper.js";
 import { evaluateRuntimeGcamMapping, mapLegalDecisionToFindings } from "./findingMapper.js";
@@ -57,12 +62,17 @@ import { buildReviewerDebatePackage } from "../reviewerDebate/index.js";
 import { buildArbitrationDecisionPackage } from "../arbitration/index.js";
 import { buildExplanationPackage } from "../explanation/index.js";
 import { buildReviewerDecisionContext } from "../legal/reviewerDecisionPreparation.js";
+import type { LegalDecision } from "../legal/legalDecision.js";
 import { buildExplanationSafeAnalysisResponse } from "./explanationSafeAnalysisResponse.js";
 import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
 import { validateReasonedDecisionAgainstEvidence } from "../provider/reasonedDecisionValidation.js";
 import { validateReviewerScope } from "./reviewerScopeValidator.js";
 import { buildV3LegalReasoningTrace, buildV3ReasoningMetrics } from "../reasoningTrace/index.js";
-import { buildV3DiagnosticReport } from "./v3DiagnosticReport.js";
+import { buildV3DiagnosticReport, type V3DiagnosticEvidenceTrace, type V3DiagnosticTraceRemovedItem, type V3DiagnosticTraceStage } from "./v3DiagnosticReport.js";
+import type { V3RuntimeFinding } from "./runtimeTypes.js";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 
 function normalizeTerms(terms: V3RuntimeAdapterRequest["promptLexiconTerms"]): V3PromptGlossary {
   return {
@@ -159,6 +169,550 @@ function normalizeSubjectModule(subjectModule?: V3PromptSubjectModule): V3Prompt
     };
   }
   return module;
+}
+
+function buildTraceRemovedItem(label: string, reason: string, score?: number | null, metadata?: Readonly<Record<string, unknown>> | null): V3DiagnosticTraceRemovedItem {
+  return {
+    label,
+    reason,
+    score: score ?? null,
+    metadata: metadata ?? null,
+  };
+}
+
+function buildTraceStage(input: Readonly<{
+  stage: string;
+  inputCount: number;
+  outputCount: number;
+  removalReason: string | null;
+  removedItems?: readonly V3DiagnosticTraceRemovedItem[];
+  details: Readonly<Record<string, unknown>>;
+}>): V3DiagnosticTraceStage {
+  return {
+    stage: input.stage,
+    inputCount: input.inputCount,
+    outputCount: input.outputCount,
+    removedCount: Math.max(0, input.inputCount - input.outputCount),
+    removalReason: input.removalReason,
+    removedItems: [...(input.removedItems ?? [])],
+    details: { ...input.details },
+  };
+}
+
+async function writePromptAuditFile(input: Readonly<{
+  jobId: string;
+  chunkId: string;
+  promptHash: string;
+  modelName: string;
+  systemPrompt: string;
+  userPrompt: string;
+  promptInput: V3PromptBuilderInput;
+}>): Promise<string | null> {
+  if (!config.V3_DIAGNOSTIC_MODE) return null;
+
+  const compiledReviewerContext = input.promptInput.compiledReviewerContext ?? null;
+  const candidateDiagnostics = compiledReviewerContext?.candidateDiagnostics ?? null;
+  const candidateReviewers = candidateDiagnostics?.reviewerScores ?? compiledReviewerContext?.selection.reviewerScores ?? [];
+  const candidateReviewerIds = candidateReviewers.map((score) => score.reviewerId);
+  const selectedReviewerIds = candidateDiagnostics?.selectedReviewerIds ?? compiledReviewerContext?.selection.selectedReviewerIds ?? [];
+  const selectedReviewerLabels = candidateDiagnostics?.selectedReviewerLabels ?? compiledReviewerContext?.selection.selectedReviewerLabels ?? [];
+  const selectedArticles = compiledReviewerContext?.selectedArticles ?? [];
+  const selectedAtoms = compiledReviewerContext?.selectedAtoms ?? [];
+  const candidateArticles = candidateDiagnostics?.articleRanking.articleScores ?? [];
+  const candidateAtoms = candidateDiagnostics?.atomRanking.atomScores ?? [];
+  const evidenceExcerpts = [
+    input.promptInput.chunkContext.localChunk,
+    ...(input.promptInput.chunkContext.neighboringSentences ?? []),
+    input.promptInput.chunkContext.sceneMemory ?? "",
+  ].filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+
+  const auditRecord = {
+    jobId: input.jobId,
+    chunkId: input.chunkId,
+    createdAt: new Date().toISOString(),
+    promptHash: input.promptHash,
+    modelName: input.modelName,
+    promptLengthChars: input.systemPrompt.length + input.userPrompt.length,
+    promptTokenEstimate: estimatePromptTokens(input.systemPrompt, input.userPrompt),
+    systemPrompt: input.systemPrompt,
+    userPrompt: input.userPrompt,
+    candidateReviewers,
+    candidateReviewerIds,
+    selectedReviewerLabels,
+    selectedArticles: selectedArticles.map((article) => ({
+      articleId: article.articleId,
+      reviewer: article.reviewer,
+      title: article.title,
+      protectedInterest: article.protectedInterest,
+      purpose: article.purpose,
+      neighboringArticles: [...article.neighboringArticles],
+      atoms: [...article.atoms],
+      inherits: [...article.inherits],
+      priority: article.priority,
+      runtime: article.runtime,
+      status: article.status,
+      sourcePath: article.sourcePath,
+    })),
+    selectedAtoms: selectedAtoms.map((atom) => ({
+      atomId: atom.atomId,
+      articleId: atom.articleId,
+      reviewer: atom.reviewer,
+      title: atom.title,
+      protectedInterest: atom.protectedInterest,
+      inherits: [...atom.inherits],
+      priority: atom.priority,
+      runtime: atom.runtime,
+      status: atom.status,
+      sourcePath: atom.sourcePath,
+    })),
+    candidateArticles: candidateArticles.map((article) => ({
+      articleId: article.articleId,
+      policyArticleId: article.policyArticleId,
+      reviewer: article.reviewer,
+      articleNumber: article.articleNumber,
+      policyTitle: article.policyTitle,
+      score: article.score,
+      confidence: article.confidence,
+      reasons: [...article.reasons],
+      matchedTerms: [...article.matchedTerms],
+      selected: article.selected,
+      sourcePath: article.sourcePath,
+      priority: article.priority,
+      runtime: article.runtime,
+      retrievalEnabled: article.retrievalEnabled,
+      atomCount: article.atomCount,
+    })),
+    candidateAtoms: candidateAtoms.map((atom) => ({
+      atomId: atom.atomId,
+      articleId: atom.articleId,
+      policyArticleId: atom.policyArticleId,
+      reviewer: atom.reviewer,
+      articleNumber: atom.articleNumber,
+      policyAtomId: atom.policyAtomId,
+      policyAtomTitle: atom.policyAtomTitle,
+      canonicalAtoms: [...atom.canonicalAtoms],
+      score: atom.score,
+      confidence: atom.confidence,
+      reasons: [...atom.reasons],
+      matchedTerms: [...atom.matchedTerms],
+      selected: atom.selected,
+      sourcePath: atom.sourcePath,
+      priority: atom.priority,
+      runtime: atom.runtime,
+      retrievalEnabled: atom.retrievalEnabled,
+    })),
+    evidenceExcerpts,
+    reviewerInstructions: {
+      reasoningContract: input.promptInput.reasoningContract,
+      decisionGraph: input.promptInput.decisionGraph,
+      semanticLayer: input.promptInput.semanticLayer,
+      subjectModule: input.promptInput.subjectModule,
+      chunkContext: input.promptInput.chunkContext,
+    },
+    universalInstructions: {
+      reviewerMethodology: getDefaultReviewerMethodology(),
+      reviewerQuestionSet: getDefaultReviewerQuestionSet(),
+      outputSchema: input.promptInput.outputSchema,
+    },
+    exceptionRules: {
+      outputSchemaNotes: input.promptInput.outputSchema.notes ?? [],
+      gptReviewerAssistant: compiledReviewerContext?.candidateDiagnostics
+        ? {
+            selectedReviewerIds,
+            selectedReviewerLabels,
+          }
+        : null,
+    },
+    exactJsonSchemaRequestedFromGpt: input.promptInput.outputSchema,
+    compiledReviewerContext: compiledReviewerContext
+      ? {
+          selection: compiledReviewerContext.selection,
+          selectedReviewerPackages: compiledReviewerContext.selectedReviewerPackages.map((pkg) => ({
+            reviewer: pkg.reviewer,
+            folder: pkg.folder,
+            loadedManualCount: pkg.loadedManualCount,
+            loadedArticleCount: pkg.loadedArticleCount,
+            loadedAtomCount: pkg.loadedAtomCount,
+            estimatedTokenCount: pkg.estimatedTokenCount,
+          })),
+          selectedArticles: selectedArticles.map((article) => article.articleId),
+          selectedAtoms: selectedAtoms.map((atom) => atom.atomId),
+        }
+      : null,
+  };
+
+  const auditDir = join(tmpdir(), "raawifilm-v3-prompt-audits");
+  const auditPath = join(auditDir, `prompt-audit-${input.promptHash.slice(0, 16)}-${Date.now()}.json`);
+  await mkdir(auditDir, { recursive: true });
+  await writeFile(auditPath, JSON.stringify(auditRecord, null, 2), "utf8");
+  return auditPath;
+}
+
+function buildEvidenceTrace(input: Readonly<{
+  originalChunkText: string;
+  promptAuditFilePath: string | null;
+  analysisRequest: AnalysisRequest;
+  promptInput: V3PromptBuilderInput;
+  renderedPrompt: ReturnType<typeof buildV3RenderedPrompt>;
+  userPrompt: string;
+  rawResponse: V3ProviderRawResponse;
+  mapped: ReturnType<typeof mapV3ProviderResponse>;
+  groundingValidation: ReturnType<typeof validateReasonedDecisionAgainstEvidence>;
+  scopeValidation: ReviewerScopeValidatorResult;
+  findings: readonly V3RuntimeFinding[];
+  validatedLegalDecision: LegalDecision;
+  gcamMapping: ReturnType<typeof evaluateRuntimeGcamMapping>;
+  reviewerKnowledgeSelection: ReturnType<typeof createEmergencyContextualReviewerKnowledgeSelection>;
+  reviewerKnowledgeRetrieval: ReturnType<typeof createReviewerKnowledgeRetrievalReport>;
+  reviewerCompiledContext: import("../reviewerCompiler/compilerTypes.js").ReviewerCompiledContext | null;
+  candidateDiagnostics: import("../ranking/rankingTypes.js").ReviewerCandidateSelectionDiagnostics | null;
+}>): V3DiagnosticEvidenceTrace {
+  const candidateDiagnostics = input.candidateDiagnostics;
+  const reviewerScores = candidateDiagnostics?.reviewerScores ?? input.reviewerKnowledgeSelection.routing.reviewerScores;
+  const selectedReviewerIds = candidateDiagnostics?.selectedReviewerIds ?? input.reviewerKnowledgeSelection.routing.selectedReviewerIds;
+  const selectedReviewerLabels = candidateDiagnostics?.selectedReviewerLabels ?? input.reviewerKnowledgeSelection.routing.selectedReviewerLabels;
+  const candidateReviewerIds = reviewerScores.map((score) => score.reviewerId);
+  const articleScores = candidateDiagnostics?.articleRanking.articleScores ?? [];
+  const selectedArticleIds = candidateDiagnostics?.articleRanking.selectedArticleIds ?? [];
+  const atomScores = candidateDiagnostics?.atomRanking.atomScores ?? [];
+  const selectedAtomIds = candidateDiagnostics?.atomRanking.selectedAtomIds ?? [];
+  const selectedArticles = input.reviewerCompiledContext?.selectedArticles ?? [];
+  const selectedAtoms = input.reviewerCompiledContext?.selectedAtoms ?? [];
+  const evidenceCandidates = input.mapped.evidence.candidates;
+  const evidenceSpans = evidenceCandidates.map((candidate, index) => ({
+    index,
+    text: candidate.text,
+    startOffset: candidate.startOffset,
+    endOffset: candidate.endOffset,
+    confidence: candidate.confidence,
+    source: candidate.source,
+    notes: [...(candidate.notes ?? [])],
+  }));
+
+  const reviewerRemoved = reviewerScores
+    .filter((score) => !selectedReviewerIds.includes(score.reviewerId))
+    .map((score) => buildTraceRemovedItem(score.label, score.reasons.length > 0 ? score.reasons.join(" | ") : "not selected by routing", score.score, {
+      reviewerId: score.reviewerId,
+      packId: score.packId,
+      folder: score.folder,
+      confidence: score.confidence,
+    }));
+
+  const articleRemoved = articleScores
+    .filter((score) => !selectedArticleIds.includes(score.articleId))
+    .map((score) => buildTraceRemovedItem(`Article ${score.policyArticleId}`, score.reasons.length > 0 ? score.reasons.join(" | ") : "not selected by top-K ranking", score.score, {
+      articleId: score.articleId,
+      reviewer: score.reviewer,
+      policyArticleId: score.policyArticleId,
+      confidence: score.confidence,
+    }));
+
+  const atomRemoved = atomScores
+    .filter((score) => !selectedAtomIds.includes(score.atomId))
+    .map((score) => buildTraceRemovedItem(`Atom ${score.policyAtomId ?? score.atomId}`, score.reasons.length > 0 ? score.reasons.join(" | ") : "not selected by top-K ranking", score.score, {
+      atomId: score.atomId,
+      articleId: score.articleId,
+      reviewer: score.reviewer,
+      policyAtomId: score.policyAtomId,
+      confidence: score.confidence,
+    }));
+
+  const stages: V3DiagnosticTraceStage[] = [
+    buildTraceStage({
+      stage: "original_chunk",
+      inputCount: 1,
+      outputCount: 1,
+      removalReason: null,
+      removedItems: [],
+      details: {
+        chunk_text: input.originalChunkText,
+        chunk_start_offset: input.analysisRequest.chunk.startOffset,
+        chunk_end_offset: input.analysisRequest.chunk.endOffset,
+        chunk_index: input.analysisRequest.chunk.chunkIndex,
+      },
+    }),
+    buildTraceStage({
+      stage: "evidence_extraction",
+      inputCount: 1,
+      outputCount: evidenceSpans.length,
+      removalReason: evidenceSpans.length < 1 ? "No evidence spans were extracted." : null,
+      removedItems: [],
+      details: {
+        evidence_spans: evidenceSpans,
+        returned_findings_count: input.mapped.reasonedDecision.articleEvaluations.length,
+        returned_articles: input.mapped.reasonedDecision.articleEvaluations.filter((evaluation) => evaluation.status === "PASS").map((evaluation) => evaluation.articleId),
+        returned_atoms: [],
+        returned_evidence: evidenceSpans.map((span) => span.text),
+      },
+    }),
+    buildTraceStage({
+      stage: "candidate_reviewers",
+      inputCount: reviewerScores.length,
+      outputCount: selectedReviewerIds.length,
+      removalReason: reviewerRemoved.length > 0 ? "Selected reviewers only." : null,
+      removedItems: reviewerRemoved,
+      details: {
+        reviewer_scores: reviewerScores,
+        selected_reviewers: selectedReviewerIds,
+        selected_reviewer_labels: selectedReviewerLabels,
+      },
+    }),
+    buildTraceStage({
+      stage: "selected_reviewers",
+      inputCount: selectedReviewerIds.length,
+      outputCount: selectedReviewerIds.length,
+      removalReason: null,
+      removedItems: [],
+      details: {
+        selected_reviewers: selectedReviewerIds,
+        selected_reviewer_labels: selectedReviewerLabels,
+      },
+    }),
+    buildTraceStage({
+      stage: "candidate_articles",
+      inputCount: articleScores.length,
+      outputCount: selectedArticleIds.length,
+      removalReason: articleRemoved.length > 0 ? "Top-K article ranking." : null,
+      removedItems: articleRemoved,
+      details: {
+        candidate_articles: articleScores,
+        selected_articles: selectedArticles.map((article) => article.articleId),
+      },
+    }),
+    buildTraceStage({
+      stage: "selected_articles",
+      inputCount: selectedArticleIds.length,
+      outputCount: selectedArticleIds.length,
+      removalReason: null,
+      removedItems: [],
+      details: {
+        selected_articles: selectedArticles.map((article) => ({
+          articleId: article.articleId,
+          reviewer: article.reviewer,
+          title: article.title,
+        })),
+      },
+    }),
+    buildTraceStage({
+      stage: "candidate_atoms",
+      inputCount: atomScores.length,
+      outputCount: selectedAtomIds.length,
+      removalReason: atomRemoved.length > 0 ? "Top-K atom ranking." : null,
+      removedItems: atomRemoved,
+      details: {
+        candidate_atoms: atomScores,
+        selected_atoms: selectedAtoms.map((atom) => atom.atomId),
+      },
+    }),
+    buildTraceStage({
+      stage: "selected_atoms",
+      inputCount: selectedAtomIds.length,
+      outputCount: selectedAtomIds.length,
+      removalReason: null,
+      removedItems: [],
+      details: {
+        selected_atoms: selectedAtoms.map((atom) => ({
+          atomId: atom.atomId,
+          articleId: atom.articleId,
+          reviewer: atom.reviewer,
+          title: atom.title,
+        })),
+      },
+    }),
+    buildTraceStage({
+      stage: "reviewer_package_compiled",
+      inputCount: selectedArticles.length,
+      outputCount: selectedArticles.length,
+      removalReason: null,
+      removedItems: [],
+      details: {
+        knowledge_retrieval: {
+          query_terms: input.reviewerKnowledgeRetrieval.queryTerms,
+          top_k: input.reviewerKnowledgeRetrieval.topK,
+          selected_pack_count: input.reviewerKnowledgeRetrieval.selectedPacks.length,
+          rejected_pack_count: input.reviewerKnowledgeRetrieval.rejectedPacks.length,
+          cache_hit: input.reviewerKnowledgeRetrieval.cacheHit,
+        },
+        compiled_reviewer_context: input.reviewerCompiledContext ? {
+          loaded_manual_count: input.reviewerCompiledContext.loadedManualCount,
+          loaded_reviewer_count: input.reviewerCompiledContext.loadedReviewerCount,
+          loaded_article_count: input.reviewerCompiledContext.loadedArticleCount,
+          loaded_atom_count: input.reviewerCompiledContext.loadedAtomCount,
+          prompt_character_count: input.reviewerCompiledContext.promptCharacterCount,
+          prompt_token_estimate: input.reviewerCompiledContext.promptTokenEstimate,
+        } : null,
+        selected_reviewer_packages: input.reviewerCompiledContext?.selectedReviewerPackages.map((pkg) => ({
+          reviewer: pkg.reviewer,
+          folder: pkg.folder,
+          loaded_manual_count: pkg.loadedManualCount,
+          loaded_article_count: pkg.loadedArticleCount,
+          loaded_atom_count: pkg.loadedAtomCount,
+          estimated_token_count: pkg.estimatedTokenCount,
+        })) ?? [],
+      },
+    }),
+    buildTraceStage({
+      stage: "prompt_audit",
+      inputCount: 1,
+      outputCount: 1,
+      removalReason: null,
+      removedItems: [],
+      details: {
+        prompt_audit_file_path: input.promptAuditFilePath,
+        system_prompt_length_chars: input.renderedPrompt.prompt.length,
+        user_prompt_length_chars: input.userPrompt.length,
+        prompt_token_estimate: estimatePromptTokens(input.renderedPrompt.prompt, input.userPrompt),
+      },
+    }),
+    buildTraceStage({
+      stage: "provider_response",
+      inputCount: 1,
+      outputCount: input.mapped.reasonedDecision.articleEvaluations.length,
+      removalReason: null,
+      removedItems: input.mapped.reasonedDecision.articleEvaluations
+        .filter((evaluation) => evaluation.status !== "PASS")
+        .map((evaluation) => buildTraceRemovedItem(`Article ${evaluation.articleId}`, evaluation.reason, evaluation.confidence, {
+          articleId: evaluation.articleId,
+          status: evaluation.status,
+        })),
+      details: {
+        provider_response: input.rawResponse,
+        parsed_response: {
+          narrative: input.mapped.narrative,
+          evidence: input.mapped.evidence,
+          semantic: input.mapped.semantic,
+          context: input.mapped.context,
+          reasoned_decision: input.mapped.reasonedDecision,
+        },
+        returned_findings_count: input.mapped.reasonedDecision.articleEvaluations.length,
+        returned_articles: input.mapped.reasonedDecision.articleEvaluations.map((evaluation) => evaluation.articleId),
+        returned_atoms: input.mapped.reasonedDecision.applicableArticles.length > 0 ? input.mapped.reasonedDecision.applicableArticles : [],
+        returned_evidence: input.mapped.reasonedDecision.supportingEvidence,
+      },
+    }),
+    buildTraceStage({
+      stage: "grounding_validation",
+      inputCount: input.mapped.reasonedDecision.articleEvaluations.length,
+      outputCount: input.groundingValidation.valid ? 1 : 0,
+      removalReason: input.groundingValidation.valid ? null : input.groundingValidation.validationNote,
+      removedItems: input.groundingValidation.issues.map((issue) => buildTraceRemovedItem(issue.path, issue.message, null, {
+        code: issue.code,
+      })),
+      details: {
+        valid: input.groundingValidation.valid,
+        issues: input.groundingValidation.issues,
+        validation_note: input.groundingValidation.validationNote,
+        accepted_count: input.groundingValidation.valid ? 1 : 0,
+        rejected_count: input.groundingValidation.issues.length,
+      },
+    }),
+    buildTraceStage({
+      stage: "scope_validation",
+      inputCount: input.groundingValidation.valid ? 1 : 0,
+      outputCount: input.scopeValidation.acceptedFindingsCount,
+      removalReason: input.scopeValidation.rejectedFindingsByScope.length > 0 ? input.scopeValidation.scopeReason : null,
+      removedItems: input.scopeValidation.rejectedFindingsByScope.map((finding) => buildTraceRemovedItem(
+        finding.articleIds[0] ? `Article ${finding.articleIds[0]}` : "scope finding",
+        input.scopeValidation.scopeReason,
+        null,
+        {
+          moduleId: finding.moduleId,
+          articleIds: finding.articleIds,
+          evidence: finding.evidence,
+        },
+      )),
+      details: {
+        accepted_count: input.scopeValidation.acceptedFindingsCount,
+        rejected_count: input.scopeValidation.rejectedFindingsByScope.length,
+        selected_reviewers: input.scopeValidation.selectedReviewerLabels,
+        rejected_reviewers: input.scopeValidation.rejectedReviewerLabels,
+      },
+    }),
+    buildTraceStage({
+      stage: "mapper",
+      inputCount: input.scopeValidation.acceptedFindingsCount,
+      outputCount: input.findings.length,
+      removalReason: input.findings.length === 0 ? "Exception applied" : null,
+      removedItems: input.findings.length === 0 && input.validatedLegalDecision.finding
+        ? [buildTraceRemovedItem(
+            `Article ${input.validatedLegalDecision.finding.articleIds[0] ?? input.validatedLegalDecision.articleIds[0] ?? 0}`,
+            input.validatedLegalDecision.reason,
+            input.validatedLegalDecision.confidence,
+            {
+              moduleId: input.validatedLegalDecision.moduleId,
+              articleIds: input.validatedLegalDecision.articleIds,
+            },
+          )]
+        : [],
+      details: {
+        validated_decision_status: input.validatedLegalDecision.status,
+        validated_decision_reason: input.validatedLegalDecision.reason,
+        mapper_findings: input.findings,
+        gcam_mapping: input.gcamMapping,
+      },
+    }),
+    buildTraceStage({
+      stage: "persistence",
+      inputCount: input.findings.length,
+      outputCount: input.findings.length,
+      removalReason: null,
+      removedItems: [],
+      details: {
+        attempted_findings: input.findings.length,
+        inserted_findings: null,
+        skipped_findings: null,
+      },
+    }),
+  ];
+
+  return {
+    originalChunkText: input.originalChunkText,
+    promptAuditFilePath: input.promptAuditFilePath,
+    stages: Object.freeze(stages),
+    providerResponse: Object.freeze({
+      rawResponse: input.rawResponse.rawResponse,
+      rawResponseHash: sha256(input.rawResponse.rawResponse),
+      responseId: input.rawResponse.responseId,
+      responseTimestamp: input.rawResponse.responseTimestamp,
+      providerName: input.rawResponse.providerName,
+      modelName: input.rawResponse.modelName,
+      modelVersion: input.rawResponse.modelVersion,
+      finishReason: input.rawResponse.finishReason,
+      usage: input.rawResponse.usage,
+      parsedResponse: {
+        narrative: input.mapped.narrative,
+        evidence: input.mapped.evidence,
+        semantic: input.mapped.semantic,
+        context: input.mapped.context,
+        reasonedDecision: input.mapped.reasonedDecision,
+      },
+    }),
+    groundingValidation: Object.freeze({
+      valid: input.groundingValidation.valid,
+      validationNote: input.groundingValidation.validationNote,
+      issues: input.groundingValidation.issues,
+      acceptedCount: input.groundingValidation.valid ? 1 : 0,
+      rejectedCount: input.groundingValidation.issues.length,
+    }),
+    scopeValidation: Object.freeze({
+      selectedReviewerIds: input.scopeValidation.selectedReviewerIds,
+      selectedReviewerLabels: input.scopeValidation.selectedReviewerLabels,
+      rejectedReviewerIds: input.scopeValidation.rejectedReviewerIds,
+      rejectedReviewerLabels: input.scopeValidation.rejectedReviewerLabels,
+      acceptedFindingsCount: input.scopeValidation.acceptedFindingsCount,
+      rejectedFindingsByScopeCount: input.scopeValidation.rejectedFindingsByScopeCount,
+      scopeReason: input.scopeValidation.scopeReason,
+    }),
+    mapperResult: Object.freeze({
+      inputCount: input.scopeValidation.acceptedFindingsCount,
+      outputCount: input.findings.length,
+      removedCount: Math.max(0, input.scopeValidation.acceptedFindingsCount - input.findings.length),
+      removalReason: input.findings.length === 0 ? "Exception applied" : null,
+      findings: input.findings,
+      gcamMapping: input.gcamMapping,
+    }),
+    persistedFindings: null,
+  };
 }
 
 function defaultOutputSchema(): V3PromptOutputSchema {
@@ -387,6 +941,27 @@ export async function runV3RuntimeAdapter(
   const promptInput = buildPromptInput(analysisRequest);
   const renderedPrompt = buildV3RenderedPrompt(promptInput);
   const userPrompt = buildV3ProviderUserPrompt(promptInput);
+  let promptAuditFilePath: string | null = null;
+  if (config.V3_DIAGNOSTIC_MODE) {
+    try {
+      promptAuditFilePath = await writePromptAuditFile({
+        jobId: input.jobId,
+        chunkId: input.chunkId,
+        promptHash: renderedPrompt.promptHash,
+        modelName: options.modelName ?? config.OPENAI_JUDGE_MODEL,
+        systemPrompt: renderedPrompt.prompt,
+        userPrompt,
+        promptInput,
+      });
+    } catch (error) {
+      logger.warn("V3 prompt audit write failed", {
+        jobId: input.jobId,
+        chunkId: input.chunkId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack ?? null : null,
+      });
+    }
+  }
 
   const providerFactory = createV3ProviderFactory();
   const provider = providerFactory.create(options.providerName ?? "openai");
@@ -633,6 +1208,29 @@ export async function runV3RuntimeAdapter(
     diagnostics,
     gcamMapping,
   });
+  const reviewerCompiledContext = promptInput.compiledReviewerContext ?? null;
+  const candidateDiagnostics = reviewerCompiledContext?.candidateDiagnostics ?? null;
+  const evidenceTrace = config.V3_DIAGNOSTIC_MODE
+    ? buildEvidenceTrace({
+        originalChunkText: analysisRequest.chunk.text,
+        promptAuditFilePath,
+        analysisRequest,
+        promptInput,
+        renderedPrompt,
+        userPrompt,
+        rawResponse,
+        mapped,
+        groundingValidation,
+        scopeValidation,
+        findings,
+        validatedLegalDecision,
+        gcamMapping,
+        reviewerKnowledgeSelection,
+        reviewerKnowledgeRetrieval,
+        reviewerCompiledContext,
+        candidateDiagnostics,
+      })
+    : null;
   const diagnosticReport = config.V3_DIAGNOSTIC_MODE
     ? buildV3DiagnosticReport({
         providerDecision: mapped.reasonedDecision,
@@ -640,6 +1238,7 @@ export async function runV3RuntimeAdapter(
         scopeValidation,
         validatedDecision: validatedLegalDecision,
         mapperFindings: findings,
+        evidenceTrace,
       })
     : null;
   const truthLayerMeta = buildRuntimeTruthLayerMeta({

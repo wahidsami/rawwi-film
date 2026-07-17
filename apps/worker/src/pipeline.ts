@@ -3213,6 +3213,37 @@ export async function processChunkJudge(
             }
           : stage
       ));
+      if (diagnosticReport.evidenceTrace) {
+        diagnosticReport.evidenceTrace.persistedFindings = {
+          inputCount: rows.length,
+          outputCount: data?.length ?? 0,
+          removedCount: rows.length - (data?.length ?? 0),
+          removalReason: rows.length > (data?.length ?? 0) ? "Some findings were dropped before persistence." : null,
+          details: {
+            attempted_findings: rows.length,
+            inserted_findings: data?.length ?? 0,
+            skipped_findings: rows.length - (data?.length ?? 0),
+            rows,
+          },
+        };
+        diagnosticReport.evidenceTrace.stages = diagnosticReport.evidenceTrace.stages.map((stage) => (
+          stage.stage === "persistence"
+            ? {
+                ...stage,
+                inputCount: rows.length,
+                outputCount: data?.length ?? 0,
+                removedCount: rows.length - (data?.length ?? 0),
+                removalReason: rows.length > (data?.length ?? 0) ? "Some findings were dropped before persistence." : null,
+                details: {
+                  ...stage.details,
+                  attempted_findings: rows.length,
+                  inserted_findings: data?.length ?? 0,
+                  skipped_findings: rows.length - (data?.length ?? 0),
+                },
+              }
+            : stage
+        ));
+      }
       logger.info("V3 diagnostic final report", {
         jobId,
         chunkId: chunk.id,
@@ -3231,6 +3262,24 @@ export async function processChunkJudge(
         topRejectionReasons: diagnosticReport.topRejectionReasons,
         rejectedFindings: diagnosticReport.rejectedFindings,
       });
+      if (diagnosticReport.evidenceTrace) {
+        logger.info("V3 evidence trace summary", {
+          jobId,
+          chunkId: chunk.id,
+          promptAuditFilePath: diagnosticReport.evidenceTrace.promptAuditFilePath,
+          originalChunkLengthChars: diagnosticReport.evidenceTrace.originalChunkText.length,
+          stageCount: diagnosticReport.evidenceTrace.stages.length,
+          providerFindingsCount: diagnosticReport.providerFindingsCount,
+          groundingAcceptedCount: diagnosticReport.groundingAcceptedCount,
+          groundingRejectedCount: diagnosticReport.groundingRejectedCount,
+          scopeAcceptedCount: diagnosticReport.scopeAcceptedCount,
+          scopeRejectedCount: diagnosticReport.scopeRejectedCount,
+          mapperFindingsCount: diagnosticReport.mapperFindingsCount,
+          persistenceFindingsCount: diagnosticReport.persistenceFindingsCount,
+          persistenceInsertedCount: diagnosticReport.persistenceInsertedCount,
+          persistenceSkippedCount: diagnosticReport.persistenceSkippedCount,
+        });
+      }
       if (routerOutputJson && typeof routerOutputJson === "object") {
         routerOutputJson.v3_diagnostic_report = diagnosticReport;
       }

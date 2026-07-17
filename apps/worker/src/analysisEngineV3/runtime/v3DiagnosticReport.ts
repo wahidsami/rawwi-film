@@ -39,6 +39,40 @@ export type V3DiagnosticRejectedFinding = Readonly<{
   lineOfCode: string | null;
 }>;
 
+export type V3DiagnosticTraceRemovedItem = {
+  label: string;
+  reason: string;
+  score?: number | null;
+  metadata?: Readonly<Record<string, unknown>> | null;
+};
+
+export type V3DiagnosticTraceStage = {
+  stage: string;
+  inputCount: number;
+  outputCount: number;
+  removedCount: number;
+  removalReason: string | null;
+  removedItems: readonly V3DiagnosticTraceRemovedItem[];
+  details: Readonly<Record<string, unknown>>;
+};
+
+export type V3DiagnosticEvidenceTrace = {
+  originalChunkText: string;
+  promptAuditFilePath: string | null;
+  stages: readonly V3DiagnosticTraceStage[];
+  providerResponse: Readonly<Record<string, unknown>> | null;
+  groundingValidation: Readonly<Record<string, unknown>> | null;
+  scopeValidation: Readonly<Record<string, unknown>> | null;
+  mapperResult: Readonly<Record<string, unknown>> | null;
+    persistedFindings: Readonly<{
+    inputCount: number;
+    outputCount: number;
+    removedCount: number;
+    removalReason: string | null;
+    details: Readonly<Record<string, unknown>>;
+  }> | null;
+};
+
 export type V3DiagnosticReport = {
   enabled: true;
   provider_error: V3ProviderErrorDetails | null;
@@ -65,6 +99,7 @@ export type V3DiagnosticReport = {
   topRejectionReasons: readonly { reason: string; count: number }[];
   stageSummary: readonly V3DiagnosticStageSummary[];
   validatorHistory: readonly string[];
+  evidenceTrace: V3DiagnosticEvidenceTrace | null;
 };
 
 function summarizeProviderFindings(decision: V3ReasonedDecisionResult): V3DiagnosticReport["rawProviderFindings"] {
@@ -142,6 +177,7 @@ export function buildV3DiagnosticReport(input: Readonly<{
   validatedDecision: LegalDecision;
   mapperFindings: readonly V3DiagnosticMapperFinding[];
   providerError?: V3ProviderErrorDetails | null;
+  evidenceTrace?: V3DiagnosticEvidenceTrace | null;
 }>): V3DiagnosticReport {
   const rawProviderFindings = summarizeProviderFindings(input.providerDecision);
   const groundingRejectedCount = input.groundingValidation.issues.length;
@@ -220,6 +256,7 @@ export function buildV3DiagnosticReport(input: Readonly<{
       },
     ],
     validatorHistory: [...input.validatedDecision.trace],
+    evidenceTrace: input.evidenceTrace ?? null,
   };
 }
 
@@ -287,6 +324,7 @@ export function buildV3ProviderFailureDiagnosticReport(input: Readonly<{
       },
     ],
     validatorHistory: [],
+    evidenceTrace: null,
   };
 }
 
