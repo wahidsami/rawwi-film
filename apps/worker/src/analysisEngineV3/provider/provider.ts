@@ -16,12 +16,9 @@ import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewer
 import { buildReviewerReasoningEnginePayload } from "../builder/reviewerReasoningEngine.js";
 import { compileReviewerContext } from "../reviewerCompiler/compiler.js";
 import { validateReasonedDecisionAgainstEvidence } from "./reasonedDecisionValidation.js";
-import { writeV3PromptReplayFile } from "../runtime/promptReplay.js";
 import { logger } from "../../logger.js";
 import { config } from "../../config.js";
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
+import { writeV3PromptReplayFile } from "../runtime/promptReplay.js";
 
 export type V3ProviderFlowInput = Readonly<{
   promptInput: V3PromptBuilderInput;
@@ -145,110 +142,6 @@ function appendValidationRepairInstruction(userPrompt: string, issues: readonly 
 
 function estimatePromptTokens(systemPrompt: string, userPrompt: string): number {
   return Math.max(1, Math.ceil((systemPrompt.length + userPrompt.length) / 4));
-}
-
-async function writePromptAuditFile(input: Readonly<{
-  promptInput: V3PromptBuilderInput;
-  systemPrompt: string;
-  userPrompt: string;
-  promptHash: string;
-  modelName: string;
-}>): Promise<void> {
-  const compiledReviewerContext = input.promptInput.compiledReviewerContext ?? null;
-  const candidateReviewers = compiledReviewerContext?.selection.selectedReviewerLabels ?? [];
-  const candidateReviewerIds = compiledReviewerContext?.selection.selectedReviewerIds ?? [];
-  const candidateArticles = (compiledReviewerContext?.selectedArticles ?? []).map((article) => ({
-    articleId: article.articleId,
-    reviewer: article.reviewer,
-    title: article.title,
-    protectedInterest: article.protectedInterest,
-    purpose: article.purpose,
-    neighboringArticles: [...article.neighboringArticles],
-    atoms: [...article.atoms],
-    inherits: [...article.inherits],
-    priority: article.priority,
-    runtime: article.runtime,
-    status: article.status,
-    sourcePath: article.sourcePath,
-  }));
-  const candidateAtoms = (compiledReviewerContext?.selectedAtoms ?? []).map((atom) => ({
-    atomId: atom.atomId,
-    articleId: atom.articleId,
-    reviewer: atom.reviewer,
-    title: atom.title,
-    protectedInterest: atom.protectedInterest,
-    inherits: [...atom.inherits],
-    priority: atom.priority,
-    runtime: atom.runtime,
-    status: atom.status,
-    sourcePath: atom.sourcePath,
-  }));
-  const evidenceExcerpts = [
-    input.promptInput.chunkContext.localChunk,
-    ...(input.promptInput.chunkContext.neighboringSentences ?? []),
-    input.promptInput.chunkContext.sceneMemory ?? "",
-  ].filter((value): value is string => typeof value === "string" && value.trim().length > 0);
-
-  const promptTokenEstimate = estimatePromptTokens(input.systemPrompt, input.userPrompt);
-  const auditRecord = {
-    createdAt: new Date().toISOString(),
-    modelName: input.modelName,
-    promptHash: input.promptHash,
-    promptLengthChars: input.systemPrompt.length + input.userPrompt.length,
-    promptTokenEstimate,
-    systemPrompt: input.systemPrompt,
-    userPrompt: input.userPrompt,
-    candidateReviewers,
-    candidateReviewerIds,
-    candidateArticles,
-    candidateAtoms,
-    evidenceExcerpts,
-    reviewerInstructions: {
-      reasoningContract: input.promptInput.reasoningContract,
-      decisionGraph: input.promptInput.decisionGraph,
-      semanticLayer: input.promptInput.semanticLayer,
-      subjectModule: input.promptInput.subjectModule,
-    },
-    universalInstructions: {
-      reviewerMethodology: getDefaultReviewerMethodology(),
-      reviewerQuestionSet: getDefaultReviewerQuestionSet(),
-    },
-    exceptionRules: {
-      outputSchemaNotes: input.promptInput.outputSchema.notes ?? [],
-      outputSchemaTitle: input.promptInput.outputSchema.title,
-    },
-    exactJsonSchemaRequestedFromGpt: input.promptInput.outputSchema,
-    compiledReviewerContext: compiledReviewerContext
-      ? {
-          selection: compiledReviewerContext.selection,
-          selectedReviewerPackages: compiledReviewerContext.selectedReviewerPackages.map((pkg) => ({
-            reviewer: pkg.reviewer,
-            folder: pkg.folder,
-            loadedManualCount: pkg.loadedManualCount,
-            loadedArticleCount: pkg.loadedArticleCount,
-            loadedAtomCount: pkg.loadedAtomCount,
-            estimatedTokenCount: pkg.estimatedTokenCount,
-          })),
-          selectedArticles: candidateArticles,
-          selectedAtoms: candidateAtoms,
-        }
-      : null,
-  };
-
-  const auditDir = join(tmpdir(), "raawifilm-v3-prompt-audits");
-  const auditPath = join(auditDir, `prompt-audit-${input.promptHash.slice(0, 16)}-${Date.now()}.json`);
-
-  await mkdir(auditDir, { recursive: true });
-  await writeFile(auditPath, JSON.stringify(auditRecord, null, 2), "utf8");
-  logger.info("V3 prompt audit written", {
-    auditPath,
-    promptHash: input.promptHash,
-    promptLengthChars: auditRecord.promptLengthChars,
-    promptTokenEstimate,
-    candidateReviewerCount: candidateReviewers.length,
-    candidateArticleCount: candidateArticles.length,
-    candidateAtomCount: candidateAtoms.length,
-  });
 }
 
 export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promise<V3ProviderReasoningResult> {

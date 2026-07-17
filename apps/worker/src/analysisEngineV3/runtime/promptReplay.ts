@@ -1,7 +1,5 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
-
+import { supabase } from "../../db.js";
+import { canonicalStringify } from "../../canonicalJson.js";
 import { config } from "../../config.js";
 import { logger } from "../../logger.js";
 
@@ -28,45 +26,72 @@ export type V3PromptReplayFileInput = Readonly<{
 
 export async function writeV3PromptReplayFile(input: V3PromptReplayFileInput): Promise<string | null> {
   if (!config.V3_DIAGNOSTIC_MODE) return null;
+  if (!input.jobId || !input.chunkId) return null;
 
-  const replayDir = join(tmpdir(), "raawifilm-v3-prompt-replays");
-  const replayPath = join(replayDir, `prompt-replay-${input.promptHash.slice(0, 16)}-${Date.now()}.json`);
   const promptLengthChars = input.systemPrompt.length + input.userPrompt.length;
   const promptTokenEstimate = estimatePromptTokens(input.systemPrompt, input.userPrompt);
+  const compiledReviewerContextText = canonicalStringify(input.compiledReviewerContext);
 
-  const replayRecord = {
-    jobId: input.jobId ?? null,
-    chunkId: input.chunkId ?? null,
-    createdAt: new Date().toISOString(),
-    promptHash: input.promptHash,
-    modelName: input.modelName,
-    promptLengthChars,
-    promptTokenEstimate,
-    chunkText: input.chunkText,
-    evidenceSpans: input.evidenceSpans,
-    candidateReviewers: input.candidateReviewers,
-    candidateArticles: input.candidateArticles,
-    candidateAtoms: input.candidateAtoms,
-    compiledReviewerContext: input.compiledReviewerContext,
-    systemPrompt: input.systemPrompt,
-    userPrompt: input.userPrompt,
-    rawProviderResponse: input.rawProviderResponse,
-    parsedDecision: input.parsedDecision,
+  const replayRow = {
+    job_id: input.jobId,
+    chunk_id: input.chunkId,
+    chunk_text: input.chunkText,
+    evidence_spans: input.evidenceSpans,
+    candidate_reviewers: input.candidateReviewers,
+    candidate_articles: input.candidateArticles,
+    candidate_atoms: input.candidateAtoms,
+    compiled_reviewer_context: compiledReviewerContextText,
+    system_prompt: input.systemPrompt,
+    user_prompt: input.userPrompt,
+    raw_provider_response: input.rawProviderResponse,
+    parsed_decision: input.parsedDecision,
   };
 
-  await mkdir(replayDir, { recursive: true });
-  await writeFile(replayPath, JSON.stringify(replayRecord, null, 2), "utf8");
-  logger.info("V3 prompt replay written", {
-    replayPath,
-    jobId: input.jobId ?? null,
-    chunkId: input.chunkId ?? null,
-    promptHash: input.promptHash,
-    promptLengthChars,
-    promptTokenEstimate,
-    candidateReviewerCount: input.candidateReviewers.length,
-    candidateArticleCount: input.candidateArticles.length,
-    candidateAtomCount: input.candidateAtoms.length,
-  });
+  try {
+    const { data, error } = await supabase
+      .from("analysis_prompt_replays")
+      .upsert(replayRow, { onConflict: "job_id,chunk_id" })
+      .select("id, job_id, chunk_id")
+      .single();
 
-  return replayPath;
+    if (error) {
+      logger.warn("V3 prompt replay insert failed", {
+        jobId: input.jobId,
+        chunkId: input.chunkId,
+        promptHash: input.promptHash,
+        modelName: input.modelName,
+        error: error.message,
+        errorCode: error.code,
+        errorDetails: error.details,
+        errorHint: error.hint,
+      });
+      return null;
+    }
+
+    const replayPath = `analysis_prompt_replays/${data.id}`;
+    logger.info("V3 prompt replay stored", {
+      replayPath,
+      jobId: input.jobId,
+      chunkId: input.chunkId,
+      promptHash: input.promptHash,
+      modelName: input.modelName,
+      promptLengthChars,
+      promptTokenEstimate,
+      candidateReviewerCount: input.candidateReviewers.length,
+      candidateArticleCount: input.candidateArticles.length,
+      candidateAtomCount: input.candidateAtoms.length,
+    });
+
+    return replayPath;
+  } catch (error) {
+    logger.warn("V3 prompt replay insert failed", {
+      jobId: input.jobId,
+      chunkId: input.chunkId,
+      promptHash: input.promptHash,
+      modelName: input.modelName,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack ?? null : null,
+    });
+    return null;
+  }
 }
