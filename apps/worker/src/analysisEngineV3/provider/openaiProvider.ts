@@ -64,6 +64,33 @@ export function createOpenAIProvider(options?: OpenAIProviderOptions): V3Provide
           maxTokens: input.maxTokens ?? null,
           retryAttempt: input.retryAttempt ?? null,
         });
+        logger.info("V3 OpenAI completion snapshot", {
+          modelName: input.modelName,
+          response: {
+            id: completion.id ?? null,
+            object: completion.object ?? null,
+            created: completion.created ?? null,
+            model: completion.model ?? null,
+            systemFingerprint: completion.system_fingerprint ?? null,
+            choiceCount: completion.choices.length,
+            choices: completion.choices.map((choice, index) => ({
+              index,
+              finishReason: choice.finish_reason ?? null,
+              message: {
+                role: choice.message?.role ?? null,
+                content: choice.message?.content ?? null,
+                refusal: (choice.message as { refusal?: string | null } | undefined)?.refusal ?? null,
+              },
+            })),
+            usage: completion.usage
+              ? {
+                  promptTokens: completion.usage.prompt_tokens ?? null,
+                  completionTokens: completion.usage.completion_tokens ?? null,
+                  totalTokens: completion.usage.total_tokens ?? null,
+                }
+              : null,
+          },
+        });
         logger.info("V3 instrumentation EXIT: provider.callJudgeRaw (openai)", {
           modelName: input.modelName,
           durationMs: Date.now() - startedAt,

@@ -71,13 +71,24 @@ export type V3ProviderResponseDiscardedField = Readonly<{
   value: V3PromptJsonValue;
 }>;
 
+export type V3ProviderResponseParseFailure = Readonly<{
+  message: string;
+  position: number | null;
+  line: number | null;
+  column: number | null;
+}>;
+
 export type V3ProviderResponseParseAudit = Readonly<{
   rawResponse: string;
   extractedJsonText: string;
   parseErrors: readonly string[];
+  parseFailure: V3ProviderResponseParseFailure | null;
   parserInput: Readonly<{
     parsedJson: V3PromptJsonValue | null;
     payloadSource: "root" | "reasoning";
+    parseStrategy: "root" | "reasoning";
+    fallbackParserUsed: boolean;
+    fallbackParserName: string | null;
     topLevelKeys: readonly string[];
     payloadKeys: readonly string[];
     expectedTopLevelKeys: readonly string[];
@@ -93,6 +104,7 @@ export type V3ProviderResponseParseAudit = Readonly<{
     reasonedDecision: V3ReasonedDecisionResult;
   }>;
   finalReasonedDecision: V3ReasonedDecisionResult;
+  parsedFindingCount: number;
   zeroFindingsReason: string | null;
 }>;
 
@@ -108,6 +120,7 @@ function extractJsonWithDiagnostics(raw: string): Readonly<{
   extractedJsonText: string;
   parsedJson: V3PromptJsonValue | null;
   parseErrors: readonly string[];
+  parseFailure: V3ProviderResponseParseFailure | null;
 }> {
   const trimmed = raw.trim();
   if (!trimmed) {
@@ -115,6 +128,7 @@ function extractJsonWithDiagnostics(raw: string): Readonly<{
       extractedJsonText: "",
       parsedJson: null,
       parseErrors: Object.freeze([]),
+      parseFailure: null,
     });
   }
   const firstBrace = trimmed.indexOf("{");
@@ -125,12 +139,45 @@ function extractJsonWithDiagnostics(raw: string): Readonly<{
       extractedJsonText: candidate,
       parsedJson: JSON.parse(candidate) as V3PromptJsonValue,
       parseErrors: Object.freeze([]),
+      parseFailure: null,
     });
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const positionMatch = message.match(/position\s+(\d+)/i);
+    const lineColumnMatch = message.match(/at line\s+(\d+)\s+column\s+(\d+)/i);
+    const position = positionMatch && positionMatch[1] ? Number(positionMatch[1]) : null;
+    const line = lineColumnMatch && lineColumnMatch[1] ? Number(lineColumnMatch[1]) : null;
+    const column = lineColumnMatch && lineColumnMatch[2] ? Number(lineColumnMatch[2]) : null;
+    const normalizedPosition = Number.isFinite(position ?? NaN) ? position : null;
+    let parsedLine = line;
+    let parsedColumn = column;
+    if (normalizedPosition !== null && (parsedLine === null || parsedColumn === null)) {
+      let currentLine = 1;
+      let currentColumn = 1;
+      for (let index = 0; index < Math.min(candidate.length, normalizedPosition); index++) {
+        if (candidate[index] === "\n") {
+          currentLine++;
+          currentColumn = 1;
+        } else {
+          currentColumn++;
+        }
+      }
+      parsedLine = currentLine;
+      parsedColumn = currentColumn;
+    }
     return Object.freeze({
       extractedJsonText: candidate,
       parsedJson: null,
-      parseErrors: Object.freeze([`JSON.parse failed for provider response candidate: ${candidate.length > 0 ? candidate.slice(0, 200) : "[empty candidate]"}`]),
+      parseErrors: Object.freeze([
+        `JSON.parse failed for provider response candidate: ${candidate.length > 0 ? candidate.slice(0, 200) : "[empty candidate]"}`,
+        `Parse abort location: ${normalizedPosition !== null ? `position ${normalizedPosition}` : "unknown position"}${parsedLine !== null && parsedColumn !== null ? ` (line ${parsedLine}, column ${parsedColumn})` : ""}; ${message}`,
+      ]),
+      parseFailure: Object.freeze({
+        message,
+        position: normalizedPosition,
+        line: parsedLine,
+        column: parsedColumn,
+      }),
     });
   }
 }
@@ -366,9 +413,13 @@ export function mapV3ProviderResponse(
     rawResponse,
     extractedJsonText: extracted.extractedJsonText,
     parseErrors: extracted.parseErrors,
+    parseFailure: extracted.parseFailure,
     parserInput: Object.freeze({
       parsedJson: parsed,
       payloadSource,
+      parseStrategy: payloadSource,
+      fallbackParserUsed: false,
+      fallbackParserName: null,
       topLevelKeys: Object.freeze(objectKeys(parsed)),
       payloadKeys: Object.freeze(objectKeys(payload)),
       expectedTopLevelKeys: EXPECTED_TOP_LEVEL_KEYS,
@@ -378,6 +429,7 @@ export function mapV3ProviderResponse(
     discardedFields,
     parserOutput,
     finalReasonedDecision: parserOutput.reasonedDecision,
+    parsedFindingCount: parserOutput.reasonedDecision.articleEvaluations.length,
     zeroFindingsReason:
       extracted.parseErrors.length > 0
         ? "JSON parsing failed; no provider decision could be recovered."
@@ -396,8 +448,11 @@ export function mapV3ProviderResponse(
     logger.info("V3 provider response parse audit", {
       rawResponseLength: rawResponse.length,
       payloadSource: parseAudit.parserInput.payloadSource,
+      parseStrategy: parseAudit.parserInput.parseStrategy,
+      fallbackParserUsed: parseAudit.parserInput.fallbackParserUsed,
       topLevelKeys: [...parseAudit.parserInput.topLevelKeys],
       payloadKeys: [...parseAudit.parserInput.payloadKeys],
+      parsedFindingCount: parseAudit.parsedFindingCount,
       finalReasonedDecision: parseAudit.finalReasonedDecision,
     });
   }

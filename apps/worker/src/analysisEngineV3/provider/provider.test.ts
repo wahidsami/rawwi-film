@@ -252,10 +252,13 @@ function testResponseMapperReportsDiscardedViolations(): void {
   if (!parseAudit) throw new Error("parse audit should be captured");
   const audit = parseAudit as any;
   assert.equal(audit.parserInput.payloadSource, "reasoning");
+  assert.equal(audit.parserInput.parseStrategy, "reasoning");
+  assert.equal(audit.parserInput.fallbackParserUsed, false);
   assert(audit.discardedFields.some((field: { path: string }) => field.path === "root.unexpected_root_field"));
   assert(audit.discardedFields.some((field: { path: string }) => field.path === "reasoning.violations"));
   assert(audit.discardedFields.some((field: { path: string }) => field.path === "reasonedDecision.violations"));
   assert.equal(audit.zeroFindingsReason, null);
+  assert.equal(audit.parsedFindingCount, 1);
   console.log("✓ response mapper records discarded non-schema violation fields");
 }
 
@@ -270,7 +273,12 @@ function testResponseMapperReportsParseFailure(): void {
   assert.equal(mapped.reasonedDecision.articleEvaluations.length, 0);
   if (!parseAudit) throw new Error("parse audit should be captured");
   const audit = parseAudit as any;
-  assert.equal(audit.parseErrors.length, 1);
+  assert.equal(audit.parseErrors.length, 2);
+  assert.equal(audit.parserInput.fallbackParserUsed, false);
+  assert.equal(audit.parserInput.parseStrategy, "root");
+  assert.equal(audit.parsedFindingCount, 0);
+  assert.equal(typeof audit.parseFailure?.message, "string");
+  assert(audit.parseErrors.some((entry: string) => entry.includes("Parse abort location")));
   assert.equal(audit.zeroFindingsReason, "JSON parsing failed; no provider decision could be recovered.");
   console.log("✓ response mapper records parse failures");
 }
