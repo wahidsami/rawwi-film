@@ -16,6 +16,7 @@ import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewer
 import { buildReviewerReasoningEnginePayload } from "../builder/reviewerReasoningEngine.js";
 import { compileReviewerContext } from "../reviewerCompiler/compiler.js";
 import { validateReasonedDecisionAgainstEvidence } from "./reasonedDecisionValidation.js";
+import { writeV3PromptReplayFile } from "../runtime/promptReplay.js";
 import { logger } from "../../logger.js";
 import { config } from "../../config.js";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -257,21 +258,6 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
   });
   const renderedPrompt = buildV3RenderedPrompt(input.promptInput);
   const userPrompt = buildV3ProviderUserPrompt(input.promptInput);
-  try {
-    await writePromptAuditFile({
-      promptInput: input.promptInput,
-      systemPrompt: renderedPrompt.prompt,
-      userPrompt,
-      promptHash: renderedPrompt.promptHash,
-      modelName: input.modelName,
-    });
-  } catch (error) {
-    logger.warn("V3 prompt audit write failed", {
-      modelName: input.modelName,
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack ?? null : null,
-    });
-  }
   logger.info("V3 instrumentation ENTER: provider.callJudgeRaw", {
     modelName: input.modelName,
   });
@@ -365,6 +351,36 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
       context: retryMapped.context,
       reasonedDecision: retryValidation.valid ? retryMapped.reasonedDecision : retryValidation.sanitizedDecision,
     });
+    try {
+      await writeV3PromptReplayFile({
+        jobId: null,
+        chunkId: null,
+        promptHash: renderedPrompt.promptHash,
+        modelName: input.modelName,
+        chunkText: input.promptInput.chunkContext.localChunk,
+        evidenceSpans: retryMapped.evidence.candidates,
+        candidateReviewers: input.promptInput.compiledReviewerContext?.candidateDiagnostics?.reviewerScores ?? [],
+        candidateArticles: input.promptInput.compiledReviewerContext?.candidateDiagnostics?.articleRanking.articleScores ?? [],
+        candidateAtoms: input.promptInput.compiledReviewerContext?.candidateDiagnostics?.atomRanking.atomScores ?? [],
+        compiledReviewerContext: input.promptInput.compiledReviewerContext ?? null,
+        systemPrompt: renderedPrompt.prompt,
+        userPrompt: appendValidationRepairInstruction(userPrompt, validation.issues),
+        rawProviderResponse: retryRawResponse,
+        parsedDecision: {
+          narrative: retryMapped.narrative,
+          evidence: retryMapped.evidence,
+          semantic: retryMapped.semantic,
+          context: retryMapped.context,
+          reasonedDecision: retryValidation.valid ? retryMapped.reasonedDecision : retryValidation.sanitizedDecision,
+        },
+      });
+    } catch (error) {
+      logger.warn("V3 prompt replay write failed", {
+        modelName: input.modelName,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack ?? null : null,
+      });
+    }
     logger.info("V3 instrumentation EXIT: runV3ProviderReasoning", {
       modelName: input.modelName,
       durationMs: Date.now() - startedAt,
@@ -383,6 +399,36 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
     context: mapped.context,
     reasonedDecision: mapped.reasonedDecision,
   });
+  try {
+    await writeV3PromptReplayFile({
+      jobId: null,
+      chunkId: null,
+      promptHash: renderedPrompt.promptHash,
+      modelName: input.modelName,
+      chunkText: input.promptInput.chunkContext.localChunk,
+      evidenceSpans: mapped.evidence.candidates,
+      candidateReviewers: input.promptInput.compiledReviewerContext?.candidateDiagnostics?.reviewerScores ?? [],
+      candidateArticles: input.promptInput.compiledReviewerContext?.candidateDiagnostics?.articleRanking.articleScores ?? [],
+      candidateAtoms: input.promptInput.compiledReviewerContext?.candidateDiagnostics?.atomRanking.atomScores ?? [],
+      compiledReviewerContext: input.promptInput.compiledReviewerContext ?? null,
+      systemPrompt: renderedPrompt.prompt,
+      userPrompt,
+      rawProviderResponse: rawResponse,
+      parsedDecision: {
+        narrative: mapped.narrative,
+        evidence: mapped.evidence,
+        semantic: mapped.semantic,
+        context: mapped.context,
+        reasonedDecision: mapped.reasonedDecision,
+      },
+    });
+  } catch (error) {
+    logger.warn("V3 prompt replay write failed", {
+      modelName: input.modelName,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack ?? null : null,
+    });
+  }
   logger.info("V3 instrumentation EXIT: runV3ProviderReasoning", {
     modelName: input.modelName,
     durationMs: Date.now() - startedAt,

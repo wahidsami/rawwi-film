@@ -70,6 +70,7 @@ import { validateReviewerScope } from "./reviewerScopeValidator.js";
 import { buildV3LegalReasoningTrace, buildV3ReasoningMetrics } from "../reasoningTrace/index.js";
 import { buildV3DiagnosticReport, type V3DiagnosticEvidenceTrace, type V3DiagnosticTraceRemovedItem, type V3DiagnosticTraceStage } from "./v3DiagnosticReport.js";
 import type { V3RuntimeFinding } from "./runtimeTypes.js";
+import { writeV3PromptReplayFile } from "./promptReplay.js";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -350,7 +351,7 @@ async function writePromptAuditFile(input: Readonly<{
 
 function buildEvidenceTrace(input: Readonly<{
   originalChunkText: string;
-  promptAuditFilePath: string | null;
+  promptReplayFilePath: string | null;
   analysisRequest: AnalysisRequest;
   promptInput: V3PromptBuilderInput;
   renderedPrompt: ReturnType<typeof buildV3RenderedPrompt>;
@@ -552,13 +553,13 @@ function buildEvidenceTrace(input: Readonly<{
       },
     }),
     buildTraceStage({
-      stage: "prompt_audit",
+      stage: "prompt_replay",
       inputCount: 1,
       outputCount: 1,
       removalReason: null,
       removedItems: [],
       details: {
-        prompt_audit_file_path: input.promptAuditFilePath,
+        prompt_replay_file_path: input.promptReplayFilePath,
         system_prompt_length_chars: input.renderedPrompt.prompt.length,
         user_prompt_length_chars: input.userPrompt.length,
         prompt_token_estimate: estimatePromptTokens(input.renderedPrompt.prompt, input.userPrompt),
@@ -667,7 +668,7 @@ function buildEvidenceTrace(input: Readonly<{
 
   return {
     originalChunkText: input.originalChunkText,
-    promptAuditFilePath: input.promptAuditFilePath,
+    promptReplayFilePath: input.promptReplayFilePath,
     stages: Object.freeze(stages),
     providerResponse: Object.freeze({
       rawResponse: input.rawResponse.rawResponse,
@@ -713,6 +714,25 @@ function buildEvidenceTrace(input: Readonly<{
     }),
     persistedFindings: null,
   };
+}
+
+async function writePromptReplayFile(input: Readonly<{
+  jobId: string;
+  chunkId: string;
+  promptHash: string;
+  modelName: string;
+  chunkText: string;
+  evidenceSpans: readonly unknown[];
+  candidateReviewers: readonly unknown[];
+  candidateArticles: readonly unknown[];
+  candidateAtoms: readonly unknown[];
+  compiledReviewerContext: unknown;
+  systemPrompt: string;
+  userPrompt: string;
+  rawProviderResponse: unknown;
+  parsedDecision: unknown;
+}>): Promise<string | null> {
+  return writeV3PromptReplayFile(input);
 }
 
 function defaultOutputSchema(): V3PromptOutputSchema {
@@ -941,27 +961,7 @@ export async function runV3RuntimeAdapter(
   const promptInput = buildPromptInput(analysisRequest);
   const renderedPrompt = buildV3RenderedPrompt(promptInput);
   const userPrompt = buildV3ProviderUserPrompt(promptInput);
-  let promptAuditFilePath: string | null = null;
-  if (config.V3_DIAGNOSTIC_MODE) {
-    try {
-      promptAuditFilePath = await writePromptAuditFile({
-        jobId: input.jobId,
-        chunkId: input.chunkId,
-        promptHash: renderedPrompt.promptHash,
-        modelName: options.modelName ?? config.OPENAI_JUDGE_MODEL,
-        systemPrompt: renderedPrompt.prompt,
-        userPrompt,
-        promptInput,
-      });
-    } catch (error) {
-      logger.warn("V3 prompt audit write failed", {
-        jobId: input.jobId,
-        chunkId: input.chunkId,
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack ?? null : null,
-      });
-    }
-  }
+  let promptReplayFilePath: string | null = null;
 
   const providerFactory = createV3ProviderFactory();
   const provider = providerFactory.create(options.providerName ?? "openai");
@@ -1210,10 +1210,37 @@ export async function runV3RuntimeAdapter(
   });
   const reviewerCompiledContext = promptInput.compiledReviewerContext ?? null;
   const candidateDiagnostics = reviewerCompiledContext?.candidateDiagnostics ?? null;
+  if (config.V3_DIAGNOSTIC_MODE) {
+    try {
+      promptReplayFilePath = await writePromptReplayFile({
+        jobId: input.jobId,
+        chunkId: input.chunkId,
+        promptHash: renderedPrompt.promptHash,
+        modelName: options.modelName ?? config.OPENAI_JUDGE_MODEL,
+        chunkText: analysisRequest.chunk.text,
+        evidenceSpans: mapped.evidence.candidates,
+        candidateReviewers: candidateDiagnostics?.reviewerScores ?? reviewerKnowledgeSelection.routing.reviewerScores,
+        candidateArticles: candidateDiagnostics?.articleRanking.articleScores ?? [],
+        candidateAtoms: candidateDiagnostics?.atomRanking.atomScores ?? [],
+        compiledReviewerContext: reviewerCompiledContext,
+        systemPrompt: renderedPrompt.prompt,
+        userPrompt,
+        rawProviderResponse: rawResponse,
+        parsedDecision: mapped,
+      });
+    } catch (error) {
+      logger.warn("V3 prompt replay write failed", {
+        jobId: input.jobId,
+        chunkId: input.chunkId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack ?? null : null,
+      });
+    }
+  }
   const evidenceTrace = config.V3_DIAGNOSTIC_MODE
     ? buildEvidenceTrace({
         originalChunkText: analysisRequest.chunk.text,
-        promptAuditFilePath,
+        promptReplayFilePath,
         analysisRequest,
         promptInput,
         renderedPrompt,

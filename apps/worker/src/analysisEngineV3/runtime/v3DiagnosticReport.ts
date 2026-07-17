@@ -58,7 +58,7 @@ export type V3DiagnosticTraceStage = {
 
 export type V3DiagnosticEvidenceTrace = {
   originalChunkText: string;
-  promptAuditFilePath: string | null;
+  promptReplayFilePath: string | null;
   stages: readonly V3DiagnosticTraceStage[];
   providerResponse: Readonly<Record<string, unknown>> | null;
   groundingValidation: Readonly<Record<string, unknown>> | null;

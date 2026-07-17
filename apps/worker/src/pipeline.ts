@@ -3266,7 +3266,7 @@ export async function processChunkJudge(
         logger.info("V3 evidence trace summary", {
           jobId,
           chunkId: chunk.id,
-          promptAuditFilePath: diagnosticReport.evidenceTrace.promptAuditFilePath,
+          promptReplayFilePath: diagnosticReport.evidenceTrace.promptReplayFilePath,
           originalChunkLengthChars: diagnosticReport.evidenceTrace.originalChunkText.length,
           stageCount: diagnosticReport.evidenceTrace.stages.length,
           providerFindingsCount: diagnosticReport.providerFindingsCount,
