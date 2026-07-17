@@ -2027,6 +2027,7 @@ export function buildReportHtml(summary: SummaryJson): string {
  */
 export async function runAggregation(jobId: string): Promise<void> {
   const aggregationStartedAt = Date.now();
+  logger.info("V3 finalization trace: runAggregation entered", { jobId });
   const { data: jobControl } = await supabase
     .from("analysis_jobs")
     .select("partial_finalize_requested")
@@ -2036,7 +2037,50 @@ export async function runAggregation(jobId: string): Promise<void> {
   const hasActive = isPartialFinalize
     ? await jobHasInFlightChunks(jobId)
     : await jobHasActiveChunks(jobId);
-  if (hasActive) return;
+  const { data: chunkSnapshot } = await supabase
+    .from("analysis_chunks")
+    .select("id, status, judging_started_at, last_error, created_at")
+    .eq("job_id", jobId)
+    .order("chunk_index", { ascending: true })
+    .order("id", { ascending: true });
+  const chunkDiagnostics = (chunkSnapshot ?? []).map((chunk) => {
+    const status = (chunk as { status?: string | null }).status ?? null;
+    const blockingStatus = isPartialFinalize ? status === "judging" : status === "pending" || status === "judging" || status === "failed";
+    return {
+      chunkId: (chunk as { id?: string | null }).id ?? null,
+      status,
+      claimed_at: null,
+      started_at: (chunk as { judging_started_at?: string | null }).judging_started_at ?? null,
+      completed_at: null,
+      retry_count: null,
+      worker_id: null,
+      last_error: (chunk as { last_error?: string | null }).last_error ?? null,
+      created_at: (chunk as { created_at?: string | null }).created_at ?? null,
+      blockingStatus,
+    };
+  });
+  const blockingChunks = chunkDiagnostics.filter((chunk) => chunk.blockingStatus);
+  logger.info("V3 finalization trace: active chunk gate evaluated", {
+    jobId,
+    isPartialFinalize,
+    hasActive,
+    chunkDiagnostics,
+    blockingChunkIds: blockingChunks.map((chunk) => chunk.chunkId),
+    blockingStatuses: blockingChunks.map((chunk) => chunk.status),
+  });
+  if (hasActive) {
+    const activeChunkStatuses = isPartialFinalize ? ["judging"] : ["pending", "judging", "failed"];
+    const activeChunkCount = await countChunksWithStatuses(jobId, activeChunkStatuses);
+    logger.warn("V3 finalization trace: exiting before finalization because active chunks remain", {
+      jobId,
+      isPartialFinalize,
+      activeChunkStatuses,
+      activeChunkCount,
+      blockingChunkIds: blockingChunks.map((chunk) => chunk.chunkId),
+      blockingStatuses: blockingChunks.map((chunk) => chunk.status),
+    });
+    return;
+  }
 
   const { data: job } = await supabase
     .from("analysis_jobs")
@@ -2062,6 +2106,7 @@ export async function runAggregation(jobId: string): Promise<void> {
 
   if (!job) {
     logger.warn("runAggregation: job not found", { jobId });
+    logger.warn("V3 finalization trace: exiting because job row was not found", { jobId });
     return;
   }
 
@@ -2240,11 +2285,17 @@ export async function runAggregation(jobId: string): Promise<void> {
     .eq("job_id", jobId)
     .single();
   if (existing) {
+    logger.info("V3 finalization trace: existing report detected", {
+      jobId,
+      reportId: (existing as { id?: string } | null)?.id ?? null,
+    });
     await finalizeRevisionCycleReanalysis((existing as { id?: string } | null)?.id ?? null);
+    logger.info("V3 finalization trace: about to mark job completed from existing report path", { jobId });
     await supabase
       .from("analysis_jobs")
       .update({ status: "completed", completed_at: new Date().toISOString() })
       .eq("id", jobId);
+    logger.info("V3 finalization trace: job marked completed from existing report path", { jobId });
     const { logAuditEvent } = await import("./audit.js");
     const j = job as { script_id: string; created_by?: string | null };
     logAuditEvent(supabase, {
@@ -2491,7 +2542,9 @@ export async function runAggregation(jobId: string): Promise<void> {
 
   if (!isPartialReport) {
     // Increment progress for the aggregation step (+1 that was reserved)
+    logger.info("V3 finalization trace: about to increment job progress for aggregation", { jobId });
     await incrementJobProgress(jobId);
+    logger.info("V3 finalization trace: job progress incremented for aggregation", { jobId });
   }
 
   // Mark completed. Partial reports preserve honest chunk progress instead of forcing 100%.
@@ -2503,6 +2556,12 @@ export async function runAggregation(jobId: string): Promise<void> {
     logger.info("V3 inspection: about to mark job completed", {
       jobId,
       isPartialReport,
+      branch: "partial",
+      processedChunks,
+      totalProgress,
+    });
+    logger.info("V3 finalization trace: about to update job status to completed", {
+      jobId,
       branch: "partial",
       processedChunks,
       totalProgress,
@@ -2525,6 +2584,12 @@ export async function runAggregation(jobId: string): Promise<void> {
       processedChunks,
       totalProgress,
     });
+    logger.info("V3 finalization trace: job status updated to completed", {
+      jobId,
+      branch: "partial",
+      processedChunks,
+      totalProgress,
+    });
   } else {
     const { data: jobFinal } = await supabase
       .from("analysis_jobs")
@@ -2535,6 +2600,11 @@ export async function runAggregation(jobId: string): Promise<void> {
     logger.info("V3 inspection: about to mark job completed", {
       jobId,
       isPartialReport,
+      branch: "full",
+      total,
+    });
+    logger.info("V3 finalization trace: about to update job status to completed", {
+      jobId,
       branch: "full",
       total,
     });
@@ -2550,6 +2620,11 @@ export async function runAggregation(jobId: string): Promise<void> {
     logger.info("V3 inspection: job marked completed", {
       jobId,
       isPartialReport,
+      branch: "full",
+      total,
+    });
+    logger.info("V3 finalization trace: job status updated to completed", {
+      jobId,
       branch: "full",
       total,
     });
