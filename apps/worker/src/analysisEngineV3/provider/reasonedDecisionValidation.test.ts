@@ -128,11 +128,15 @@ function main(): void {
 
   assert.equal(validation.valid, false);
   assert.equal(validation.issues.length > 0, true);
+  assert.equal(validation.issues.some((issue) => issue.code === "unsupported_factual_claim"), true);
   assert.equal(validation.sanitizedDecision.reasoning, "NO VIOLATION");
   console.log("✓ reasoned decision grounding validator rejects hallucinated explanations");
 
   testCandidateAwareValidation();
   console.log("✓ reasoned decision grounding validator accepts deterministic candidate references");
+
+  testArabicNarrativeGrounding();
+  console.log("✓ reasoned decision grounding validator accepts grounded Arabic explanation");
 }
 
 function testCandidateAwareValidation(): void {
@@ -300,6 +304,179 @@ function testCandidateAwareValidation(): void {
       riskAnalysis: "Low risk.",
       narrativeAnalysis: "Direct dialogue.",
       humanLikeExplanation: "The returned article and atom are inside the deterministic candidate set.",
+      recommendation: "RETURN VIOLATION",
+    },
+  });
+
+  assert.equal(validation.valid, true);
+  assert.equal(validation.issues.length, 0);
+}
+
+function testArabicNarrativeGrounding(): void {
+  const input = makePromptInput();
+  const compiledReviewerContext: any = {
+    academyRoot: "academy",
+    fingerprint: "fingerprint",
+    generatedAt: "2026-07-17T00:00:00.000Z",
+    selection: {
+      selectedReviewerIds: ["v4_11_profanity"],
+      selectedReviewerLabels: ["Profanity Reviewer"],
+      selectedAcademyFolders: ["profanity"],
+      rejectedReviewerIds: [],
+      rejectedReviewerLabels: [],
+      loadedAcademyCount: 1,
+      skippedAcademyCount: 0,
+      knowledgeReductionPercent: 0,
+      routingConfidence: 0.99,
+      routingReason: "Candidate aware route.",
+      lowConfidence: false,
+      reviewerScores: [],
+    },
+    universalManuals: [],
+    selectedReviewerManuals: [],
+    rejectedReviewerManuals: [],
+    selectedReviewerPackages: [],
+    selectedArticles: [{ articleId: "4", reviewer: "Profanity", title: "t", protectedInterest: "", purpose: "", neighboringArticles: [], atoms: ["atom_4_1"], inherits: [], priority: null, runtime: null, retrieval: null, status: null, sourcePath: "a" }],
+    selectedAtoms: [{ atomId: "atom_4_1", articleId: "4", reviewer: "Profanity", title: "t", protectedInterest: "", inherits: [], priority: null, runtime: null, retrieval: null, status: null, sourcePath: "a" }],
+    loadedManualCount: 0,
+    loadedReviewerCount: 1,
+    loadedArticleCount: 1,
+    loadedAtomCount: 1,
+    loadedCharacterCount: 0,
+    estimatedTokenCount: 1,
+    promptCharacterCount: 0,
+    promptTokenEstimate: 1,
+    promptPreview: "",
+    candidateDiagnostics: {
+      enabled: true,
+      subjectModuleId: "v4_11_profanity",
+      subjectModuleTitle: "الألفاظ النابية",
+      subjectModuleFolders: ["profanity"],
+      selectedReviewerIds: ["v4_11_profanity"],
+      selectedReviewerLabels: ["Profanity Reviewer"],
+      selectedReviewerFolders: ["profanity"],
+      selectedReviewerPackIds: ["v4_11_profanity"],
+      selectedReviewerPackLabels: ["Profanity Reviewer"],
+      selectedReviewerPackCount: 1,
+      rejectedReviewerIds: [],
+      rejectedReviewerLabels: [],
+      reviewerRoutingReason: "Candidate aware route.",
+      reviewerScores: [],
+      articleRanking: {
+        selectedPolicyArticleIds: [4],
+        selectedPolicyArticleIdsByReviewer: { v4_11_profanity: [4] },
+        rejectedPolicyArticleIds: [],
+        candidateArticleCount: 1,
+        candidateArticleScores: [],
+      },
+      atomRanking: {
+        selectedPolicyAtomIds: ["atom_4_1"],
+        selectedPolicyAtomIdsByArticle: { "4": ["atom_4_1"] },
+        rejectedPolicyAtomIds: [],
+        candidateAtomCount: 1,
+        candidateAtomScores: [],
+      },
+      selectionReason: "Candidate aware route.",
+    },
+  };
+  (input as any).compiledReviewerContext = compiledReviewerContext;
+
+  const validation = validateReasonedDecisionAgainstEvidence(input, {
+    prompt: "prompt",
+    promptHash: "hash",
+    userPrompt: "user prompt",
+    rawResponse: {
+      providerName: "openai",
+      modelName: "test-model",
+      modelVersion: null,
+      rawResponse: "{}",
+      finishReason: "stop",
+      usage: null,
+      responseId: null,
+      responseTimestamp: null,
+    },
+    narrative: {
+      speaker: "speaker",
+      listener: "listener",
+      target: "listener",
+      narrativeVoice: "dialogue",
+      sceneType: "dialogue",
+      narrativeIntent: "attack",
+      storyPosition: "middle",
+      relationship: null,
+      emotionalTone: "hostile",
+      condemnation: false,
+      approval: false,
+      neutrality: false,
+      historicalContext: false,
+      dream: false,
+      flashback: false,
+      comedy: false,
+      satire: false,
+      threat: false,
+      instruction: false,
+      news: false,
+      documentary: false,
+      dialogue: true,
+      narration: false,
+      sceneDescription: false,
+      confidence: 0.9,
+      notes: [],
+    },
+    evidence: {
+      candidates: [
+        {
+          text: "أنت كذاب",
+          startOffset: 0,
+          endOffset: 8,
+          confidence: 0.98,
+          source: "chunk",
+          notes: [],
+        },
+      ],
+      primaryCandidateIndex: 0,
+      admissible: true,
+      confidence: 0.98,
+      notes: [],
+    },
+    semantic: {
+      semanticMeaning: "direct insult",
+      narrativeIntent: "attack",
+      conversationRole: "speaker",
+      sceneRole: "dialogue",
+      speaker: "speaker",
+      listener: "listener",
+      target: "listener",
+      victim: "listener",
+      emotion: "hostile",
+      riskContext: "high",
+      confidence: 0.93,
+      notes: [],
+    },
+    context: {
+      storyMemory: null,
+      sceneMemory: null,
+      localContext: "أنت كذاب",
+      chunkContext: "chunk-1",
+      neighboringSentences: ["قبلها كان صمت.", "بعدها غادروا."],
+      narrativeContext: "dialogue scene",
+      confidence: 0.9,
+      notes: [],
+    },
+    reasonedDecision: {
+      reasoning: "النص يحتوي حواراً مباشرًا، وإدانة واضحة، ويصف الزوجة داخل سياق عائلي مرتبط بالعنف، لكن الحكم النهائي يستند إلى العبارة المنقولة نفسها.",
+      alternativeInterpretations: ["قد يكون مجرد حوار عائلي لا أكثر."],
+      confidence: 0.93,
+      articleEvaluations: [
+        { articleId: 4, status: "PASS", evidence: ["أنت كذاب"], reason: "العبارة المنقولة هي الأساس، ولا أضيف وقائع جديدة.", confidence: 0.93 },
+      ],
+      supportingEvidence: ["أنت كذاب"],
+      contradictingEvidence: [],
+      applicableArticles: [4],
+      rejectedArticles: [],
+      riskAnalysis: "Low risk.",
+      narrativeAnalysis: "وصف حواري عائلي.",
+      humanLikeExplanation: "التفسير عربي وصفي لكنه لا يضيف وقائع خارج الاقتباس.",
       recommendation: "RETURN VIOLATION",
     },
   });

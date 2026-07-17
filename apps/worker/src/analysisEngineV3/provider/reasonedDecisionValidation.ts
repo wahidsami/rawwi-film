@@ -15,7 +15,7 @@ export type V3ReasonedDecisionValidationResult = Readonly<{
   sanitizedDecision: V3ReasonedDecisionResult;
 }>;
 
-const GENERIC_ALLOWED_TOKENS = new Set([
+const GENERIC_EXPLANATORY_TOKENS = new Set([
   "a",
   "ability",
   "according",
@@ -30,10 +30,12 @@ const GENERIC_ALLOWED_TOKENS = new Set([
   "before",
   "but",
   "case",
+  "cause",
   "commentary",
   "could",
   "confidence",
   "context",
+  "conclusion",
   "directly",
   "counter",
   "counterargument",
@@ -55,6 +57,7 @@ const GENERIC_ALLOWED_TOKENS = new Set([
   "human",
   "in",
   "inside",
+  "interpretations",
   "interpretation",
   "kept",
   "keeping",
@@ -63,6 +66,7 @@ const GENERIC_ALLOWED_TOKENS = new Set([
   "likely",
   "line",
   "literal",
+  "low",
   "no",
   "risk",
   "semantic",
@@ -80,7 +84,6 @@ const GENERIC_ALLOWED_TOKENS = new Set([
   "scene",
   "single",
   "selected",
-  "supports",
   "support",
   "supported",
   "supports",
@@ -105,6 +108,7 @@ const GENERIC_ALLOWED_TOKENS = new Set([
   "while",
   "when",
   "why",
+  "within",
   "injury",
   "injuries",
   "actor",
@@ -147,6 +151,137 @@ const GENERIC_ALLOWED_TOKENS = new Set([
   "would",
   "with",
   "cues",
+  // Common Arabic explanatory / legal narration vocabulary that should not be
+  // mistaken for hallucinated factual content when it merely paraphrases the quote.
+  "يحتوي",
+  "حوار",
+  "حواراً",
+  "إدانة",
+  "وإدانة",
+  "الزوجة",
+  "عائلية",
+  "عائلي",
+  "بالعنف",
+  "العنف",
+  "الأسري",
+  "الاسري",
+  "تحذر",
+  "تحذير",
+  "تصاعد",
+  "خطورة",
+  "الإضرار",
+  "الاضرار",
+  "النسيج",
+  "الاجتماعي",
+  "الاجتماعية",
+  "القتل",
+  "المساس",
+  "الثوابت",
+  "الدينية",
+  "التفسير",
+  "تفسيرية",
+  "ملاحظة",
+  "آلي",
+  "تحليل",
+  "ثقة",
+  "صفحة",
+  "المشهد",
+  "الفصل",
+  "داخلي",
+  "شقة",
+  "ضيقة",
+  "ليل",
+  "حاضر",
+  "غادروا",
+  "صمت",
+  "مباشر",
+  "مباشرًا",
+  "واضحة",
+  "النص",
+  "حوارا",
+  "ويصف",
+  "إلى",
+  "يصف",
+  "داخل",
+  "سياق",
+  "مرتبط",
+  "لكن",
+  "الحكم",
+  "النهائي",
+  "يستند",
+  "العبارة",
+  "المنقولة",
+  "نفسها",
+  "قد",
+  "مجرد",
+  "أكثر",
+  "وصف",
+  "وصفي",
+  "الاقتباس",
+  "بدون",
+  "وقائع",
+  "جديدة",
+  "عربي",
+  "صفي",
+  "الاساس",
+  "الأساس",
+  "لا",
+  "أضيف",
+  "الأب",
+  "الاب",
+  "الأم",
+  "الام",
+  "الابن",
+  "الابنة",
+  "الجار",
+  "الجارة",
+  "المنزل",
+  "البيت",
+  "الرجل",
+  "المرآة",
+  "المرأة",
+]);
+
+const CONCRETE_CLAIM_TOKENS = new Set([
+  "murder",
+  "murdered",
+  "kill",
+  "killed",
+  "prince",
+  "palace",
+  "king",
+  "queen",
+  "blood",
+  "weapon",
+  "gun",
+  "knife",
+  "house",
+  "street",
+  "car",
+  "prison",
+  "police",
+  "attack",
+  "assault",
+  "victim",
+  "offender",
+  "أمير",
+  "قصر",
+  "قتل",
+  "مقتل",
+  "مقتول",
+  "طعن",
+  "سلاح",
+  "بندقية",
+  "سكين",
+  "دم",
+  "شرطة",
+  "جريمة",
+  "اعتداء",
+  "سجن",
+  "شارع",
+  "سيارة",
+  "منزل",
+  "بيت",
 ]);
 
 function normalizeText(value: string | null | undefined): string {
@@ -212,6 +347,14 @@ function splitTokens(value: string): readonly string[] {
     .filter((token) => token.length > 0) ?? [];
 }
 
+function splitSentences(value: string): readonly string[] {
+  return value
+    .normalize("NFC")
+    .split(/[.!?؟\n]+/u)
+    .map((sentence) => sentence.trim())
+    .filter((sentence) => sentence.length > 0);
+}
+
 function normalizeStoryMemory(storyMemory: V3PromptBuilderInput["storyMemory"]): string {
   if (typeof storyMemory === "string") {
     return storyMemory;
@@ -240,6 +383,10 @@ function collectGroundingCorpus(input: V3PromptBuilderInput, result: V3ProviderR
     result.context.narrativeContext,
     ...result.evidence.candidates.flatMap((candidate) => [candidateText(candidate), candidate.text ?? ""]),
   ].join(" | ");
+}
+
+function collectGroundingTokens(input: V3PromptBuilderInput, result: V3ProviderReasoningResult): ReadonlySet<string> {
+  return new Set(splitTokens(collectGroundingCorpus(input, result)));
 }
 
 function candidateText(candidate: V3ProviderReasoningResult["evidence"]["candidates"][number]): string {
@@ -278,6 +425,82 @@ function buildNoViolationDecision(
   });
 }
 
+type FactualClaimDiagnostic = Readonly<{
+  sentence: string;
+  unsupportedVocabularyTokens: readonly string[];
+  supportRatio: number;
+  reason: string;
+}>;
+
+function sentenceHasExactGrounding(
+  sentence: string,
+  exactEvidenceTexts: ReadonlySet<string>,
+  candidateArticleTokens: ReadonlySet<string>,
+  candidateAtomTokens: ReadonlySet<string>,
+  candidateReviewerTokens: ReadonlySet<string>,
+): boolean {
+  const normalizedSentence = normalizeText(sentence);
+  if (normalizedSentence.length === 0) return true;
+  if (exactEvidenceTexts.has(normalizedSentence)) return true;
+  if (candidateArticleTokens.has(normalizedSentence)) return true;
+  if (candidateAtomTokens.has(normalizedSentence)) return true;
+  if (candidateReviewerTokens.has(normalizedSentence)) return true;
+
+  for (const evidenceText of exactEvidenceTexts) {
+    if (evidenceText.length > 0 && normalizedSentence.includes(evidenceText)) return true;
+  }
+
+  return false;
+}
+
+function assessFactualClaimGrounding(
+  sentence: string,
+  groundingTokens: ReadonlySet<string>,
+  exactEvidenceTexts: ReadonlySet<string>,
+  candidateArticleTokens: ReadonlySet<string>,
+  candidateAtomTokens: ReadonlySet<string>,
+  candidateReviewerTokens: ReadonlySet<string>,
+): FactualClaimDiagnostic | null {
+  const normalizedSentence = normalizeText(sentence);
+  if (normalizedSentence.length === 0) return null;
+  if (sentenceHasExactGrounding(sentence, exactEvidenceTexts, candidateArticleTokens, candidateAtomTokens, candidateReviewerTokens)) {
+    return null;
+  }
+
+  const tokens = splitTokens(sentence);
+  if (tokens.length === 0) return null;
+
+  const unsupportedVocabularyTokens = tokens.filter((token) =>
+    token.length >= 3 &&
+    !groundingTokens.has(token) &&
+    !candidateArticleTokens.has(token) &&
+    !candidateAtomTokens.has(token) &&
+    !candidateReviewerTokens.has(token) &&
+    !GENERIC_EXPLANATORY_TOKENS.has(token)
+  );
+
+  const supportTokens = tokens.filter((token) =>
+    groundingTokens.has(token) ||
+    candidateArticleTokens.has(token) ||
+    candidateAtomTokens.has(token) ||
+    candidateReviewerTokens.has(token) ||
+    GENERIC_EXPLANATORY_TOKENS.has(token)
+  );
+
+  const supportRatio = supportTokens.length / Math.max(1, tokens.length);
+  const concreteClaimTokens = unsupportedVocabularyTokens.filter((token) => CONCRETE_CLAIM_TOKENS.has(token));
+  if (concreteClaimTokens.length === 0) return null;
+
+  return Object.freeze({
+    sentence,
+    unsupportedVocabularyTokens: Object.freeze([...new Set(unsupportedVocabularyTokens)]),
+    supportRatio,
+    reason: concreteClaimTokens.length > 0
+      ? "The sentence introduces concrete factual content that is not grounded in the quoted evidence, current scene, candidate articles, candidate atoms, or reviewer scope."
+      : "The sentence introduces factual content that is not grounded in the quoted evidence, current scene, candidate articles, candidate atoms, or reviewer scope.",
+  });
+}
+
 export function validateReasonedDecisionAgainstEvidence(
   input: V3PromptBuilderInput,
   result: V3ProviderReasoningResult,
@@ -288,6 +511,7 @@ export function validateReasonedDecisionAgainstEvidence(
   const candidateReviewerIds = normalizeIdSet(compiledReviewerContext?.selection.selectedReviewerIds);
   const candidateReviewerLabels = normalizeIdSet(compiledReviewerContext?.selection.selectedReviewerLabels);
   const groundingCorpus = normalizeText(collectGroundingCorpus(input, result));
+  const groundingTokens = collectGroundingTokens(input, result);
   const primaryCandidate = result.evidence.candidates[result.evidence.primaryCandidateIndex ?? 0] ?? result.evidence.candidates[0] ?? null;
   const exactEvidenceTexts = new Set(
     result.evidence.candidates
@@ -310,6 +534,7 @@ export function validateReasonedDecisionAgainstEvidence(
   const candidateArticleTokens = buildCandidateReferenceTokenSet([...candidateArticleIds]);
   const candidateAtomTokens = buildCandidateReferenceTokenSet([...candidateAtomIds]);
   const candidateReviewerTokens = buildCandidateReferenceTokenSet([...candidateReviewerIds, ...candidateReviewerLabels]);
+  const factualClaimDiagnostics: FactualClaimDiagnostic[] = [];
 
   if (candidateArticleIds.size > 0) {
     for (const [index, evaluation] of result.reasonedDecision.articleEvaluations.entries()) {
@@ -325,7 +550,7 @@ export function validateReasonedDecisionAgainstEvidence(
 
   if (passArticleCount === 0 && !noViolationRecommendation) {
     issues.push({
-      code: "insufficient_evidence_requires_no_violation",
+      code: "unsupported_legal_conclusion",
       path: "reasonedDecision.recommendation",
       message: "When no article passes, the reviewer must return NO VIOLATION instead of guessing.",
     });
@@ -345,6 +570,58 @@ export function validateReasonedDecisionAgainstEvidence(
       code: "unsupported_supporting_evidence",
       path: `reasonedDecision.supportingEvidence[${index}]`,
       message: `Supporting evidence must be an exact quote or scene span, but received: ${JSON.stringify(evidence)}.`,
+    });
+  }
+
+  const claimTexts = [
+    result.reasonedDecision.reasoning,
+    ...result.reasonedDecision.alternativeInterpretations,
+    result.reasonedDecision.riskAnalysis,
+    result.reasonedDecision.narrativeAnalysis,
+    result.reasonedDecision.humanLikeExplanation,
+    result.reasonedDecision.recommendation,
+    ...result.reasonedDecision.articleEvaluations.flatMap((evaluation) => [evaluation.reason, ...evaluation.evidence]),
+    ...result.reasonedDecision.contradictingEvidence,
+  ];
+
+  for (const sentence of claimTexts.flatMap((text) => splitSentences(text))) {
+    const diagnostic = assessFactualClaimGrounding(
+      sentence,
+      groundingTokens,
+      exactEvidenceTexts,
+      candidateArticleTokens,
+      candidateAtomTokens,
+      candidateReviewerTokens,
+    );
+    if (diagnostic) {
+      factualClaimDiagnostics.push(diagnostic);
+    }
+  }
+
+  if (factualClaimDiagnostics.length > 0) {
+    const claimSentenceCount = claimTexts.flatMap((text) => splitSentences(text)).length;
+    issues.push({
+      code: "unsupported_factual_claim",
+      path: "reasonedDecision.reasoning",
+      message: [
+        "The explanation introduces factual claims that are not grounded in the quoted evidence or supplied candidates.",
+        `Unsupported sentences: ${factualClaimDiagnostics.slice(0, 3).map((diagnostic) => diagnostic.sentence).join(" | ")}`,
+      ].join(" "),
+    });
+    logger.warn("V3 reasoned decision grounding diagnostics", {
+      validator_name: "reasonedDecisionValidation",
+      diagnostic_type: "unsupported_factual_claim",
+      candidate_reviewers: [...candidateReviewerIds],
+      candidate_reviewer_labels: [...candidateReviewerLabels],
+      candidate_articles: [...candidateArticleIds],
+      candidate_atoms: [...candidateAtomIds],
+      unsupported_sentences: factualClaimDiagnostics.slice(0, 5).map((diagnostic) => ({
+        sentence: diagnostic.sentence,
+        unsupportedVocabularyTokens: diagnostic.unsupportedVocabularyTokens,
+        supportRatio: diagnostic.supportRatio,
+      })),
+      supported_sentence_count: claimSentenceCount - factualClaimDiagnostics.length,
+      line_of_code: "reasonedDecisionValidation.ts:362-459",
     });
   }
 
@@ -369,31 +646,6 @@ export function validateReasonedDecisionAgainstEvidence(
         });
       }
     }
-  }
-
-  const claimText = [
-    result.reasonedDecision.reasoning,
-    result.reasonedDecision.narrativeAnalysis,
-    result.reasonedDecision.humanLikeExplanation,
-    result.reasonedDecision.recommendation,
-  ].join(" | ");
-
-  const unsupportedTokens = splitTokens(claimText).filter((token) => {
-    if (token.length < 4) return false;
-    if (GENERIC_ALLOWED_TOKENS.has(token)) return false;
-    if (candidateReviewerTokens.has(token)) return false;
-    if (candidateArticleTokens.has(token)) return false;
-    if (candidateAtomTokens.has(token)) return false;
-    if (groundingCorpus.includes(token)) return false;
-    return true;
-  });
-
-  if (unsupportedTokens.length > 0) {
-    issues.push({
-      code: "unsupported_claim_tokens",
-      path: "reasonedDecision.reasoning",
-      message: `The explanation introduced tokens not grounded in the quoted evidence or current scene: ${[...new Set(unsupportedTokens)].slice(0, 8).join(", ")}.`,
-    });
   }
 
   if (issues.length > 0) {
