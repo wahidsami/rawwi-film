@@ -30,10 +30,6 @@ function buildCombinedText(input: ReviewerDecisionModuleInput): string {
     input.intelligence.context.chunkContext,
     input.intelligence.context.neighboringSentences.join(" "),
     input.intelligence.evidence.candidates.map((candidate) => candidate.text).join(" "),
-    input.intelligence.storyMemory ?? "",
-    input.intelligence.glossary.title,
-    ...input.intelligence.glossary.entries.map((entry) => entry.term),
-    ...input.intelligence.glossary.entries.map((entry) => entry.definition ?? ""),
   ].join(" ");
 }
 
