@@ -370,6 +370,10 @@ function computeExecutionSignatureHash(row: ReturnType<typeof buildExecutionSign
   return sha256(canonicalStringify(row));
 }
 
+function estimatePromptTokens(systemPrompt: string, userPrompt: string): number {
+  return Math.max(1, Math.ceil((systemPrompt.length + userPrompt.length) / 4));
+}
+
 export async function runV3RuntimeAdapter(
   input: V3RuntimeAdapterRequest,
   options: V3RuntimeAdapterOptions = {},
@@ -431,6 +435,8 @@ export async function runV3RuntimeAdapter(
     topP,
     seed,
     maxTokens,
+    promptTokenEstimate: estimatePromptTokens(renderedPrompt.prompt, userPrompt),
+    retryAttempt: 0,
     responseFormat,
   });
   const reasoningLatencyMs = Date.now() - reasoningStartedAt;

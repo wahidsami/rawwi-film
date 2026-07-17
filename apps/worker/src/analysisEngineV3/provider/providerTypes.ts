@@ -11,6 +11,8 @@ export type V3ProviderCallJudgeRawInput = Readonly<{
   topP?: number;
   seed?: number;
   maxTokens?: number;
+  promptTokenEstimate?: number | null;
+  retryAttempt?: number | null;
   responseFormat?: "json_object" | "text";
   signal?: AbortSignal | null;
 }>;
@@ -29,6 +31,8 @@ export type V3ProviderRawResponse = Readonly<{
   responseId: string | null;
   responseTimestamp: string | null;
 }>;
+
+export type { V3ProviderErrorDetails } from "./providerError.js";
 
 export type V3ReasonedDecisionResult = Readonly<{
   reasoning: string;
@@ -66,6 +70,8 @@ export type V3ProviderReasoningRequest = Readonly<{
   topP?: number;
   seed?: number;
   maxTokens?: number;
+  promptTokenEstimate?: number | null;
+  retryAttempt?: number | null;
   responseFormat?: "json_object" | "text";
   signal?: AbortSignal | null;
 }>;

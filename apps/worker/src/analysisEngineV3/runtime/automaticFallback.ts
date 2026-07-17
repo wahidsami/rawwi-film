@@ -1,10 +1,12 @@
 import { logger } from "../../logger.js";
+import { extractV3ProviderError, type V3ProviderErrorDetails } from "../provider/providerError.js";
 
 export type V3AutomaticFallbackDiagnostics = Readonly<{
   engineAttempted: "v3";
   engineUsed: "v2_fallback";
   fallbackReason: string;
   exceptionStack: string | null;
+  providerError: V3ProviderErrorDetails | null;
 }>;
 
 export type V3AutomaticFallbackInput<T> = Readonly<{
@@ -40,6 +42,7 @@ export async function runWithV3AutomaticFallback<T>(input: V3AutomaticFallbackIn
       engineUsed: "v2_fallback",
       fallbackReason: toFailureMessage(error),
       exceptionStack: toFailureStack(error),
+      providerError: extractV3ProviderError(error),
     };
 
     if (input.onFallback) {

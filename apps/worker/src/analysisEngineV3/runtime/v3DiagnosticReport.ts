@@ -1,4 +1,5 @@
 import type { V3ReasonedDecisionValidationIssue } from "../provider/reasonedDecisionValidation.js";
+import type { V3ProviderErrorDetails } from "../provider/providerError.js";
 import type { ReviewerScopeValidatorResult } from "./reviewerScopeValidator.js";
 import type { V3ReasonedDecisionResult, V3ReasonedDecisionArticleEvaluation } from "../provider/providerTypes.js";
 import type { LegalDecision } from "../legal/legalDecision.js";
@@ -40,6 +41,7 @@ export type V3DiagnosticRejectedFinding = Readonly<{
 
 export type V3DiagnosticReport = {
   enabled: true;
+  provider_error: V3ProviderErrorDetails | null;
   providerFindingsCount: number;
   rawProviderFindings: readonly {
     articleId: number;
@@ -139,6 +141,7 @@ export function buildV3DiagnosticReport(input: Readonly<{
   scopeValidation: ReviewerScopeValidatorResult;
   validatedDecision: LegalDecision;
   mapperFindings: readonly V3DiagnosticMapperFinding[];
+  providerError?: V3ProviderErrorDetails | null;
 }>): V3DiagnosticReport {
   const rawProviderFindings = summarizeProviderFindings(input.providerDecision);
   const groundingRejectedCount = input.groundingValidation.issues.length;
@@ -156,6 +159,7 @@ export function buildV3DiagnosticReport(input: Readonly<{
 
   return {
     enabled: true,
+    provider_error: input.providerError ?? null,
     providerFindingsCount,
     rawProviderFindings,
     groundingAcceptedCount,
@@ -216,6 +220,73 @@ export function buildV3DiagnosticReport(input: Readonly<{
       },
     ],
     validatorHistory: [...input.validatedDecision.trace],
+  };
+}
+
+export function buildV3ProviderFailureDiagnosticReport(input: Readonly<{
+  providerError: V3ProviderErrorDetails;
+}>): V3DiagnosticReport {
+  return {
+    enabled: true,
+    provider_error: input.providerError,
+    providerFindingsCount: 0,
+    rawProviderFindings: [],
+    groundingAcceptedCount: 0,
+    groundingRejectedCount: 0,
+    scopeAcceptedCount: 0,
+    scopeRejectedCount: 0,
+    mapperFindingsCount: 0,
+    persistenceFindingsCount: null,
+    persistenceInsertedCount: null,
+    persistenceSkippedCount: null,
+    finalV3FindingsCount: 0,
+    rawV3FindingsCount: 0,
+    rejectedFindings: [],
+    acceptanceRate: 0,
+    topRejectionReasons: [],
+    stageSummary: [
+      {
+        stage: "provider",
+        inputCount: 0,
+        outputCount: 0,
+        rejectionCount: 0,
+        rejectionReason: input.providerError.message,
+        sourceValidator: "openaiProvider",
+      },
+      {
+        stage: "grounding_validation",
+        inputCount: 0,
+        outputCount: 0,
+        rejectionCount: 0,
+        rejectionReason: null,
+        sourceValidator: "reasonedDecisionValidation",
+      },
+      {
+        stage: "scope_validation",
+        inputCount: 0,
+        outputCount: 0,
+        rejectionCount: 0,
+        rejectionReason: null,
+        sourceValidator: "reviewerScopeValidator",
+      },
+      {
+        stage: "mapper",
+        inputCount: 0,
+        outputCount: 0,
+        rejectionCount: 0,
+        rejectionReason: null,
+        sourceValidator: "findingMapper",
+      },
+      {
+        stage: "persistence",
+        inputCount: 0,
+        outputCount: 0,
+        rejectionCount: 0,
+        rejectionReason: null,
+        sourceValidator: null,
+      },
+    ],
+    validatorHistory: [],
   };
 }
 

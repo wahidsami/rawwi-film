@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { buildV3DiagnosticReport, finalizeV3DiagnosticReport } from "./v3DiagnosticReport.js";
+import { buildV3DiagnosticReport, buildV3ProviderFailureDiagnosticReport, finalizeV3DiagnosticReport } from "./v3DiagnosticReport.js";
 
 const report = buildV3DiagnosticReport({
   providerDecision: {
@@ -102,12 +102,14 @@ const report = buildV3DiagnosticReport({
       evidence_snippet: "quote",
     } as never,
   ],
+  providerError: null,
 });
 
 assert.equal(report.providerFindingsCount, 2);
 assert.equal(report.mapperFindingsCount, 1);
 assert.equal(report.rejectedFindings.length >= 0, true);
 assert.equal(report.stageSummary[0]?.stage, "provider");
+assert.equal(report.provider_error, null);
 
 const finalized = finalizeV3DiagnosticReport(report, {
   persistenceFindingsCount: 1,
@@ -117,4 +119,26 @@ const finalized = finalizeV3DiagnosticReport(report, {
 
 assert.equal(finalized.persistenceFindingsCount, 1);
 assert.equal(finalized.stageSummary.find((stage) => stage.stage === "persistence")?.outputCount, 1);
+
+const failureReport = buildV3ProviderFailureDiagnosticReport({
+  providerError: {
+    name: "OpenAIError",
+    message: "upstream failed",
+    stack: null,
+    httpStatus: 500,
+    type: "server_error",
+    code: "server_error",
+    param: null,
+    requestId: "req_123",
+    modelName: "gpt-4.1",
+    maxTokens: 4096,
+    promptTokenEstimate: 1024,
+    retryAttempt: 0,
+    serializedError: { message: "upstream failed" },
+  },
+});
+
+assert.ok(failureReport.provider_error);
+assert.equal(failureReport.provider_error.message, "upstream failed");
+assert.equal(failureReport.stageSummary[0]?.rejectionReason, "upstream failed");
 console.log("✓ V3 diagnostic report summarizes stage counts");

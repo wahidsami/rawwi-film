@@ -50,6 +50,7 @@ import { recordV3FallbackExecution } from "./analysisEngineV3/runtime/runtimeMet
 import { v3InspectionRecorder } from "./analysisEngineV3/inspection/index.js";
 import { buildV3InspectionChunkFindingKey } from "./analysisEngineV3/inspection/inspectionKeys.js";
 import { buildV3PersistenceInspectionRecord } from "./analysisEngineV3/inspection/inspectionStageBuilders.js";
+import { buildV3ProviderFailureDiagnosticReport } from "./analysisEngineV3/runtime/v3DiagnosticReport.js";
 import { processChunkJudgeV2 } from "./pipelineV2.js";
 
 export type FindingWithGlobal = Omit<JudgeFinding, "source" | "evidence_hash" | "canonical_hash" | "lineage_id" | "parent_lineage_id" | "related_article_ids"> & {
@@ -1989,6 +1990,7 @@ export async function processChunkJudge(
               jobId,
               chunkId: chunk.id,
               runKey,
+              providerError: diagnosticReport.provider_error,
               stageSummary: diagnosticReport.stageSummary,
               providerFindingsCount: diagnosticReport.providerFindingsCount,
               groundingRejectedCount: diagnosticReport.groundingRejectedCount,
@@ -2007,6 +2009,7 @@ export async function processChunkJudge(
             engine_used: failure.engineUsed,
             fallback_reason: failure.fallbackReason,
             exception_stack: failure.exceptionStack,
+            provider_error: failure.providerError,
             fallback_execution_count: fallbackExecutionCount,
           };
 
@@ -2028,6 +2031,14 @@ export async function processChunkJudge(
             stage: "fallback",
             ...fallbackDiagnostics,
           };
+
+          if (config.V3_DIAGNOSTIC_MODE && failure.providerError) {
+            v3DiagnosticReport = buildV3ProviderFailureDiagnosticReport({
+              providerError: failure.providerError,
+            });
+            routerOutputJson.v3_diagnostic_report = v3DiagnosticReport;
+            (chunkTruthLayerMeta as Record<string, unknown>).v3_diagnostic_report = v3DiagnosticReport;
+          }
 
           try {
             await persistJudgeDiagnostic({
@@ -3206,6 +3217,7 @@ export async function processChunkJudge(
         jobId,
         chunkId: chunk.id,
         runKey,
+        providerError: diagnosticReport.provider_error,
         providerFindingsCount: diagnosticReport.providerFindingsCount,
         groundingAcceptedCount: diagnosticReport.groundingAcceptedCount,
         groundingRejectedCount: diagnosticReport.groundingRejectedCount,

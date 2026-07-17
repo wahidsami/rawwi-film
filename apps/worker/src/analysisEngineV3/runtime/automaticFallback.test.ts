@@ -27,6 +27,7 @@ async function testEnabledFallbackRecoversWithDiagnostics(): Promise<void> {
       assert.equal(diagnostics.engineUsed, "v2_fallback");
       assert.equal(diagnostics.fallbackReason, "synthetic V3 failure");
       assert.ok(diagnostics.exceptionStack?.includes("synthetic V3 failure"));
+      assert.equal(diagnostics.providerError, null);
       return "v2-result";
     },
   });
@@ -38,6 +39,7 @@ async function testEnabledFallbackRecoversWithDiagnostics(): Promise<void> {
   assert.equal(fallbackDiagnostics.engineUsed, "v2_fallback");
   assert.equal(fallbackDiagnostics.fallbackReason, "synthetic V3 failure");
   assert.ok(fallbackDiagnostics.exceptionStack?.includes("synthetic V3 failure"));
+  assert.equal(fallbackDiagnostics.providerError, null);
   assert.equal(getV3FallbackExecutionCount(), 0);
 }
 

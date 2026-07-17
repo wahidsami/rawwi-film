@@ -138,6 +138,10 @@ function appendValidationRepairInstruction(userPrompt: string, issues: readonly 
   ].join("\n");
 }
 
+function estimatePromptTokens(systemPrompt: string, userPrompt: string): number {
+  return Math.max(1, Math.ceil((systemPrompt.length + userPrompt.length) / 4));
+}
+
 export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promise<V3ProviderReasoningResult> {
   const startedAt = Date.now();
   logger.info("V3 instrumentation ENTER: runV3ProviderReasoning", {
@@ -156,6 +160,8 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
     topP: input.topP,
     seed: input.seed,
     maxTokens: input.maxTokens,
+    promptTokenEstimate: estimatePromptTokens(renderedPrompt.prompt, userPrompt),
+    retryAttempt: 0,
     responseFormat: input.responseFormat ?? "json_object",
     signal: input.signal ?? null,
   });
@@ -184,17 +190,20 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
   });
 
   if (!validation.valid) {
+    const repairedUserPrompt = appendValidationRepairInstruction(userPrompt, validation.issues);
     logger.info("V3 instrumentation ENTER: provider.callJudgeRaw (validation retry)", {
       modelName: input.modelName,
     });
     const retryRawResponse = await input.provider.callJudgeRaw({
       systemPrompt: renderedPrompt.prompt,
-      userPrompt: appendValidationRepairInstruction(userPrompt, validation.issues),
+      userPrompt: repairedUserPrompt,
       modelName: input.modelName,
       temperature: input.temperature,
       topP: input.topP,
       seed: input.seed,
       maxTokens: input.maxTokens,
+      promptTokenEstimate: estimatePromptTokens(renderedPrompt.prompt, repairedUserPrompt),
+      retryAttempt: 1,
       responseFormat: input.responseFormat ?? "json_object",
       signal: input.signal ?? null,
     });
@@ -213,7 +222,7 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
     const retryValidation = validateReasonedDecisionAgainstEvidence(input.promptInput, {
       prompt: renderedPrompt.prompt,
       promptHash: renderedPrompt.promptHash,
-      userPrompt: appendValidationRepairInstruction(userPrompt, validation.issues),
+      userPrompt: repairedUserPrompt,
       rawResponse: retryRawResponse,
       narrative: retryMapped.narrative,
       evidence: retryMapped.evidence,
