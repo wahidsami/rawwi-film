@@ -191,6 +191,9 @@ function testReviewerKnowledgePackRendered(): void {
   assert(rendered.prompt.includes("NO VIOLATION"), "prompt should instruct NO VIOLATION when no article passes");
   assert(rendered.prompt.includes("article-by-article"), "prompt should instruct article-by-article evaluation");
   assert(rendered.prompt.includes("PASS or FAIL"), "prompt should instruct PASS or FAIL per article");
+  assert(rendered.prompt.includes("find all policy violations"), "prompt should instruct exhaustive violation hunting");
+  assert(rendered.prompt.includes("Do not stop after finding one exception"), "prompt should forbid stopping after a single exception");
+  assert(rendered.prompt.includes("Analyze every threatening, abusive, violent, sexual, political, religious, criminal, or profane statement independently"), "prompt should require per-statement analysis");
   assert(rendered.prompt.includes("facts, actors, objects, injuries, or events"), "prompt should prohibit unsupported facts");
   assert(!rendered.prompt.includes('"rules": ['), "subject rule bundles should no longer be rendered directly");
   console.log("✓ reviewer knowledge packs are rendered instead of subject rule bundles");
