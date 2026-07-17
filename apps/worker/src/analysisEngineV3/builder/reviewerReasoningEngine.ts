@@ -621,11 +621,11 @@ function buildGptReviewerAssistant(
     }),
     }),
     decision_template: Object.freeze({
-      answer_with: Object.freeze(["reasoning", "article_evaluations", "supporting_evidence", "counter_evidence", "applicable_articles", "rejected_articles", "confidence", "recommendation"]),
+      answer_with: Object.freeze(["reasoning", "article_evaluations", "supporting_evidence", "contradicting_evidence", "applicable_articles", "rejected_articles", "confidence", "recommendation"]),
       reasoning: "Explain why each supplied article passes or fails based only on quote-based evidence. Keep it evidence-first and quote-grounded. Analyze every suspicious sentence independently and do not stop after the first exception.",
       article_evaluations: "For each supplied article return articleId, PASS or FAIL, evidence, reason, and confidence. Do not choose the closest category. Evaluate all suspicious statements before merging findings.",
       supporting_evidence: "Cite the exact quote and current-scene context that support the reasoning.",
-      counter_evidence: "State the strongest counter-reading and why it loses.",
+      contradicting_evidence: "State the strongest counter-reading and why it loses.",
       applicable_articles: "List only the article ids whose evaluations are PASS. If no article passes, use NO VIOLATION.",
       rejected_articles: "List the articles that were considered but rejected.",
       confidence: "Provide a calibrated confidence value between 0 and 1.",

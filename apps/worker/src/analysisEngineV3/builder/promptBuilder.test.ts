@@ -192,6 +192,7 @@ function testReviewerKnowledgePackRendered(): void {
   assert(rendered.prompt.includes("Profanity Reviewer Knowledge Pack"), "profanity pack should be selected for profanity input");
   assert(rendered.prompt.includes("reasoned_decision"), "output schema should request a reasoned decision");
   assert(rendered.prompt.includes("recommendation"), "output schema should request a recommendation");
+  assert(rendered.prompt.includes("contradicting_evidence"), "prompt should request contradicting evidence using the parser's canonical field");
   assert(rendered.prompt.includes("NO VIOLATION"), "prompt should instruct NO VIOLATION when no article passes");
   assert(rendered.prompt.includes("article-by-article"), "prompt should instruct article-by-article evaluation");
   assert(rendered.prompt.includes("PASS or FAIL"), "prompt should instruct PASS or FAIL per article");
