@@ -129,7 +129,8 @@ function main(): void {
   assert.equal(validation.valid, false);
   assert.equal(validation.issues.length > 0, true);
   assert.equal(validation.issues.some((issue) => issue.code === "unsupported_factual_claim"), true);
-  assert.equal(validation.sanitizedDecision.reasoning, "NO VIOLATION");
+  assert.equal(validation.sanitizedDecision.reasoning, "The quote is enough to know that a prince was murdered in the palace.");
+  assert.equal(validation.sanitizedDecision.articleEvaluations.length, 1);
   console.log("✓ reasoned decision grounding validator rejects hallucinated explanations");
 
   testCandidateAwareValidation();

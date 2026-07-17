@@ -1,6 +1,8 @@
 import type { EmergencyContextualReviewerRoutingReport } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
 import type { LegalDecision } from "../legal/legalDecision.js";
 import type { LegalFinding } from "../legal/legalResult.js";
+import { createLegalFinding } from "../legal/legalResult.js";
+import type { V3ReasonedDecisionResult } from "../provider/providerTypes.js";
 import type { ReviewerScopeDeclaration } from "../reviewerKnowledge/reviewerScopeMatrix.js";
 import { getReviewerScopeDeclaration, getReviewerScopeDeclarationsByIds } from "../reviewerKnowledge/reviewerScopeMatrix.js";
 import { logger } from "../../logger.js";
@@ -8,6 +10,7 @@ import { logger } from "../../logger.js";
 export type ReviewerScopeValidatorInput = Readonly<{
   routing: EmergencyContextualReviewerRoutingReport;
   decision: LegalDecision;
+  reasonedDecision?: V3ReasonedDecisionResult | null;
 }>;
 
 export type ReviewerScopeValidatorResult = Readonly<{
@@ -21,11 +24,73 @@ export type ReviewerScopeValidatorResult = Readonly<{
   acceptedFindings: readonly LegalFinding[];
   rejectedFindingsByScope: readonly LegalFinding[];
   sanitizedDecision: LegalDecision;
+  sanitizedReasonedDecision: V3ReasonedDecisionResult | null;
   scopeReason: string;
 }>;
 
 function uniqueSorted(values: readonly string[]): readonly string[] {
   return Object.freeze([...new Set(values.map((value) => value.trim()).filter((value) => value.length > 0))].sort((left, right) => left.localeCompare(right)));
+}
+
+function normalizeText(value: string): string {
+  return value.normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function pickEvidenceText(input: ReviewerScopeValidatorInput, articleId: number): string {
+  const reasonedDecision = input.reasonedDecision;
+  if (!reasonedDecision) return input.decision.evidence.candidates[0]?.text ?? `article:${articleId}`;
+
+  for (const evidence of reasonedDecision.supportingEvidence) {
+    const normalized = normalizeText(evidence);
+    if (normalized.length > 0) return evidence;
+  }
+
+  for (const evaluation of reasonedDecision.articleEvaluations) {
+    for (const evidence of evaluation.evidence) {
+      const normalized = normalizeText(evidence);
+      if (normalized.length > 0) return evidence;
+    }
+  }
+
+  return input.decision.evidence.candidates[0]?.text ?? `article:${articleId}`;
+}
+
+function buildFindingFromEvaluation(
+  input: ReviewerScopeValidatorInput,
+  evaluation: V3ReasonedDecisionResult["articleEvaluations"][number],
+  index: number,
+): LegalFinding {
+  const evidenceText = pickEvidenceText(input, evaluation.articleId);
+  const baseEvidence = input.decision.evidence.candidates[0] ?? {
+    text: evidenceText,
+    startOffset: 0,
+    endOffset: Math.max(1, evidenceText.length),
+    confidence: input.decision.evidence.confidence,
+    source: "chunk" as const,
+    notes: [],
+  };
+
+  return createLegalFinding({
+    findingKey: `${input.decision.moduleId}:${evaluation.articleId}:${index}:${normalizeText(evaluation.reason)}:${normalizeText(evaluation.status)}`,
+    moduleId: input.decision.moduleId,
+    moduleTitle: input.decision.moduleTitle,
+    articleIds: [evaluation.articleId],
+    status: "accept",
+    reason: evaluation.reason,
+    confidence: evaluation.confidence,
+    semantic: input.decision.semantic,
+    narrative: input.decision.narrative,
+    evidence: {
+      text: evidenceText,
+      startOffset: baseEvidence.startOffset,
+      endOffset: baseEvidence.endOffset,
+      confidence: baseEvidence.confidence,
+      source: baseEvidence.source,
+      notes: baseEvidence.notes ?? [],
+    },
+    context: input.decision.context,
+    exceptionCodes: [],
+  });
 }
 
 export function validateReviewerScope(input: ReviewerScopeValidatorInput): ReviewerScopeValidatorResult {
@@ -47,7 +112,11 @@ export function validateReviewerScope(input: ReviewerScopeValidatorInput): Revie
       })),
   ]);
 
-  const findings = input.decision.finding ? [input.decision.finding] : [];
+  const findings = Array.isArray(input.reasonedDecision?.articleEvaluations) && input.reasonedDecision.articleEvaluations.length > 0
+    ? input.reasonedDecision.articleEvaluations
+        .filter((evaluation) => evaluation.status === "PASS")
+        .map((evaluation, index) => buildFindingFromEvaluation(input, evaluation, index))
+    : input.decision.finding ? [input.decision.finding] : [];
   const acceptedFindings: LegalFinding[] = [];
   const rejectedFindingsByScope: LegalFinding[] = [];
   const selectedReviewerSet = new Set(selectedReviewerIds.map((reviewerId) => reviewerId.toLowerCase()));
@@ -64,12 +133,20 @@ export function validateReviewerScope(input: ReviewerScopeValidatorInput): Revie
   }
 
   const acceptedDecision: LegalDecision = acceptedFindings.length > 0
-    ? input.decision
+    ? Object.freeze({
+        ...input.decision,
+        status: "accept",
+        finding: acceptedFindings[0] ?? input.decision.finding,
+        trace: Object.freeze([
+          ...input.decision.trace,
+          "scope_validation:accepted",
+        ]),
+      })
     : Object.freeze({
         ...input.decision,
         status: "reject",
         reason: rejectedFindingsByScope.length > 0
-          ? `${input.decision.reason} | Scope validation rejected the finding because it is outside the declared reviewer scope.`
+          ? `${input.decision.reason} | Scope validation rejected the returned evaluation(s) because they are outside the declared reviewer scope.`
           : input.decision.reason,
         finding: null,
         trace: Object.freeze([
@@ -109,6 +186,29 @@ export function validateReviewerScope(input: ReviewerScopeValidatorInput): Revie
     acceptedFindings: Object.freeze(acceptedFindings),
     rejectedFindingsByScope: Object.freeze(rejectedFindingsByScope),
     sanitizedDecision: acceptedDecision,
+    sanitizedReasonedDecision: input.reasonedDecision
+      ? Object.freeze({
+          ...input.reasonedDecision,
+          articleEvaluations: Object.freeze(
+            input.reasonedDecision.articleEvaluations.filter((evaluation) =>
+              evaluation.status !== "PASS"
+                ? true
+                : acceptedFindings.some((finding) => finding.articleIds.includes(evaluation.articleId)),
+            ),
+          ),
+          applicableArticles: Object.freeze(
+            input.reasonedDecision.applicableArticles.filter((articleId) =>
+              acceptedFindings.some((finding) => finding.articleIds.includes(articleId)),
+            ),
+          ),
+          rejectedArticles: Object.freeze([
+            ...new Set([
+              ...input.reasonedDecision.rejectedArticles,
+              ...rejectedFindingsByScope.flatMap((finding) => finding.articleIds),
+            ]),
+          ].sort((left, right) => left - right)),
+        })
+      : null,
     scopeReason,
   });
 }

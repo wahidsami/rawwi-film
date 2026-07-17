@@ -1268,6 +1268,7 @@ export async function runV3RuntimeAdapter(
   const scopeValidation = validateReviewerScope({
     routing: reviewerKnowledgeSelection.routing,
     decision: legalDecision,
+    reasonedDecision: validatedReasonedDecision,
   });
   logger.info("V3 reviewer scope validation", {
     jobId: input.jobId,
@@ -1280,6 +1281,7 @@ export async function runV3RuntimeAdapter(
   });
   const validatedLegalDecision = scopeValidation.sanitizedDecision;
   const gcamMapping = evaluateRuntimeGcamMapping(validatedLegalDecision, intelligence);
+  const resolvedReasonedDecision = scopeValidation.sanitizedReasonedDecision ?? validatedReasonedDecision;
 
   const intelligenceHash = sha256(canonicalStringify(intelligence));
   const semanticHash = sha256(canonicalStringify(mapped.semantic));
@@ -1319,6 +1321,7 @@ export async function runV3RuntimeAdapter(
     }),
   });
 
+  const findingCount = resolvedReasonedDecision.articleEvaluations.filter((evaluation) => evaluation.status === "PASS").length;
   const diagnostics = createV3RuntimeDiagnostics({
     analysisResponse,
     providerName: rawResponse.providerName,
@@ -1331,10 +1334,11 @@ export async function runV3RuntimeAdapter(
     executionSignatureHash,
     subjectModuleId: analysisRequest.subjectModule.id,
     chunkText: analysisRequest.chunk.text,
-    findingCount: validatedLegalDecision.finding ? 1 : 0,
+    findingCount,
   });
   const findings = mapLegalDecisionToFindings({
     decision: validatedLegalDecision,
+    reasonedDecision: resolvedReasonedDecision,
     chunkStart: input.chunkStart,
     chunkEnd: input.chunkEnd,
     startLine: input.startLine,

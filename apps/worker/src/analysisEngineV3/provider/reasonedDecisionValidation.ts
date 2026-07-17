@@ -1,5 +1,5 @@
 import type { V3PromptBuilderInput } from "../builder/builderTypes.js";
-import type { V3ProviderReasoningResult, V3ReasonedDecisionResult } from "./providerTypes.js";
+import type { V3ProviderReasoningResult, V3ReasonedDecisionArticleEvaluation, V3ReasonedDecisionResult } from "./providerTypes.js";
 import { logger } from "../../logger.js";
 
 export type V3ReasonedDecisionValidationIssue = Readonly<{
@@ -425,6 +425,10 @@ function buildNoViolationDecision(
   });
 }
 
+function evaluationKey(evaluation: V3ReasonedDecisionArticleEvaluation): string {
+  return `${normalizeText(String(evaluation.articleId))}::${normalizeText(evaluation.reason)}::${normalizeText(evaluation.evidence.join(" | "))}::${normalizeText(evaluation.status)}`;
+}
+
 type FactualClaimDiagnostic = Readonly<{
   sentence: string;
   unsupportedVocabularyTokens: readonly string[];
@@ -522,7 +526,6 @@ export function validateReasonedDecisionAgainstEvidence(
 
   const recommendation = normalizeText(result.reasonedDecision.recommendation);
   const noViolationRecommendation = recommendation.includes("no violation");
-  const passArticleCount = result.reasonedDecision.articleEvaluations.filter((evaluation) => evaluation.status === "PASS").length;
   const candidateArticleIds = normalizeIdSet(
     candidateDiagnostics?.articleRanking.selectedPolicyArticleIds.map((articleId) => String(articleId))
       ?? compiledReviewerContext?.selectedArticles.map((article) => article.articleId),
@@ -534,57 +537,146 @@ export function validateReasonedDecisionAgainstEvidence(
   const candidateArticleTokens = buildCandidateReferenceTokenSet([...candidateArticleIds]);
   const candidateAtomTokens = buildCandidateReferenceTokenSet([...candidateAtomIds]);
   const candidateReviewerTokens = buildCandidateReferenceTokenSet([...candidateReviewerIds, ...candidateReviewerLabels]);
-  const factualClaimDiagnostics: FactualClaimDiagnostic[] = [];
-
-  if (candidateArticleIds.size > 0) {
-    for (const [index, evaluation] of result.reasonedDecision.articleEvaluations.entries()) {
-      if (!candidateArticleIds.has(normalizeText(String(evaluation.articleId)))) {
-        issues.push({
-          code: "article_outside_candidate_set",
-          path: `reasonedDecision.articleEvaluations[${index}].articleId`,
-          message: `The reviewer returned article ${evaluation.articleId}, but it was not supplied in the candidate article set.`,
-        });
-      }
-    }
-  }
-
-  if (passArticleCount === 0 && !noViolationRecommendation) {
-    issues.push({
-      code: "unsupported_legal_conclusion",
-      path: "reasonedDecision.recommendation",
-      message: "When no article passes, the reviewer must return NO VIOLATION instead of guessing.",
-    });
-  }
-
-  const exactEvidenceFailure = result.reasonedDecision.supportingEvidence
-    .map((evidence, index) => ({ evidence, index }))
-    .filter(({ evidence }) => {
-      const normalizedEvidence = normalizeText(evidence);
-      if (normalizedEvidence.length === 0) return true;
-      if (exactEvidenceTexts.has(normalizedEvidence)) return false;
-      return !groundingCorpus.includes(normalizedEvidence);
-    });
-
-  for (const { evidence, index } of exactEvidenceFailure) {
-    issues.push({
-      code: "unsupported_supporting_evidence",
-      path: `reasonedDecision.supportingEvidence[${index}]`,
-      message: `Supporting evidence must be an exact quote or scene span, but received: ${JSON.stringify(evidence)}.`,
-    });
-  }
-
-  const claimTexts = [
+  const acceptedEvaluations: V3ReasonedDecisionArticleEvaluation[] = [];
+  const rejectedEvaluationRecords: Array<Readonly<{
+    index: number;
+    evaluation: V3ReasonedDecisionArticleEvaluation;
+    issues: readonly V3ReasonedDecisionValidationIssue[];
+  }>> = [];
+  const sharedClaimSources = [
     result.reasonedDecision.reasoning,
     ...result.reasonedDecision.alternativeInterpretations,
     result.reasonedDecision.riskAnalysis,
     result.reasonedDecision.narrativeAnalysis,
     result.reasonedDecision.humanLikeExplanation,
-    result.reasonedDecision.recommendation,
-    ...result.reasonedDecision.articleEvaluations.flatMap((evaluation) => [evaluation.reason, ...evaluation.evidence]),
-    ...result.reasonedDecision.contradictingEvidence,
   ];
 
-  for (const sentence of claimTexts.flatMap((text) => splitSentences(text))) {
+  for (const [index, evaluation] of result.reasonedDecision.articleEvaluations.entries()) {
+    const evaluationIssues: V3ReasonedDecisionValidationIssue[] = [];
+    const evaluationPath = `reasonedDecision.articleEvaluations[${index}]`;
+    const evaluationArticleId = normalizeText(String(evaluation.articleId));
+    const evaluationEvidence = [...new Set([
+      ...evaluation.evidence,
+      ...(evaluation.status === "PASS" ? result.reasonedDecision.supportingEvidence : []),
+    ].map((value) => String(value).normalize("NFC").replace(/\s+/g, " ").trim()).filter((value) => value.length > 0))];
+
+    if (candidateArticleIds.size > 0 && !candidateArticleIds.has(evaluationArticleId)) {
+      const issue = {
+        code: "article_outside_candidate_set",
+        path: `${evaluationPath}.articleId`,
+        message: `The reviewer returned article ${evaluation.articleId}, but it was not supplied in the candidate article set.`,
+      };
+      issues.push(issue);
+      evaluationIssues.push(issue);
+    }
+
+    for (const [evidenceIndex, evidence] of evaluation.evidence.entries()) {
+      const normalizedEvidence = normalizeText(evidence);
+      if (normalizedEvidence.length === 0) {
+        const issue = {
+          code: "unsupported_supporting_evidence",
+          path: `${evaluationPath}.evidence[${evidenceIndex}]`,
+          message: "Supporting evidence cannot be empty.",
+        };
+        issues.push(issue);
+        evaluationIssues.push(issue);
+        continue;
+      }
+      if (exactEvidenceTexts.has(normalizedEvidence) || groundingCorpus.includes(normalizedEvidence)) {
+        continue;
+      }
+      const issue = {
+        code: "unsupported_supporting_evidence",
+        path: `${evaluationPath}.evidence[${evidenceIndex}]`,
+        message: `Supporting evidence must be an exact quote or scene span, but received: ${JSON.stringify(evidence)}.`,
+      };
+      issues.push(issue);
+      evaluationIssues.push(issue);
+    }
+
+    const claimTexts = [
+      evaluation.reason,
+      ...evaluation.evidence,
+    ];
+
+    const evaluationFactualClaimDiagnostics: FactualClaimDiagnostic[] = [];
+    for (const sentence of claimTexts.flatMap((text) => splitSentences(text))) {
+      const diagnostic = assessFactualClaimGrounding(
+        sentence,
+        groundingTokens,
+        exactEvidenceTexts,
+        candidateArticleTokens,
+        candidateAtomTokens,
+        candidateReviewerTokens,
+      );
+      if (diagnostic) {
+        evaluationFactualClaimDiagnostics.push(diagnostic);
+      }
+    }
+
+    if (evaluationFactualClaimDiagnostics.length > 0) {
+      const issue = {
+        code: "unsupported_factual_claim",
+        path: `${evaluationPath}.reason`,
+        message: [
+          "The evaluation introduces factual claims that are not grounded in the quoted evidence or supplied candidates.",
+          `Unsupported sentences: ${evaluationFactualClaimDiagnostics.slice(0, 3).map((diagnostic) => diagnostic.sentence).join(" | ")}`,
+        ].join(" "),
+      };
+      issues.push(issue);
+      evaluationIssues.push(issue);
+      logger.warn("V3 reasoned decision grounding diagnostics", {
+        validator_name: "reasonedDecisionValidation",
+        diagnostic_type: "unsupported_factual_claim",
+        evaluation_index: index,
+        evaluation_article: evaluation.articleId,
+        candidate_reviewers: [...candidateReviewerIds],
+        candidate_reviewer_labels: [...candidateReviewerLabels],
+        candidate_articles: [...candidateArticleIds],
+        candidate_atoms: [...candidateAtomIds],
+        unsupported_sentences: evaluationFactualClaimDiagnostics.slice(0, 5).map((diagnostic) => ({
+          sentence: diagnostic.sentence,
+          unsupportedVocabularyTokens: diagnostic.unsupportedVocabularyTokens,
+          supportRatio: diagnostic.supportRatio,
+        })),
+        line_of_code: "reasonedDecisionValidation.ts:362-459",
+      });
+    }
+
+    if (candidateAtomIds.size > 0) {
+      const candidateAtomPattern = /\b(?:atom[_-]?\d+(?:[_-]\d+)*|\d+-\d+)\b/gi;
+      const atomMentionText = claimTexts.join(" | ");
+      const atomMentions = [...new Set(atomMentionText.match(candidateAtomPattern) ?? [])];
+
+      for (const atomId of atomMentions) {
+        if (!candidateAtomIds.has(normalizeText(atomId))) {
+          const issue = {
+            code: "atom_outside_candidate_set",
+            path: `${evaluationPath}.reason`,
+            message: `The reviewer referenced atom ${atomId}, but it was not supplied in the candidate atom set.`,
+          };
+          issues.push(issue);
+          evaluationIssues.push(issue);
+        }
+      }
+    }
+
+    if (evaluationIssues.length === 0) {
+      acceptedEvaluations.push(Object.freeze({
+        ...evaluation,
+        evidence: Object.freeze(evaluationEvidence.length > 0 ? evaluationEvidence : [...evaluation.evidence]),
+      }));
+    } else {
+      rejectedEvaluationRecords.push(Object.freeze({
+        index,
+        evaluation,
+        issues: Object.freeze([...evaluationIssues]),
+      }));
+    }
+  }
+
+  const sharedClaimDiagnostics: FactualClaimDiagnostic[] = [];
+  for (const sentence of sharedClaimSources.flatMap((text) => splitSentences(text))) {
     const diagnostic = assessFactualClaimGrounding(
       sentence,
       groundingTokens,
@@ -594,65 +686,98 @@ export function validateReasonedDecisionAgainstEvidence(
       candidateReviewerTokens,
     );
     if (diagnostic) {
-      factualClaimDiagnostics.push(diagnostic);
+      sharedClaimDiagnostics.push(diagnostic);
     }
   }
 
-  if (factualClaimDiagnostics.length > 0) {
-    const claimSentenceCount = claimTexts.flatMap((text) => splitSentences(text)).length;
-    issues.push({
+  if (sharedClaimDiagnostics.length > 0) {
+    const issue = {
       code: "unsupported_factual_claim",
       path: "reasonedDecision.reasoning",
       message: [
-        "The explanation introduces factual claims that are not grounded in the quoted evidence or supplied candidates.",
-        `Unsupported sentences: ${factualClaimDiagnostics.slice(0, 3).map((diagnostic) => diagnostic.sentence).join(" | ")}`,
+        "The reviewer reasoning introduces factual claims that are not grounded in the quoted evidence or supplied candidates.",
+        `Unsupported sentences: ${sharedClaimDiagnostics.slice(0, 3).map((diagnostic) => diagnostic.sentence).join(" | ")}`,
       ].join(" "),
-    });
+    };
+    issues.push(issue);
     logger.warn("V3 reasoned decision grounding diagnostics", {
       validator_name: "reasonedDecisionValidation",
       diagnostic_type: "unsupported_factual_claim",
+      evaluation_index: null,
+      evaluation_article: null,
       candidate_reviewers: [...candidateReviewerIds],
       candidate_reviewer_labels: [...candidateReviewerLabels],
       candidate_articles: [...candidateArticleIds],
       candidate_atoms: [...candidateAtomIds],
-      unsupported_sentences: factualClaimDiagnostics.slice(0, 5).map((diagnostic) => ({
+      unsupported_sentences: sharedClaimDiagnostics.slice(0, 5).map((diagnostic) => ({
         sentence: diagnostic.sentence,
         unsupportedVocabularyTokens: diagnostic.unsupportedVocabularyTokens,
         supportRatio: diagnostic.supportRatio,
       })),
-      supported_sentence_count: claimSentenceCount - factualClaimDiagnostics.length,
-      line_of_code: "reasonedDecisionValidation.ts:362-459",
+      line_of_code: "reasonedDecisionValidation.ts:671-733",
     });
   }
 
-  if (candidateAtomIds.size > 0) {
-    const candidateAtomPattern = /\b(?:atom[_-]?\d+(?:[_-]\d+)*|\d+-\d+)\b/gi;
-    const atomMentionText = [
-      result.reasonedDecision.reasoning,
-      result.reasonedDecision.narrativeAnalysis,
-      result.reasonedDecision.humanLikeExplanation,
-      result.reasonedDecision.recommendation,
-      ...result.reasonedDecision.supportingEvidence,
-      ...result.reasonedDecision.contradictingEvidence,
-    ].join(" | ");
-    const atomMentions = [...new Set(atomMentionText.match(candidateAtomPattern) ?? [])];
+  if (rejectedEvaluationRecords.length > 0) {
+    logger.warn("V3 reasoned decision evaluation rejections", {
+      validator_name: "reasonedDecisionValidation",
+      candidate_reviewers: [...candidateReviewerIds],
+      candidate_reviewer_labels: [...candidateReviewerLabels],
+      candidate_articles: [...candidateArticleIds],
+      candidate_atoms: [...candidateAtomIds],
+      rejected_evaluations: rejectedEvaluationRecords.slice(0, 10).map(({ index, evaluation, issues: evaluationIssues }) => ({
+        evaluation_index: index,
+        article_id: evaluation.articleId,
+        status: evaluation.status,
+        reason: evaluation.reason,
+        issues: evaluationIssues.map((issue) => ({
+          code: issue.code,
+          path: issue.path,
+          message: issue.message,
+        })),
+      })),
+      line_of_code: "reasonedDecisionValidation.ts:504-670",
+    });
+  }
 
-    for (const atomId of atomMentions) {
-      if (!candidateAtomIds.has(normalizeText(atomId))) {
-        issues.push({
-          code: "atom_outside_candidate_set",
-          path: "reasonedDecision.reasoning",
-          message: `The reviewer referenced atom ${atomId}, but it was not supplied in the candidate atom set.`,
-        });
-      }
-    }
+  const acceptedPassCount = acceptedEvaluations.filter((evaluation) => evaluation.status === "PASS").length;
+  if (acceptedPassCount === 0 && !noViolationRecommendation) {
+    const issue: V3ReasonedDecisionValidationIssue = {
+      code: "unsupported_legal_conclusion",
+      path: "reasonedDecision.recommendation",
+      message: "When no article passes, the reviewer must return NO VIOLATION instead of guessing.",
+    };
+    issues.push(issue);
+    logger.warn("V3 reasoned decision grounding diagnostics", {
+      validator_name: "reasonedDecisionValidation",
+      diagnostic_type: "unsupported_legal_conclusion",
+      candidate_reviewers: [...candidateReviewerIds],
+      candidate_reviewer_labels: [...candidateReviewerLabels],
+      candidate_articles: [...candidateArticleIds],
+      candidate_atoms: [...candidateAtomIds],
+      line_of_code: "reasonedDecisionValidation.ts:549-557",
+    });
   }
 
   if (issues.length > 0) {
     logValidationRejection(input, result, issues, candidateArticleIds, candidateAtomIds, candidateReviewerIds, candidateReviewerLabels);
   }
 
-  const sanitizedDecision = issues.length === 0 ? result.reasonedDecision : buildNoViolationDecision(input, result);
+  const sanitizedDecision = Object.freeze({
+    ...result.reasonedDecision,
+    articleEvaluations: Object.freeze(acceptedEvaluations),
+    applicableArticles: Object.freeze(acceptedEvaluations
+      .filter((evaluation) => evaluation.status === "PASS")
+      .map((evaluation) => evaluation.articleId)
+      .filter((articleId, index, array) => array.indexOf(articleId) === index)
+      .sort((left, right) => left - right)),
+    rejectedArticles: Object.freeze([
+      ...new Set([
+        ...result.reasonedDecision.rejectedArticles,
+        ...rejectedEvaluationRecords.map(({ evaluation }) => evaluation.articleId),
+      ]),
+    ].sort((left, right) => left - right)),
+  });
 
   return Object.freeze({
     valid: issues.length === 0,
@@ -663,7 +788,6 @@ export function validateReasonedDecisionAgainstEvidence(
           "Validation failed.",
           "Return an evidence-first, quote-grounded answer evaluated article-by-article.",
           "Use only exact quotes from the current evidence or scene.",
-          "If no article passes, return NO VIOLATION.",
           ...issues.map((issue) => `${issue.path}: ${issue.message}`),
         ].join(" "),
     sanitizedDecision,

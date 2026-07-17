@@ -63,6 +63,22 @@ const report = buildV3DiagnosticReport({
       },
       trace: ["scope_validation:accepted"],
     },
+    sanitizedReasonedDecision: {
+      reasoning: "Reason",
+      alternativeInterpretations: ["Alt"],
+      confidence: 0.91,
+      articleEvaluations: [
+        { articleId: 11, status: "PASS", evidence: ["quote"], reason: "fits", confidence: 0.9 },
+      ],
+      supportingEvidence: ["quote"],
+      contradictingEvidence: [],
+      applicableArticles: [11],
+      rejectedArticles: [18],
+      riskAnalysis: "risk",
+      narrativeAnalysis: "narrative",
+      humanLikeExplanation: "explanation",
+      recommendation: "NO VIOLATION",
+    },
     scopeReason: "ok",
   },
   validatedDecision: {

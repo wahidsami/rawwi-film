@@ -4,6 +4,7 @@ import type { JudgeFinding } from "../../schemas.js";
 import type { LegalDecision } from "../legal/legalDecision.js";
 import type { LegalEvidenceCandidate, LegalContextResult } from "../legal/legalTypes.js";
 import type { IntelligenceContext } from "../intelligence/intelligenceContext.js";
+import type { V3ReasonedDecisionResult } from "../provider/providerTypes.js";
 import { createGcamMapperRegistry } from "../reviewerKnowledge/gcamMapper/index.js";
 import type {
   GcamMapperInput,
@@ -24,6 +25,13 @@ function clampOffset(value: number | null | undefined, fallback: number): number
 function pickPrimaryEvidence(decision: LegalDecision): LegalEvidenceCandidate | null {
   if (decision.evidence.primaryCandidateIndex === null) return null;
   return decision.evidence.candidates[decision.evidence.primaryCandidateIndex] ?? null;
+}
+
+function pickEvaluationEvidence(decision: LegalDecision, evaluationEvidence: readonly string[]): LegalEvidenceCandidate | null {
+  if (decision.evidence.candidates.length === 0) return null;
+  const normalizedEvaluationEvidence = new Set(evaluationEvidence.map((value) => normalizeText(value)));
+  const matchingCandidate = decision.evidence.candidates.find((candidate) => normalizedEvaluationEvidence.has(normalizeText(candidate.text)));
+  return matchingCandidate ?? pickPrimaryEvidence(decision) ?? decision.evidence.candidates[0] ?? null;
 }
 
 function normalizeText(value: string): string {
@@ -410,6 +418,7 @@ function buildLocation(
 
 export function mapLegalDecisionToFindings(args: {
   decision: LegalDecision;
+  reasonedDecision?: V3ReasonedDecisionResult | null;
   chunkStart: number;
   chunkEnd: number;
   startLine: number | null;
@@ -417,44 +426,65 @@ export function mapLegalDecisionToFindings(args: {
   diagnostics: V3RuntimeDiagnostics;
   gcamMapping?: GcamMapperResult | null;
 }): V3RuntimeFinding[] {
-  const { decision, chunkStart, chunkEnd, startLine, endLine, diagnostics, gcamMapping } = args;
-  if (!decision.finding || decision.status === "reject") {
+  const { decision, reasonedDecision, chunkStart, chunkEnd, startLine, endLine, diagnostics, gcamMapping } = args;
+  const sourceEvaluations = Array.isArray(reasonedDecision?.articleEvaluations) && reasonedDecision.articleEvaluations.length > 0
+    ? reasonedDecision.articleEvaluations
+    : decision.finding
+      ? [{
+          articleId: decision.finding.articleIds[0] ?? decision.articleIds[0] ?? 0,
+          status: "PASS" as const,
+          evidence: [decision.finding.evidence.text],
+          reason: decision.finding.reason,
+          confidence: decision.finding.confidence,
+        }]
+      : [];
+  const passEvaluations = sourceEvaluations.filter((evaluation) => evaluation.status === "PASS" && Number.isFinite(Number(evaluation.articleId)) && Number(evaluation.articleId) > 0);
+
+  if (passEvaluations.length === 0) {
     logger.info("V3 finding mapper rejected decision", {
       decision_status: decision.status,
-      decision_article: decision.finding?.articleIds[0] ?? decision.articleIds[0] ?? null,
+      decision_article: decision.finding?.articleIds[0] ?? decision.articleIds[0] ?? (reasonedDecision?.applicableArticles[0] ?? null),
       decision_atom: gcamMapping?.status === "MAPPED" ? gcamMapping.atomId : null,
       decision_reason: decision.reason,
       validator_history: decision.trace,
       line_of_code: "findingMapper.ts:419-421",
+      reasoned_decision_article_evaluations: reasonedDecision?.articleEvaluations.length ?? 0,
     });
     return [];
   }
 
-  const primaryEvidence = pickPrimaryEvidence(decision) ?? decision.finding.evidence;
-  const mappedArticleId = gcamMapping?.status === "MAPPED" ? gcamMapping.articleId : null;
-  const decisionArticleId = decision.finding.articleIds[0] ?? decision.articleIds[0] ?? null;
-  const articleId = decisionArticleId ?? mappedArticleId ?? 0;
-  const mappedAtomId = gcamMapping?.status === "MAPPED" && (mappedArticleId === null || mappedArticleId === articleId)
-    ? gcamMapping.atomId
-    : null;
-  const fallbackAtomId = getPolicyAtomIdsForArticle(articleId)[0] ?? null;
-  const atomId = normalizeAtomId(mappedAtomId ?? fallbackAtomId ?? null, articleId) || null;
-  const canonicalAtom = getPrimaryCanonicalAtomForGcam(articleId, atomId);
-  const evidenceSnippet = String(primaryEvidence?.text ?? "").trim();
-  const location = buildLocation(primaryEvidence ?? decision.finding.evidence, chunkStart, startLine, endLine, diagnostics, decision.moduleId);
+  return passEvaluations.flatMap((evaluation, index) => {
+    const articleId = Number(evaluation.articleId);
+    const mappedArticleId = gcamMapping?.status === "MAPPED" ? gcamMapping.articleId : null;
+    const mappedAtomId = gcamMapping?.status === "MAPPED" && mappedArticleId === articleId
+      ? gcamMapping.atomId
+      : null;
+    const fallbackAtomId = getPolicyAtomIdsForArticle(articleId)[0] ?? null;
+    const atomId = normalizeAtomId(mappedAtomId ?? fallbackAtomId ?? null, articleId) || null;
+    const canonicalAtom = getPrimaryCanonicalAtomForGcam(articleId, atomId);
+    const primaryEvidence = pickEvaluationEvidence(decision, evaluation.evidence);
+    const evidenceSnippet = String(primaryEvidence?.text ?? evaluation.evidence[0] ?? "").trim();
+    const locationEvidence = primaryEvidence ?? pickPrimaryEvidence(decision) ?? decision.evidence.candidates[0] ?? {
+      text: evidenceSnippet,
+      startOffset: chunkStart,
+      endOffset: Math.max(chunkStart + evidenceSnippet.length, chunkStart + 1),
+      confidence: decision.evidence.confidence,
+      source: "chunk" as const,
+      notes: [],
+    };
+    const location = buildLocation(locationEvidence, chunkStart, startLine, endLine, diagnostics, decision.moduleId);
 
-  return [
-    {
+    return [{
       source: "ai",
       article_id: articleId,
       atom_id: atomId,
-      severity: inferSeverity(decision.status, decision.confidence),
-      confidence: Number(Math.max(0, Math.min(1, decision.confidence)).toFixed(6)),
+      severity: inferSeverity(evaluation.status === "PASS" ? "accept" : "needs_review", evaluation.confidence),
+      confidence: Number(Math.max(0, Math.min(1, evaluation.confidence)).toFixed(6)),
       title_ar: gcamMapping?.findingTitle ?? decision.moduleTitle,
-      description_ar: gcamMapping?.reviewerExplanation ?? decision.reason,
+      description_ar: gcamMapping?.reviewerExplanation ?? evaluation.reason ?? decision.reason,
       evidence_snippet: evidenceSnippet,
-      rationale_ar: decision.reason,
-      final_ruling: decision.status === "accept" ? "violation" : "needs_review",
+      rationale_ar: evaluation.reason ?? decision.reason,
+      final_ruling: "violation",
       detection_pass: `v3_runtime_${decision.moduleId}`,
       location,
       start_offset_global: clampOffset(primaryEvidence?.startOffset, chunkStart),
@@ -464,7 +494,7 @@ export function mapLegalDecisionToFindings(args: {
       parent_lineage_id: null,
       evidence_hash: null,
       canonical_hash: null,
-      is_interpretive: decision.status === "needs_review",
+      is_interpretive: evaluation.status === "needs_review",
       depiction_type: "unknown",
       speaker_role: "unknown",
       narrative_consequence: "unknown",
@@ -473,9 +503,9 @@ export function mapLegalDecisionToFindings(args: {
       lexical_confidence: decision.evidence.confidence,
       policy_confidence: decision.semantic.confidence,
       primary_article_id: articleId,
-      related_article_ids: [...new Set([...(decision.finding.articleIds ?? []), ...(gcamMapping?.status === "MAPPED" && gcamMapping.articleId !== null ? [gcamMapping.articleId] : [])])].sort((left, right) => left - right),
-    },
-  ];
+      related_article_ids: [...new Set([articleId, ...(gcamMapping?.status === "MAPPED" && gcamMapping.articleId !== null ? [gcamMapping.articleId] : [])])].sort((left, right) => left - right),
+    }];
+  });
 }
 
 export function summarizeContextForReport(context: LegalContextResult): Record<string, unknown> {
