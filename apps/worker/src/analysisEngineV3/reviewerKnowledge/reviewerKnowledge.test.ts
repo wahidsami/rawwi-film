@@ -335,6 +335,33 @@ function testEmergencyRouterIsDeterministicAndSelective(): void {
   console.log("✓ emergency router is deterministic and selective");
 }
 
+function testEmergencyRouterIgnoresStoryMemory(): void {
+  const promptInput = makeProfanityPromptInput() as unknown as Record<string, unknown>;
+  const pollutedPromptInput = {
+    ...promptInput,
+    storyMemory: {
+      summary: "Earlier scene discussed religion and sacred symbols.",
+      notes: ["religion", "sacred symbols"],
+      scenes: ["A previous religious discussion."],
+    },
+  };
+  const conceptContext = makeConceptContext();
+  const assessment = runReviewerMethodology({
+    promptInput: pollutedPromptInput as never,
+    conceptContext,
+  });
+
+  const selection = createEmergencyContextualReviewerKnowledgeSelection({
+    promptInput: pollutedPromptInput as never,
+    conceptContext,
+    assessment,
+  });
+
+  assert.equal(selection.routing.selectedReviewerIds.includes("v3_01_religion"), false);
+  assert.equal(selection.routing.selectedReviewerIds.includes("v4_11_profanity"), true);
+  console.log("✓ emergency router ignores story memory");
+}
+
 function testSecurityRendererIsDeterministic(): void {
   const packs = [SECURITY_REVIEWER_KNOWLEDGE_PACK];
   const renderedA = renderReviewerKnowledgePacksSection(packs);
@@ -379,6 +406,7 @@ async function main(): Promise<void> {
   testMethodologyRenderer();
   testSelectorFindsProfanityPack();
   testEmergencyRouterIsDeterministicAndSelective();
+  testEmergencyRouterIgnoresStoryMemory();
   testSelectorFindsSecurityPack();
   testSelectorFindsSexualPack();
   testRendererIsDeterministic();

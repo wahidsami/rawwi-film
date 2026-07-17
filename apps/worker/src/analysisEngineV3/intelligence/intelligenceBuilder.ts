@@ -129,7 +129,6 @@ function buildGlossaryReferences(input: IntelligenceBuilderInput): readonly Inte
     input.context.localContext,
     input.context.narrativeContext,
     input.semantic.semanticMeaning,
-    input.storyMemory ?? "",
   ].join(" "));
 
   const sources = [

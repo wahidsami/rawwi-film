@@ -367,21 +367,10 @@ function collectSignals(input: Readonly<{
 
   const textSignals = [
     promptInput.chunkContext.localChunk,
-    ...(promptInput.chunkContext.neighboringSentences ?? []),
-    promptInput.chunkContext.sceneMemory ?? "",
-    typeof promptInput.storyMemory === "string"
-      ? promptInput.storyMemory
-      : [
-          promptInput.storyMemory.summary ?? "",
-          ...(promptInput.storyMemory.notes ?? []),
-          ...(promptInput.storyMemory.scenes ?? []),
-        ].join(" | "),
     assessment.narrativeUnderstanding,
     assessment.narrativeIntent,
     assessment.contextClassification,
     assessment.literalVsImpliedMeaning,
-    ...(assessment.exceptionSignals ?? []),
-    ...(assessment.reasoningTrace ?? []),
     assessment.speaker ?? "",
     assessment.target ?? "",
     assessment.victim ?? "",

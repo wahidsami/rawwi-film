@@ -52,7 +52,6 @@ function buildNarrativeSourceText(input: ConceptRecognitionInput): string {
     input.narrative.relationship,
     input.narrative.emotionalTone,
     ...flagTerms,
-    input.storyMemory,
   ]);
 }
 
@@ -96,7 +95,6 @@ function candidateSources(input: ConceptRecognitionInput): readonly SourcePool[]
   return [
     { type: "narrative", text: buildNarrativeSourceText(input), confidence: input.narrative.confidence },
     { type: "semantic", text: buildSemanticSourceText(input), confidence: input.semantic.confidence },
-    { type: "story_memory", text: buildStoryMemorySourceText(input), confidence: input.context.confidence * 0.8 },
     { type: "entity", text: buildEntitySourceText(input), confidence: 0.85 },
     { type: "glossary", text: buildGlossarySourceText(input), confidence: 0.9 },
     { type: "evidence", text: buildEvidenceSourceText(input), confidence: input.evidence.confidence },
@@ -180,7 +178,6 @@ function detectConcept(input: ConceptRecognitionInput, definition: ConceptRegist
   const confidence = normalizeConceptConfidence({
     narrative: hits.some((hit) => hit.sourceType === "narrative") ? input.narrative.confidence : 0,
     semantic: hits.some((hit) => hit.sourceType === "semantic") ? input.semantic.confidence : 0,
-    storyMemory: hits.some((hit) => hit.sourceType === "story_memory") ? input.context.confidence * 0.8 : 0,
     entity: hits.some((hit) => hit.sourceType === "entity") ? 0.85 : 0,
     glossary: hits.some((hit) => hit.sourceType === "glossary") ? 0.9 : 0,
     evidence: hits.some((hit) => hit.sourceType === "evidence") ? input.evidence.confidence : 0,
