@@ -3,6 +3,7 @@ import type { LegalDecision } from "../legal/legalDecision.js";
 import type { LegalFinding } from "../legal/legalResult.js";
 import type { ReviewerScopeDeclaration } from "../reviewerKnowledge/reviewerScopeMatrix.js";
 import { getReviewerScopeDeclaration, getReviewerScopeDeclarationsByIds } from "../reviewerKnowledge/reviewerScopeMatrix.js";
+import { logger } from "../../logger.js";
 
 export type ReviewerScopeValidatorInput = Readonly<{
   routing: EmergencyContextualReviewerRoutingReport;
@@ -82,6 +83,20 @@ export function validateReviewerScope(input: ReviewerScopeValidatorInput): Revie
     : rejectedFindingsByScope.length > 0
       ? "The returned finding was rejected because the reviewer did not own the classified category."
       : "No legal finding was returned.";
+
+  logger.info("V3 reviewer scope validation", {
+    validator_name: "reviewerScopeValidator",
+    candidate_reviewers: selectedReviewerIds,
+    candidate_reviewer_labels: selectedReviewerLabels,
+    rejected_reviewers: rejectedReviewerIds,
+    rejected_reviewer_labels: rejectedReviewerLabels,
+    gpt_reviewer: input.decision.moduleId,
+    gpt_article: input.decision.finding?.articleIds[0] ?? input.decision.articleIds[0] ?? null,
+    rejection_reason: acceptedFindings.length > 0 ? null : scopeReason,
+    line_of_code: "reviewerScopeValidator.ts:54-78",
+    accepted_findings_count: acceptedFindings.length,
+    rejected_findings_by_scope_count: rejectedFindingsByScope.length,
+  });
 
   return Object.freeze({
     scopeMatrix,

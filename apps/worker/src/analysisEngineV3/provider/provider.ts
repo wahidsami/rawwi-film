@@ -49,6 +49,9 @@ export function buildV3ProviderUserPrompt(input: V3PromptBuilderInput): string {
         assessment: reviewerAssessment,
       }).compiledReviewerContext)
     : null;
+  if (input.compiledReviewerContext !== compiledReviewerContext) {
+    (input as V3PromptBuilderInput & { compiledReviewerContext?: typeof compiledReviewerContext | null }).compiledReviewerContext = compiledReviewerContext;
+  }
   const reviewerKnowledgeSelection = useReviewerCompiler
     ? null
     : createEmergencyContextualReviewerKnowledgeSelection({

@@ -1,5 +1,6 @@
 import type { V3PromptBuilderInput } from "../builder/builderTypes.js";
 import type { V3ProviderReasoningResult, V3ReasonedDecisionResult } from "./providerTypes.js";
+import { logger } from "../../logger.js";
 
 export type V3ReasonedDecisionValidationIssue = Readonly<{
   code: string;
@@ -20,6 +21,8 @@ const GENERIC_ALLOWED_TOKENS = new Set([
   "according",
   "analysis",
   "and",
+  "atom",
+  "candidate",
   "article",
   "articles",
   "authoritative",
@@ -51,6 +54,7 @@ const GENERIC_ALLOWED_TOKENS = new Set([
   "grounded",
   "human",
   "in",
+  "inside",
   "interpretation",
   "kept",
   "keeping",
@@ -75,6 +79,7 @@ const GENERIC_ALLOWED_TOKENS = new Set([
   "reviewer",
   "scene",
   "single",
+  "selected",
   "supports",
   "support",
   "supported",
@@ -85,6 +90,11 @@ const GENERIC_ALLOWED_TOKENS = new Set([
   "text",
   "the",
   "this",
+  "deterministic",
+  "provided",
+  "supplied",
+  "returned",
+  "return",
   "treat",
   "treating",
   "to",
@@ -145,6 +155,53 @@ function normalizeText(value: string | null | undefined): string {
 
 function normalizeIdSet(values: readonly string[] | null | undefined): ReadonlySet<string> {
   return new Set((values ?? []).map((value) => normalizeText(value)).filter((value) => value.length > 0));
+}
+
+function candidateReferenceTokenVariants(value: string): readonly string[] {
+  const normalized = normalizeText(value);
+  if (!normalized) return [];
+
+  const variants = new Set<string>([normalized]);
+  const compact = normalized.replace(/\s+/g, "");
+  if (compact.length > 0) variants.add(compact);
+  const hyphenated = normalized.replace(/\s+/g, "-");
+  if (hyphenated.length > 0) variants.add(hyphenated);
+  const underscored = normalized.replace(/\s+/g, "_");
+  if (underscored.length > 0) variants.add(underscored);
+
+  if (/^\d+$/.test(normalized)) {
+    variants.add(`article ${normalized}`);
+    variants.add(`article-${normalized}`);
+    variants.add(`article_${normalized}`);
+    variants.add(`article${normalized}`);
+  }
+
+  return [...variants];
+}
+
+function buildCandidateReferenceTokenSet(values: readonly string[]): ReadonlySet<string> {
+  return new Set(values.flatMap((value) => candidateReferenceTokenVariants(value)));
+}
+
+function logValidationRejection(input: V3PromptBuilderInput, result: V3ProviderReasoningResult, issues: readonly V3ReasonedDecisionValidationIssue[], candidateArticleIds: ReadonlySet<string>, candidateAtomIds: ReadonlySet<string>, candidateReviewerIds: ReadonlySet<string>, candidateReviewerLabels: ReadonlySet<string>): void {
+  logger.warn("V3 reasoned decision validation rejected", {
+    validator_name: "reasonedDecisionValidation",
+    candidate_reviewers: [...candidateReviewerIds],
+    candidate_reviewer_labels: [...candidateReviewerLabels],
+    candidate_articles: [...candidateArticleIds],
+    candidate_atoms: [...candidateAtomIds],
+    gpt_reviewer: input.subjectModule.id,
+    gpt_articles: [...new Set(result.reasonedDecision.articleEvaluations.map((evaluation) => String(evaluation.articleId)))],
+    gpt_atoms: [...new Set([
+      ...(result.reasonedDecision.reasoning.match(/\b(?:atom[_-]?\d+(?:[_-]\d+)*|\d+-\d+)\b/gi) ?? []),
+      ...(result.reasonedDecision.narrativeAnalysis.match(/\b(?:atom[_-]?\d+(?:[_-]\d+)*|\d+-\d+)\b/gi) ?? []),
+      ...(result.reasonedDecision.humanLikeExplanation.match(/\b(?:atom[_-]?\d+(?:[_-]\d+)*|\d+-\d+)\b/gi) ?? []),
+      ...(result.reasonedDecision.recommendation.match(/\b(?:atom[_-]?\d+(?:[_-]\d+)*|\d+-\d+)\b/gi) ?? []),
+    ])],
+    rejection_reason: issues.map((issue) => `${issue.code}:${issue.path}`).join(" | "),
+    line_of_code: "reasonedDecisionValidation.ts:252-334",
+    issue_messages: issues.map((issue) => issue.message),
+  });
 }
 
 function splitTokens(value: string): readonly string[] {
@@ -228,6 +285,8 @@ export function validateReasonedDecisionAgainstEvidence(
   const issues: V3ReasonedDecisionValidationIssue[] = [];
   const compiledReviewerContext = input.compiledReviewerContext ?? null;
   const candidateDiagnostics = compiledReviewerContext?.candidateDiagnostics ?? null;
+  const candidateReviewerIds = normalizeIdSet(compiledReviewerContext?.selection.selectedReviewerIds);
+  const candidateReviewerLabels = normalizeIdSet(compiledReviewerContext?.selection.selectedReviewerLabels);
   const groundingCorpus = normalizeText(collectGroundingCorpus(input, result));
   const primaryCandidate = result.evidence.candidates[result.evidence.primaryCandidateIndex ?? 0] ?? result.evidence.candidates[0] ?? null;
   const exactEvidenceTexts = new Set(
@@ -248,6 +307,9 @@ export function validateReasonedDecisionAgainstEvidence(
     candidateDiagnostics?.atomRanking.selectedPolicyAtomIds
       ?? compiledReviewerContext?.selectedAtoms.map((atom) => atom.atomId),
   );
+  const candidateArticleTokens = buildCandidateReferenceTokenSet([...candidateArticleIds]);
+  const candidateAtomTokens = buildCandidateReferenceTokenSet([...candidateAtomIds]);
+  const candidateReviewerTokens = buildCandidateReferenceTokenSet([...candidateReviewerIds, ...candidateReviewerLabels]);
 
   if (candidateArticleIds.size > 0) {
     for (const [index, evaluation] of result.reasonedDecision.articleEvaluations.entries()) {
@@ -319,6 +381,9 @@ export function validateReasonedDecisionAgainstEvidence(
   const unsupportedTokens = splitTokens(claimText).filter((token) => {
     if (token.length < 4) return false;
     if (GENERIC_ALLOWED_TOKENS.has(token)) return false;
+    if (candidateReviewerTokens.has(token)) return false;
+    if (candidateArticleTokens.has(token)) return false;
+    if (candidateAtomTokens.has(token)) return false;
     if (groundingCorpus.includes(token)) return false;
     return true;
   });
@@ -329,6 +394,10 @@ export function validateReasonedDecisionAgainstEvidence(
       path: "reasonedDecision.reasoning",
       message: `The explanation introduced tokens not grounded in the quoted evidence or current scene: ${[...new Set(unsupportedTokens)].slice(0, 8).join(", ")}.`,
     });
+  }
+
+  if (issues.length > 0) {
+    logValidationRejection(input, result, issues, candidateArticleIds, candidateAtomIds, candidateReviewerIds, candidateReviewerLabels);
   }
 
   const sanitizedDecision = issues.length === 0 ? result.reasonedDecision : buildNoViolationDecision(input, result);

@@ -12,6 +12,7 @@ import type {
 } from "../reviewerKnowledge/gcamMapper/schemas/gcamMapperTypes.js";
 import type { V3RuntimeDiagnostics } from "./runtimeDiagnostics.js";
 import type { V3RuntimeFinding } from "./runtimeTypes.js";
+import { logger } from "../../logger.js";
 
 const DEFAULT_GCAM_MAPPER_REGISTRY = createGcamMapperRegistry();
 
@@ -417,7 +418,17 @@ export function mapLegalDecisionToFindings(args: {
   gcamMapping?: GcamMapperResult | null;
 }): V3RuntimeFinding[] {
   const { decision, chunkStart, chunkEnd, startLine, endLine, diagnostics, gcamMapping } = args;
-  if (!decision.finding || decision.status === "reject") return [];
+  if (!decision.finding || decision.status === "reject") {
+    logger.info("V3 finding mapper rejected decision", {
+      decision_status: decision.status,
+      decision_article: decision.finding?.articleIds[0] ?? decision.articleIds[0] ?? null,
+      decision_atom: gcamMapping?.status === "MAPPED" ? gcamMapping.atomId : null,
+      decision_reason: decision.reason,
+      validator_history: decision.trace,
+      line_of_code: "findingMapper.ts:419-421",
+    });
+    return [];
+  }
 
   const primaryEvidence = pickPrimaryEvidence(decision) ?? decision.finding.evidence;
   const mappedArticleId = gcamMapping?.status === "MAPPED" ? gcamMapping.articleId : null;
