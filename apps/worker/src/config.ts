@@ -145,6 +145,7 @@ export const config = {
   REVIEWER_COMPILER_ENABLED: (process.env.REVIEWER_COMPILER_ENABLED ?? "false").toLowerCase() === "true",
   DETERMINISTIC_CANDIDATES_ENABLED: (process.env.DETERMINISTIC_CANDIDATES_ENABLED ?? "false").toLowerCase() === "true",
   ARTICLE_ATOM_RANKING_ENABLED: (process.env.ARTICLE_ATOM_RANKING_ENABLED ?? "false").toLowerCase() === "true",
+  V3_RAW_PROVIDER_TEST: (process.env.V3_RAW_PROVIDER_TEST ?? "false").toLowerCase() === "true",
   ANALYSIS_SKIP_SCRIPT_SUMMARY_ON_LARGE_JOBS: (process.env.ANALYSIS_SKIP_SCRIPT_SUMMARY_ON_LARGE_JOBS ?? "true").toLowerCase() !== "false",
   ANALYSIS_SKIP_REVISIT_ON_LARGE_JOBS: (process.env.ANALYSIS_SKIP_REVISIT_ON_LARGE_JOBS ?? "true").toLowerCase() !== "false",
   ANALYSIS_SKIP_DEEP_AUDITOR_ON_LARGE_JOBS: (process.env.ANALYSIS_SKIP_DEEP_AUDITOR_ON_LARGE_JOBS ?? "false").toLowerCase() === "true",

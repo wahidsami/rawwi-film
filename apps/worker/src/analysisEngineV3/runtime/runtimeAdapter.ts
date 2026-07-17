@@ -63,6 +63,7 @@ import { buildArbitrationDecisionPackage } from "../arbitration/index.js";
 import { buildExplanationPackage } from "../explanation/index.js";
 import { buildReviewerDecisionContext } from "../legal/reviewerDecisionPreparation.js";
 import type { LegalDecision } from "../legal/legalDecision.js";
+import { createLegalDecision } from "../legal/legalDecision.js";
 import { buildExplanationSafeAnalysisResponse } from "./explanationSafeAnalysisResponse.js";
 import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
 import { validateReasonedDecisionAgainstEvidence } from "../provider/reasonedDecisionValidation.js";
@@ -71,6 +72,8 @@ import { buildV3LegalReasoningTrace, buildV3ReasoningMetrics } from "../reasonin
 import { buildV3DiagnosticReport, type V3DiagnosticEvidenceTrace, type V3DiagnosticTraceRemovedItem, type V3DiagnosticTraceStage } from "./v3DiagnosticReport.js";
 import type { V3RuntimeFinding } from "./runtimeTypes.js";
 import { writeV3PromptReplayFile } from "./promptReplay.js";
+import { createEmptyConceptContext } from "../concepts/conceptNormalizer.js";
+import type { IntelligenceContext, IntelligenceFlags } from "../intelligence/intelligenceContext.js";
 
 function normalizeTerms(terms: V3RuntimeAdapterRequest["promptLexiconTerms"]): V3PromptGlossary {
   return {
@@ -799,6 +802,206 @@ function estimatePromptTokens(systemPrompt: string, userPrompt: string): number 
   return Math.max(1, Math.ceil((systemPrompt.length + userPrompt.length) / 4));
 }
 
+function buildRawProviderTestSystemPrompt(): string {
+  return [
+    "You are an expert compliance reviewer.",
+    "Read the screenplay below.",
+    "List every possible violation you can find.",
+    "For each violation return:",
+    "- offending sentence",
+    "- reason",
+    "- policy category",
+  ].join("\n");
+}
+
+function buildRawProviderTestAnalysisResponse(input: V3RuntimeAdapterRequest, promptHash: string, subjectModuleId: string): AnalysisResponse {
+  const stageDefinitions = [
+    "narrative",
+    "evidence",
+    "semantic",
+    "context",
+    "intelligence",
+    "legal",
+  ] as const;
+
+  const narrative = Object.freeze({
+    speaker: null,
+    listener: null,
+    target: null,
+    narrativeVoice: "unknown",
+    sceneType: "unknown",
+    narrativeIntent: "unknown",
+    storyPosition: "unknown",
+    relationship: null,
+    emotionalTone: "unknown",
+    condemnation: null,
+    approval: null,
+    neutrality: true,
+    historicalContext: null,
+    dream: null,
+    flashback: null,
+    comedy: null,
+    satire: null,
+    threat: null,
+    instruction: null,
+    news: null,
+    documentary: null,
+    dialogue: null,
+    narration: null,
+    sceneDescription: null,
+    confidence: 0,
+    notes: ["V3 raw provider test mode"],
+  });
+  const evidence = Object.freeze({
+    candidates: Object.freeze([]),
+    primaryCandidateIndex: null,
+    admissible: false,
+    confidence: 0,
+    notes: ["V3 raw provider test mode"],
+  });
+  const semantic = Object.freeze({
+    semanticMeaning: "",
+    narrativeIntent: "unknown",
+    conversationRole: "unknown",
+    sceneRole: "unknown",
+    speaker: null,
+    listener: null,
+    target: null,
+    victim: null,
+    emotion: null,
+    riskContext: null,
+    confidence: 0,
+    notes: ["V3 raw provider test mode"],
+  });
+  const context = Object.freeze({
+    storyMemory: input.storyMemory ?? null,
+    sceneMemory: input.sceneMemory ?? null,
+    localContext: input.chunkText,
+    chunkContext: input.analysisPromptContext ?? input.chunkText,
+    neighboringSentences: Object.freeze([...input.neighboringSentences]),
+    narrativeContext: "",
+    confidence: 0,
+    notes: ["V3 raw provider test mode"],
+  });
+  const glossary = Object.freeze({
+    title: "Runtime Glossary",
+    entries: Object.freeze([]),
+    notes: Object.freeze(["V3 raw provider test mode"]),
+  });
+  const intelligenceFlags = Object.freeze({
+    dialogue: false,
+    narration: false,
+    promotion: false,
+    condemnation: false,
+    description: false,
+    historical: false,
+    educational: false,
+    satire: false,
+    documentary: false,
+    fiction: false,
+    threat: false,
+    instruction: false,
+    news: false,
+    comedy: false,
+    dream: false,
+    flashback: false,
+    quotation: false,
+    approval: false,
+    neutrality: true,
+  }) as IntelligenceFlags;
+  const conceptContext = createEmptyConceptContext();
+  const intelligence: IntelligenceContext = Object.freeze({
+    moduleId: subjectModuleId,
+    storyMemory: input.storyMemory ?? null,
+    narrative,
+    evidence,
+    semantic,
+    context,
+    narrativeIntent: "unknown",
+    speaker: null,
+    listener: null,
+    target: null,
+    victim: null,
+    sceneType: "unknown",
+    dialogueMode: "unknown",
+    interpretationMode: "unknown",
+    flags: intelligenceFlags,
+    entities: Object.freeze([]),
+    glossaryReferences: Object.freeze([]),
+    evidenceAssessment: Object.freeze({
+      primaryText: input.chunkText,
+      primaryStartOffset: input.chunkStart,
+      primaryEndOffset: input.chunkEnd,
+      primaryCandidateIndex: null,
+      candidateCount: 0,
+      admissible: false,
+      confidence: 0,
+      source: "chunk" as const,
+      notes: Object.freeze(["V3 raw provider test mode"]),
+    }),
+    contextConfidence: 0,
+    legalConcepts: Object.freeze([]),
+    conceptContext,
+    glossary,
+  });
+  const legalDecision = createLegalDecision({
+    moduleId: subjectModuleId,
+    moduleTitle: "Raw Provider Test",
+    articleIds: [],
+    applies: false,
+    status: "reject",
+    reason: "V3 raw provider test mode",
+    confidence: 0,
+    semantic,
+    narrative,
+    evidence,
+    context,
+    exceptions: [],
+    finding: null,
+    trace: Object.freeze(["raw_provider_test_mode"]),
+  });
+  const stageHashes = Object.freeze(
+    stageDefinitions.map((stage) => Object.freeze({ stage, hash: sha256(canonicalStringify(stage === "narrative"
+      ? narrative
+      : stage === "evidence"
+        ? evidence
+        : stage === "semantic"
+          ? semantic
+          : stage === "context"
+            ? context
+            : stage === "intelligence"
+              ? intelligence
+              : legalDecision)) })),
+  ) as readonly V3StageHash[];
+  const stageTimings = Object.freeze(
+    stageDefinitions.map((stage) => Object.freeze({ stage, durationMs: null as number | null })),
+  ) as readonly V3StageTiming[];
+  const semanticHash = sha256(canonicalStringify(semantic));
+  const legalHash = sha256(canonicalStringify(legalDecision));
+
+  return Object.freeze({
+    promptHash,
+    semanticHash,
+    legalHash,
+    stageHashes,
+    stageTimings,
+    narrative,
+    evidence,
+    semantic,
+    context,
+    intelligence,
+    legalDecision,
+    diagnostics: Object.freeze({
+      executionOrder: ["build_prompt", "reasoning_pipeline", "semantic_layer", "intelligence_layer", "legal_engine", "module_evaluation", "analysis_response"] as const,
+      promptHash,
+      semanticHash,
+      legalHash,
+      stageHashes,
+      stageTimings,
+    }),
+  });
+}
+
 export async function runV3RuntimeAdapter(
   input: V3RuntimeAdapterRequest,
   options: V3RuntimeAdapterOptions = {},
@@ -808,12 +1011,6 @@ export async function runV3RuntimeAdapter(
     jobId: input.jobId,
     chunkId: input.chunkId,
   });
-  const analysisRequest = buildRuntimeAnalysisRequest(input, options);
-  const promptInput = buildPromptInput(analysisRequest);
-  const renderedPrompt = buildV3RenderedPrompt(promptInput);
-  const userPrompt = buildV3ProviderUserPrompt(promptInput);
-  let promptReplayFilePath: string | null = null;
-
   const providerFactory = createV3ProviderFactory();
   const provider = providerFactory.create(options.providerName ?? "openai");
   const modelName = options.modelName ?? config.OPENAI_JUDGE_MODEL;
@@ -823,6 +1020,87 @@ export async function runV3RuntimeAdapter(
   const maxTokens = options.maxTokens ?? 4096;
   const responseFormat = options.responseFormat ?? "json_object";
   const pipelineVersion = input.analysisSignatureContext?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION;
+
+  if (config.V3_RAW_PROVIDER_TEST) {
+    const startedRawAt = Date.now();
+    const rawSystemPrompt = buildRawProviderTestSystemPrompt();
+    const rawUserPrompt = input.chunkText;
+    logger.info("V3 raw provider test ENTER", {
+      jobId: input.jobId,
+      chunkId: input.chunkId,
+      modelName,
+    });
+    logger.info("V3 raw provider test prompt", {
+      jobId: input.jobId,
+      chunkId: input.chunkId,
+      systemPrompt: rawSystemPrompt,
+      userPrompt: rawUserPrompt,
+      promptTokenEstimate: estimatePromptTokens(rawSystemPrompt, rawUserPrompt),
+      maxTokens,
+    });
+    const rawResponse = await provider.callJudgeRaw({
+      systemPrompt: rawSystemPrompt,
+      userPrompt: rawUserPrompt,
+      modelName,
+      temperature,
+      topP,
+      seed,
+      maxTokens,
+      promptTokenEstimate: estimatePromptTokens(rawSystemPrompt, rawUserPrompt),
+      retryAttempt: 0,
+      responseFormat: "text",
+    });
+    logger.info("V3 raw provider test raw response", {
+      jobId: input.jobId,
+      chunkId: input.chunkId,
+      modelName: rawResponse.modelName,
+      providerName: rawResponse.providerName,
+      responseId: rawResponse.responseId,
+      responseTimestamp: rawResponse.responseTimestamp,
+      finishReason: rawResponse.finishReason,
+      usage: rawResponse.usage,
+      rawResponse: rawResponse.rawResponse,
+    });
+    const rawPromptHash = sha256(canonicalStringify({ systemPrompt: rawSystemPrompt, userPrompt: rawUserPrompt }));
+    const analysisResponse = buildRawProviderTestAnalysisResponse(input, rawPromptHash, options.subjectModule?.id ?? "raw_provider_test");
+    const diagnostics = createV3RuntimeDiagnostics({
+      analysisResponse,
+      providerName: rawResponse.providerName,
+      modelName: rawResponse.modelName,
+      modelVersion: rawResponse.modelVersion,
+      rawResponseHash: sha256(rawResponse.rawResponse),
+      responseId: rawResponse.responseId,
+      responseTimestamp: rawResponse.responseTimestamp,
+      promptHash: analysisResponse.promptHash,
+      executionSignatureHash: null,
+      subjectModuleId: options.subjectModule?.id ?? "raw_provider_test",
+      chunkText: input.chunkText,
+      findingCount: 0,
+    });
+    const truthLayerMeta = buildRuntimeTruthLayerMeta({
+      analysisResponse,
+      findings: [],
+      diagnostics,
+      gptAssistant: null,
+    });
+    logger.info("V3 raw provider test EXIT", {
+      jobId: input.jobId,
+      chunkId: input.chunkId,
+      durationMs: Date.now() - startedRawAt,
+    });
+    return Object.freeze({
+      analysisResponse,
+      findings: Object.freeze([]),
+      diagnostics,
+      truthLayerMeta,
+    });
+  }
+
+  const analysisRequest = buildRuntimeAnalysisRequest(input, options);
+  const promptInput = buildPromptInput(analysisRequest);
+  const renderedPrompt = buildV3RenderedPrompt(promptInput);
+  const userPrompt = buildV3ProviderUserPrompt(promptInput);
+  let promptReplayFilePath: string | null = null;
 
   const signatureContext = input.analysisSignatureContext ?? null;
   let executionSignatureHash: string | null = null;
@@ -863,7 +1141,7 @@ export async function runV3RuntimeAdapter(
     maxTokens,
     promptTokenEstimate: estimatePromptTokens(renderedPrompt.prompt, userPrompt),
     retryAttempt: 0,
-    responseFormat,
+    responseFormat: options.responseFormat ?? "json_object",
   });
   const reasoningLatencyMs = Date.now() - reasoningStartedAt;
 
