@@ -256,6 +256,37 @@ function normalizeArticleEvaluation(value: unknown): V3ReasonedDecisionArticleEv
   });
 }
 
+function synthesizeArticleEvaluations(input: V3ReasoningResponsePayload): readonly V3ReasonedDecisionArticleEvaluation[] {
+  const supportingEvidence = normalizeList(input.supportingEvidence ?? input.supporting_evidence);
+  const confidence = clampConfidence(input.confidence);
+  const recommendation = String(input.recommendation ?? input.recommendation_result ?? input.recommendationResult ?? "");
+  const applicableArticles = normalizeArticleList(input.applicableArticles ?? input.applicable_articles);
+  const rejectedArticles = normalizeArticleList(input.rejectedArticles ?? input.rejected_articles);
+  const synthesized: V3ReasonedDecisionArticleEvaluation[] = [];
+
+  for (const articleId of applicableArticles) {
+    synthesized.push(Object.freeze({
+      articleId,
+      status: "PASS" as const,
+      evidence: Object.freeze([...supportingEvidence]),
+      reason: recommendation || "The model marked this article as applicable.",
+      confidence,
+    }));
+  }
+
+  for (const articleId of rejectedArticles) {
+    synthesized.push(Object.freeze({
+      articleId,
+      status: "FAIL" as const,
+      evidence: Object.freeze([...supportingEvidence]),
+      reason: recommendation || "The model marked this article as rejected.",
+      confidence,
+    }));
+  }
+
+  return Object.freeze(synthesized);
+}
+
 function normalizeNarrativeResult(value: unknown): LegalNarrativeResult {
   const input = isObject(value) ? value : {};
   return Object.freeze({
@@ -351,10 +382,13 @@ function normalizeContextResult(value: unknown): LegalContextResult {
 function normalizeReasonedDecisionResult(value: unknown): V3ReasonedDecisionResult {
   const input = isObject(value) ? value : {};
   const rawArticleEvaluations = input.articleEvaluations ?? input.article_evaluations;
+  const synthesizedArticleEvaluations = Array.isArray(rawArticleEvaluations) && rawArticleEvaluations.length > 0
+    ? null
+    : synthesizeArticleEvaluations(input as V3ReasoningResponsePayload);
   const articleEvaluations = Object.freeze(
-    Array.isArray(rawArticleEvaluations)
+    Array.isArray(rawArticleEvaluations) && rawArticleEvaluations.length > 0
       ? rawArticleEvaluations.map(normalizeArticleEvaluation)
-      : [],
+      : synthesizedArticleEvaluations ?? [],
   );
   return Object.freeze({
     reasoning: String(input.reasoning ?? input.why ?? ""),
