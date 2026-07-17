@@ -62,6 +62,7 @@ import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewer
 import { validateReasonedDecisionAgainstEvidence } from "../provider/reasonedDecisionValidation.js";
 import { validateReviewerScope } from "./reviewerScopeValidator.js";
 import { buildV3LegalReasoningTrace, buildV3ReasoningMetrics } from "../reasoningTrace/index.js";
+import { buildV3DiagnosticReport } from "./v3DiagnosticReport.js";
 
 function normalizeTerms(terms: V3RuntimeAdapterRequest["promptLexiconTerms"]): V3PromptGlossary {
   return {
@@ -626,12 +627,24 @@ export async function runV3RuntimeAdapter(
     diagnostics,
     gcamMapping,
   });
+  const diagnosticReport = config.V3_DIAGNOSTIC_MODE
+    ? buildV3DiagnosticReport({
+        providerDecision: mapped.reasonedDecision,
+        groundingValidation,
+        scopeValidation,
+        validatedDecision: validatedLegalDecision,
+        mapperFindings: findings,
+      })
+    : null;
   const truthLayerMeta = buildRuntimeTruthLayerMeta({
     analysisResponse,
     findings,
     diagnostics,
     gptAssistant,
   });
+  if (diagnosticReport) {
+    truthLayerMeta.v3_diagnostic_report = diagnosticReport;
+  }
   const reviewerDebate = buildReviewerDebatePackage({
     analysisResponse,
     legalModules,

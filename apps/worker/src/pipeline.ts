@@ -15,6 +15,7 @@ import { findStringMatches, getLexiconCache } from "./lexiconCache.js";
 import { logger } from "./logger.js";
 import { buildRouterTraceSummary, callJudgeRaw, callRouter, parseJudgeWithRepair } from "./openai.js";
 import { config } from "./config.js";
+import type { V3DiagnosticReport } from "./analysisEngineV3/runtime/v3DiagnosticReport.js";
 import { isValidAtomForArticle, normalizeAtomId } from "./policyMap.js";
 import type { JudgeFinding } from "./schemas.js";
 import { getScriptStandardRouterList } from "./gcam.js";
@@ -1835,6 +1836,7 @@ export async function processChunkJudge(
   let routerOutputJson: any = null;
   let chunkTruthLayerMeta: Record<string, unknown> | null = null;
   let finalDiagnosticPromptHash = "";
+  let v3DiagnosticReport: V3DiagnosticReport | null = null;
 
   const cachedValidated = ((cachedRun?.validated_ai_findings as any[]) || []) as FindingWithGlobal[];
   const cachedLegacy = ((cachedRun?.ai_findings as any[]) || []) as FindingWithGlobal[];
@@ -1919,7 +1921,7 @@ export async function processChunkJudge(
         runKey,
       });
       await runWithV3AutomaticFallback({
-        enabled: config.V3_ENABLE_AUTOMATIC_FALLBACK,
+        enabled: !config.V3_DIAGNOSTIC_MODE && config.V3_ENABLE_AUTOMATIC_FALLBACK,
         runPrimary: async () => {
           const runtimeAdapterStartedAt = Date.now();
           logger.info("V3 instrumentation ENTER: runV3RuntimeAdapter", {
@@ -1969,6 +1971,7 @@ export async function processChunkJudge(
             gcam_mapping_hash: runtimeGcamMapping?.hash ?? null,
           };
           chunkTruthLayerMeta = runtimeResult.truthLayerMeta;
+          v3DiagnosticReport = (runtimeResult.truthLayerMeta as Record<string, unknown> | null | undefined)?.v3_diagnostic_report as V3DiagnosticReport | null | undefined ?? null;
           finalDiagnosticPromptHash = runtimeResult.diagnostics.promptHash;
           logger.info("V3 runtime adapter completed", {
             jobId,
@@ -1980,6 +1983,22 @@ export async function processChunkJudge(
             semanticHash: runtimeResult.diagnostics.semanticHash,
             legalHash: runtimeResult.diagnostics.legalHash,
           });
+          if (config.V3_DIAGNOSTIC_MODE && v3DiagnosticReport) {
+            const diagnosticReport = v3DiagnosticReport as V3DiagnosticReport;
+            logger.info("V3 diagnostic stage report", {
+              jobId,
+              chunkId: chunk.id,
+              runKey,
+              stageSummary: diagnosticReport.stageSummary,
+              providerFindingsCount: diagnosticReport.providerFindingsCount,
+              groundingRejectedCount: diagnosticReport.groundingRejectedCount,
+              scopeRejectedCount: diagnosticReport.scopeRejectedCount,
+              mapperFindingsCount: diagnosticReport.mapperFindingsCount,
+              rejectedFindings: diagnosticReport.rejectedFindings,
+              acceptanceRate: diagnosticReport.acceptanceRate,
+              topRejectionReasons: diagnosticReport.topRejectionReasons,
+            });
+          }
         },
         onFallback: async (failure) => {
           const fallbackExecutionCount = recordV3FallbackExecution();
@@ -3166,6 +3185,47 @@ export async function processChunkJudge(
       inserted: data?.length ?? 0,
       error: error ?? null,
     });
+
+    if (config.V3_DIAGNOSTIC_MODE && v3DiagnosticReport) {
+      const diagnosticReport = v3DiagnosticReport as V3DiagnosticReport;
+      diagnosticReport.persistenceFindingsCount = rows.length;
+      diagnosticReport.persistenceInsertedCount = data?.length ?? 0;
+      diagnosticReport.persistenceSkippedCount = rows.length - (data?.length ?? 0);
+      diagnosticReport.stageSummary = diagnosticReport.stageSummary.map((stage) => (
+        stage.stage === "persistence"
+          ? {
+              ...stage,
+              inputCount: rows.length,
+              outputCount: data?.length ?? 0,
+              rejectionCount: rows.length - (data?.length ?? 0),
+              rejectionReason: rows.length > (data?.length ?? 0) ? "Some findings were dropped before persistence." : null,
+            }
+          : stage
+      ));
+      logger.info("V3 diagnostic final report", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+        providerFindingsCount: diagnosticReport.providerFindingsCount,
+        groundingAcceptedCount: diagnosticReport.groundingAcceptedCount,
+        groundingRejectedCount: diagnosticReport.groundingRejectedCount,
+        scopeAcceptedCount: diagnosticReport.scopeAcceptedCount,
+        scopeRejectedCount: diagnosticReport.scopeRejectedCount,
+        mapperFindingsCount: diagnosticReport.mapperFindingsCount,
+        persistenceFindingsCount: diagnosticReport.persistenceFindingsCount,
+        persistenceInsertedCount: diagnosticReport.persistenceInsertedCount,
+        persistenceSkippedCount: diagnosticReport.persistenceSkippedCount,
+        acceptanceRate: diagnosticReport.acceptanceRate,
+        topRejectionReasons: diagnosticReport.topRejectionReasons,
+        rejectedFindings: diagnosticReport.rejectedFindings,
+      });
+      if (routerOutputJson && typeof routerOutputJson === "object") {
+        routerOutputJson.v3_diagnostic_report = diagnosticReport;
+      }
+      if (chunkTruthLayerMeta && typeof chunkTruthLayerMeta === "object") {
+        (chunkTruthLayerMeta as Record<string, unknown>).v3_diagnostic_report = diagnosticReport;
+      }
+    }
 
     if (config.V3_INSPECTION_MODE) {
       const inspectionTimestamp = new Date().toISOString();
