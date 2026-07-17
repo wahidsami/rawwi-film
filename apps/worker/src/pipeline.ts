@@ -1991,6 +1991,7 @@ export async function processChunkJudge(
               chunkId: chunk.id,
               runKey,
               providerError: diagnosticReport.provider_error,
+              providerParseAudit: diagnosticReport.provider_parse_audit,
               stageSummary: diagnosticReport.stageSummary,
               providerFindingsCount: diagnosticReport.providerFindingsCount,
               groundingRejectedCount: diagnosticReport.groundingRejectedCount,

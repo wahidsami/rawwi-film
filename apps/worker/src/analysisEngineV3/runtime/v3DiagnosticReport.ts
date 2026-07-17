@@ -1,5 +1,6 @@
 import type { V3ReasonedDecisionValidationIssue } from "../provider/reasonedDecisionValidation.js";
 import type { V3ProviderErrorDetails } from "../provider/providerError.js";
+import type { V3ProviderResponseParseAudit } from "../provider/responseMapper.js";
 import type { ReviewerScopeValidatorResult } from "./reviewerScopeValidator.js";
 import type { V3ReasonedDecisionResult, V3ReasonedDecisionArticleEvaluation } from "../provider/providerTypes.js";
 import type { LegalDecision } from "../legal/legalDecision.js";
@@ -76,6 +77,7 @@ export type V3DiagnosticEvidenceTrace = {
 export type V3DiagnosticReport = {
   enabled: true;
   provider_error: V3ProviderErrorDetails | null;
+  provider_parse_audit: V3ProviderResponseParseAudit | null;
   providerFindingsCount: number;
   rawProviderFindings: readonly {
     articleId: number;
@@ -177,6 +179,7 @@ export function buildV3DiagnosticReport(input: Readonly<{
   validatedDecision: LegalDecision;
   mapperFindings: readonly V3DiagnosticMapperFinding[];
   providerError?: V3ProviderErrorDetails | null;
+  providerParseAudit?: V3ProviderResponseParseAudit | null;
   evidenceTrace?: V3DiagnosticEvidenceTrace | null;
 }>): V3DiagnosticReport {
   const rawProviderFindings = summarizeProviderFindings(input.providerDecision);
@@ -196,6 +199,7 @@ export function buildV3DiagnosticReport(input: Readonly<{
   return {
     enabled: true,
     provider_error: input.providerError ?? null,
+    provider_parse_audit: input.providerParseAudit ?? null,
     providerFindingsCount,
     rawProviderFindings,
     groundingAcceptedCount,
@@ -266,6 +270,7 @@ export function buildV3ProviderFailureDiagnosticReport(input: Readonly<{
   return {
     enabled: true,
     provider_error: input.providerError,
+    provider_parse_audit: null,
     providerFindingsCount: 0,
     rawProviderFindings: [],
     groundingAcceptedCount: 0,

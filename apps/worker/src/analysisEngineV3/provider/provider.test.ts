@@ -6,7 +6,7 @@ import { strict as assert } from "node:assert";
 import { buildV3RenderedPrompt } from "../builder/promptBuilder.js";
 import type { V3PromptBuilderInput } from "../builder/builderTypes.js";
 import { createV3ProviderFactory } from "./providerFactory.js";
-import { mapV3ProviderResponse } from "./responseMapper.js";
+import { mapV3ProviderResponse, type V3ProviderResponseParseAudit } from "./responseMapper.js";
 import { runV3ProviderReasoning, type V3Provider } from "./provider.js";
 
 function makeInput(): V3PromptBuilderInput {
@@ -144,6 +144,135 @@ function testResponseMapper(): void {
   assert.equal(mapped.reasonedDecision.reasoning, "The line is explicit profanity.");
   assert.equal(mapped.reasonedDecision.recommendation, "Support the finding while keeping the legal engine authoritative.");
   console.log("✓ response mapper normalizes GPT JSON");
+}
+
+function testResponseMapperReportsDiscardedViolations(): void {
+  let parseAudit: V3ProviderResponseParseAudit | null = null;
+  const mapped = mapV3ProviderResponse(
+    JSON.stringify({
+      reasoning: {
+        narrative: {
+          speaker: "speaker",
+          listener: "listener",
+          target: "listener",
+          narrativeVoice: "dialogue",
+          sceneType: "dialogue scene",
+          narrativeIntent: "dialogue",
+          storyPosition: "opening",
+          relationship: "peer",
+          emotionalTone: "neutral",
+          condemnation: false,
+          approval: false,
+          neutrality: true,
+          historicalContext: false,
+          dream: false,
+          flashback: false,
+          comedy: false,
+          satire: false,
+          threat: false,
+          instruction: false,
+          news: false,
+          documentary: false,
+          dialogue: true,
+          narration: false,
+          sceneDescription: false,
+          confidence: 0.91,
+        },
+        evidence: {
+          candidates: [{ text: "damn", startOffset: 10, endOffset: 14, confidence: 0.99, source: "chunk" }],
+          primaryCandidateIndex: 0,
+          admissible: true,
+          confidence: 0.99,
+        },
+        semantic: {
+          semanticMeaning: "The evidence is direct dialogue.",
+          narrativeIntent: "dialogue",
+          conversationRole: "speaker",
+          sceneRole: "dialogue scene",
+          speaker: "speaker",
+          listener: "listener",
+          target: "listener",
+          victim: "listener",
+          emotion: "neutral",
+          riskContext: "medium",
+          confidence: 0.9,
+        },
+        context: {
+          storyMemory: "Memory",
+          sceneMemory: "Scene",
+          localContext: "A: damn, stop that.",
+          chunkContext: "chunk_index=1",
+          neighboringSentences: ["Before", "After"],
+          narrativeContext: "dialogue",
+          confidence: 0.88,
+        },
+        reasoned_decision: {
+          reasoning: "The line is explicit profanity.",
+          alternative_interpretations: ["It could be quoted language, but the scene supports literal use."],
+          article_evaluations: [
+            { article_id: 4, status: "PASS", evidence: ["damn"], reason: "Exact quote supports the article.", confidence: 0.94 },
+          ],
+          supporting_evidence: ["damn"],
+          contradicting_evidence: [],
+          applicable_articles: [4],
+          rejected_articles: [],
+          risk_analysis: "Low risk because the evidence is direct.",
+          narrative_analysis: "Direct dialogue with no exception cues.",
+          human_like_explanation: "A human reviewer would treat this as a straightforward profanity case.",
+          recommendation: "Support the finding while keeping the legal engine authoritative.",
+          confidence: 0.94,
+          violations: [
+            {
+              offending_sentence: "invented sentence",
+              reason: "invented reason",
+              policy_category: "invented category",
+            },
+          ],
+        },
+        violations: [
+          {
+            offending_sentence: "invented sentence",
+            reason: "invented reason",
+            policy_category: "invented category",
+          },
+        ],
+      },
+      unexpected_root_field: {
+        will_be_discarded: true,
+      },
+    }),
+    {
+      onAudit: (audit) => {
+        parseAudit = audit;
+      },
+    },
+  );
+
+  assert.equal(mapped.reasonedDecision.articleEvaluations.length, 1);
+  if (!parseAudit) throw new Error("parse audit should be captured");
+  const audit = parseAudit as any;
+  assert.equal(audit.parserInput.payloadSource, "reasoning");
+  assert(audit.discardedFields.some((field: { path: string }) => field.path === "root.unexpected_root_field"));
+  assert(audit.discardedFields.some((field: { path: string }) => field.path === "reasoning.violations"));
+  assert(audit.discardedFields.some((field: { path: string }) => field.path === "reasonedDecision.violations"));
+  assert.equal(audit.zeroFindingsReason, null);
+  console.log("✓ response mapper records discarded non-schema violation fields");
+}
+
+function testResponseMapperReportsParseFailure(): void {
+  let parseAudit: V3ProviderResponseParseAudit | null = null;
+  const mapped = mapV3ProviderResponse("not valid json", {
+    onAudit: (audit) => {
+      parseAudit = audit;
+    },
+  });
+
+  assert.equal(mapped.reasonedDecision.articleEvaluations.length, 0);
+  if (!parseAudit) throw new Error("parse audit should be captured");
+  const audit = parseAudit as any;
+  assert.equal(audit.parseErrors.length, 1);
+  assert.equal(audit.zeroFindingsReason, "JSON parsing failed; no provider decision could be recovered.");
+  console.log("✓ response mapper records parse failures");
 }
 
 async function testProviderFlowWithMockProvider(): Promise<void> {
@@ -332,6 +461,8 @@ function testFactoryCreatesOpenAIProvider(): void {
 
 async function main(): Promise<void> {
   testResponseMapper();
+  testResponseMapperReportsDiscardedViolations();
+  testResponseMapperReportsParseFailure();
   await testProviderFlowWithMockProvider();
   await testProviderRepairsInvalidReasonedDecision();
   testFactoryCreatesOpenAIProvider();

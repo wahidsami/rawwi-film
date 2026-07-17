@@ -6,7 +6,7 @@ import type { AnalysisResponse } from "../engine/analysisResponse.js";
 import type { V3PromptBuilderInput } from "../builder/builderTypes.js";
 import { buildV3ProviderUserPrompt } from "../provider/provider.js";
 import { createV3ProviderFactory } from "../provider/providerFactory.js";
-import { mapV3ProviderResponse } from "../provider/responseMapper.js";
+import { mapV3ProviderResponse, type V3ProviderResponseParseAudit } from "../provider/responseMapper.js";
 import type { V3ProviderRawResponse } from "../provider/providerTypes.js";
 import { createPromptConceptContext, runReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRunner.js";
 import { getDefaultReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRegistry.js";
@@ -1145,7 +1145,12 @@ export async function runV3RuntimeAdapter(
   });
   const reasoningLatencyMs = Date.now() - reasoningStartedAt;
 
-  const mapped = mapV3ProviderResponse(rawResponse.rawResponse);
+  let providerParseAudit: V3ProviderResponseParseAudit | null = null;
+  const mapped = mapV3ProviderResponse(rawResponse.rawResponse, {
+    onAudit: (audit) => {
+      providerParseAudit = audit;
+    },
+  });
   const groundingValidation = validateReasonedDecisionAgainstEvidence(promptInput, {
     prompt: renderedPrompt.prompt,
     promptHash: renderedPrompt.promptHash,
@@ -1395,6 +1400,7 @@ export async function runV3RuntimeAdapter(
         validatedDecision: validatedLegalDecision,
         mapperFindings: findings,
         evidenceTrace,
+        providerParseAudit,
       })
     : null;
   const truthLayerMeta = buildRuntimeTruthLayerMeta({

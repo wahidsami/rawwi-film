@@ -3,21 +3,178 @@ import type { V3PromptJsonObject, V3PromptJsonValue } from "../builder/builderTy
 import type { V3ReasonedDecisionArticleEvaluation, V3ReasonedDecisionResult, V3ReasoningResponsePayload } from "./providerTypes.js";
 import { logger } from "../../logger.js";
 
+const EXPECTED_TOP_LEVEL_KEYS = Object.freeze([
+  "narrative",
+  "narrative_result",
+  "narrativeResult",
+  "evidence",
+  "evidence_result",
+  "evidenceResult",
+  "semantic",
+  "semantic_result",
+  "semanticResult",
+  "context",
+  "context_result",
+  "contextResult",
+  "reasoned_decision",
+  "reasonedDecision",
+  "reasoned_decision_result",
+  "reasonedDecisionResult",
+  "reasoning",
+  "metadata",
+] as const);
+
+const EXPECTED_SECTION_KEYS = Object.freeze([
+  "narrative",
+  "narrative_result",
+  "narrativeResult",
+  "evidence",
+  "evidence_result",
+  "evidenceResult",
+  "semantic",
+  "semantic_result",
+  "semanticResult",
+  "context",
+  "context_result",
+  "contextResult",
+] as const);
+
+const EXPECTED_REASONED_DECISION_KEYS = Object.freeze([
+  "reasoning",
+  "why",
+  "alternativeInterpretations",
+  "alternative_interpretations",
+  "confidence",
+  "articleEvaluations",
+  "article_evaluations",
+  "supportingEvidence",
+  "supporting_evidence",
+  "contradictingEvidence",
+  "contradicting_evidence",
+  "applicableArticles",
+  "applicable_articles",
+  "rejectedArticles",
+  "rejected_articles",
+  "riskAnalysis",
+  "risk_analysis",
+  "narrativeAnalysis",
+  "narrative_analysis",
+  "humanLikeExplanation",
+  "human_like_explanation",
+  "recommendation",
+  "recommendation_result",
+  "recommendationResult",
+] as const);
+
+export type V3ProviderResponseDiscardedField = Readonly<{
+  path: string;
+  value: V3PromptJsonValue;
+}>;
+
+export type V3ProviderResponseParseAudit = Readonly<{
+  rawResponse: string;
+  extractedJsonText: string;
+  parseErrors: readonly string[];
+  parserInput: Readonly<{
+    parsedJson: V3PromptJsonValue | null;
+    payloadSource: "root" | "reasoning";
+    topLevelKeys: readonly string[];
+    payloadKeys: readonly string[];
+    expectedTopLevelKeys: readonly string[];
+    expectedSectionKeys: readonly string[];
+    expectedReasonedDecisionKeys: readonly string[];
+  }>;
+  discardedFields: readonly V3ProviderResponseDiscardedField[];
+  parserOutput: Readonly<{
+    narrative: LegalNarrativeResult;
+    evidence: LegalEvidenceResult;
+    semantic: LegalSemanticResult;
+    context: LegalContextResult;
+    reasonedDecision: V3ReasonedDecisionResult;
+  }>;
+  finalReasonedDecision: V3ReasonedDecisionResult;
+  zeroFindingsReason: string | null;
+}>;
+
 function isObject(value: unknown): value is V3PromptJsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function extractJson(raw: string): unknown {
+function objectKeys(value: unknown): readonly string[] {
+  return isObject(value) ? Object.keys(value) : [];
+}
+
+function extractJsonWithDiagnostics(raw: string): Readonly<{
+  extractedJsonText: string;
+  parsedJson: V3PromptJsonValue | null;
+  parseErrors: readonly string[];
+}> {
   const trimmed = raw.trim();
-  if (!trimmed) return {};
+  if (!trimmed) {
+    return Object.freeze({
+      extractedJsonText: "",
+      parsedJson: null,
+      parseErrors: Object.freeze([]),
+    });
+  }
   const firstBrace = trimmed.indexOf("{");
   const lastBrace = trimmed.lastIndexOf("}");
   const candidate = firstBrace >= 0 && lastBrace >= firstBrace ? trimmed.slice(firstBrace, lastBrace + 1) : trimmed;
   try {
-    return JSON.parse(candidate);
+    return Object.freeze({
+      extractedJsonText: candidate,
+      parsedJson: JSON.parse(candidate) as V3PromptJsonValue,
+      parseErrors: Object.freeze([]),
+    });
   } catch {
-    return {};
+    return Object.freeze({
+      extractedJsonText: candidate,
+      parsedJson: null,
+      parseErrors: Object.freeze([`JSON.parse failed for provider response candidate: ${candidate.length > 0 ? candidate.slice(0, 200) : "[empty candidate]"}`]),
+    });
   }
+}
+
+function collectDiscardedFields(
+  root: V3PromptJsonValue | null,
+  payloadSource: "root" | "reasoning",
+  payload: V3PromptJsonValue | null,
+): readonly V3ProviderResponseDiscardedField[] {
+  const discarded: V3ProviderResponseDiscardedField[] = [];
+
+  if (isObject(root)) {
+    for (const [key, value] of Object.entries(root)) {
+      const isReasoningWrapper = payloadSource === "reasoning";
+      const allowedRootKey = isReasoningWrapper
+        ? key === "reasoning" || key === "metadata"
+        : EXPECTED_TOP_LEVEL_KEYS.includes(key as (typeof EXPECTED_TOP_LEVEL_KEYS)[number]);
+      if (!allowedRootKey) {
+        discarded.push(Object.freeze({ path: `root.${key}`, value: value as V3PromptJsonValue }));
+      }
+    }
+  }
+
+  if (payloadSource === "reasoning") {
+    const reasoningPayload = isObject(payload) ? payload : {};
+    for (const [key, value] of Object.entries(reasoningPayload)) {
+      if (!EXPECTED_SECTION_KEYS.includes(key as (typeof EXPECTED_SECTION_KEYS)[number])) {
+        discarded.push(Object.freeze({ path: `reasoning.${key}`, value: value as V3PromptJsonValue }));
+      }
+    }
+  }
+
+  const reasonedDecisionValue = isObject(payload)
+    ? (payload.reasoned_decision ?? payload.reasonedDecision ?? payload.reasoned_decision_result ?? payload.reasonedDecisionResult)
+    : null;
+  if (isObject(reasonedDecisionValue)) {
+    for (const [key, value] of Object.entries(reasonedDecisionValue)) {
+      if (!EXPECTED_REASONED_DECISION_KEYS.includes(key as (typeof EXPECTED_REASONED_DECISION_KEYS)[number])) {
+        discarded.push(Object.freeze({ path: `reasonedDecision.${key}`, value: value as V3PromptJsonValue }));
+      }
+    }
+  }
+
+  return Object.freeze(discarded);
 }
 
 function clampConfidence(value: unknown): number {
@@ -168,7 +325,12 @@ function normalizeReasonedDecisionResult(value: unknown): V3ReasonedDecisionResu
   });
 }
 
-export function mapV3ProviderResponse(rawResponse: string): Readonly<{
+export function mapV3ProviderResponse(
+  rawResponse: string,
+  options?: Readonly<{
+    onAudit?: (audit: V3ProviderResponseParseAudit) => void;
+  }>,
+): Readonly<{
   narrative: LegalNarrativeResult;
   evidence: LegalEvidenceResult;
   semantic: LegalSemanticResult;
@@ -179,10 +341,15 @@ export function mapV3ProviderResponse(rawResponse: string): Readonly<{
   logger.info("V3 instrumentation ENTER: mapV3ProviderResponse", {
     rawResponseLength: rawResponse.length,
   });
-  const parsed = extractJson(rawResponse);
-  const payload = isObject(parsed) ? (parsed.reasoning && isObject(parsed.reasoning) ? parsed.reasoning : parsed) : {};
-  const source = payload as V3ReasoningResponsePayload;
-  const mapped = Object.freeze({
+  const extracted = extractJsonWithDiagnostics(rawResponse);
+  const parsed = extracted.parsedJson;
+  const parsedObject = isObject(parsed) ? parsed : null;
+  const payloadSource = parsedObject && isObject(parsedObject.reasoning) ? "reasoning" as const : "root" as const;
+  const payload = payloadSource === "reasoning"
+    ? parsedObject?.reasoning ?? null
+    : parsedObject;
+  const source = isObject(payload) ? (payload as V3ReasoningResponsePayload) : {};
+  const parserOutput = Object.freeze({
     narrative: normalizeNarrativeResult(source.narrative ?? source.narrative_result ?? source.narrativeResult),
     evidence: normalizeEvidenceResult(source.evidence ?? source.evidence_result ?? source.evidenceResult),
     semantic: normalizeSemanticResult(source.semantic ?? source.semantic_result ?? source.semanticResult),
@@ -194,9 +361,49 @@ export function mapV3ProviderResponse(rawResponse: string): Readonly<{
       source.reasonedDecisionResult
     ),
   });
+  const discardedFields = collectDiscardedFields(parsed, payloadSource, payload);
+  const parseAudit: V3ProviderResponseParseAudit = Object.freeze({
+    rawResponse,
+    extractedJsonText: extracted.extractedJsonText,
+    parseErrors: extracted.parseErrors,
+    parserInput: Object.freeze({
+      parsedJson: parsed,
+      payloadSource,
+      topLevelKeys: Object.freeze(objectKeys(parsed)),
+      payloadKeys: Object.freeze(objectKeys(payload)),
+      expectedTopLevelKeys: EXPECTED_TOP_LEVEL_KEYS,
+      expectedSectionKeys: EXPECTED_SECTION_KEYS,
+      expectedReasonedDecisionKeys: EXPECTED_REASONED_DECISION_KEYS,
+    }),
+    discardedFields,
+    parserOutput,
+    finalReasonedDecision: parserOutput.reasonedDecision,
+    zeroFindingsReason:
+      extracted.parseErrors.length > 0
+        ? "JSON parsing failed; no provider decision could be recovered."
+        : parserOutput.reasonedDecision.articleEvaluations.length === 0
+          ? "No article evaluations were present in the parsed provider response."
+          : parserOutput.reasonedDecision.articleEvaluations.every((evaluation) => evaluation.status !== "PASS")
+            ? "No PASS article evaluations were parsed from the provider response."
+            : null,
+  });
+  if (options?.onAudit) {
+    options.onAudit(parseAudit);
+  }
+  if (parseAudit.parseErrors.length > 0 || parseAudit.discardedFields.length > 0 || parseAudit.zeroFindingsReason) {
+    logger.warn("V3 provider response parse audit", parseAudit);
+  } else {
+    logger.info("V3 provider response parse audit", {
+      rawResponseLength: rawResponse.length,
+      payloadSource: parseAudit.parserInput.payloadSource,
+      topLevelKeys: [...parseAudit.parserInput.topLevelKeys],
+      payloadKeys: [...parseAudit.parserInput.payloadKeys],
+      finalReasonedDecision: parseAudit.finalReasonedDecision,
+    });
+  }
   logger.info("V3 instrumentation EXIT: mapV3ProviderResponse", {
     rawResponseLength: rawResponse.length,
     durationMs: Date.now() - startedAt,
   });
-  return mapped;
+  return parserOutput;
 }
