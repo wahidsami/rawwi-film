@@ -61,6 +61,7 @@ import { buildExplanationSafeAnalysisResponse } from "./explanationSafeAnalysisR
 import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
 import { validateReasonedDecisionAgainstEvidence } from "../provider/reasonedDecisionValidation.js";
 import { validateReviewerScope } from "./reviewerScopeValidator.js";
+import { buildV3LegalReasoningTrace, buildV3ReasoningMetrics } from "../reasoningTrace/index.js";
 
 function normalizeTerms(terms: V3RuntimeAdapterRequest["promptLexiconTerms"]): V3PromptGlossary {
   return {
@@ -654,6 +655,32 @@ export async function runV3RuntimeAdapter(
     arbitration,
     diagnostics,
   });
+  const legalReasoningTrace = buildV3LegalReasoningTrace({
+    jobId: input.jobId,
+    chunkId: input.chunkId,
+    findingKey: buildV3InspectionChunkFindingKey(input.jobId, input.chunkId),
+    analysisResponse,
+    findings,
+    promptInput,
+    renderedPrompt,
+    userPrompt,
+    rawResponse,
+    groundingValidation,
+    scopeValidation,
+    reviewerKnowledgeSelection,
+    reviewerKnowledgeRetrieval,
+    reviewerCompiledContext: promptInput.compiledReviewerContext ?? null,
+    candidateDiagnostics: promptInput.compiledReviewerContext?.candidateDiagnostics ?? null,
+    reviewerDecision,
+    legalDecision,
+    validatedLegalDecision,
+    gcamMapping,
+    reviewerDebate,
+    arbitration,
+    explanation,
+    diagnostics,
+  });
+  const legalReasoningMetrics = buildV3ReasoningMetrics(legalReasoningTrace);
 
   if (config.V3_INSPECTION_MODE) {
     try {
@@ -949,6 +976,8 @@ export async function runV3RuntimeAdapter(
       truthLayerMeta: Object.freeze({
       ...truthLayerMeta,
       explanation,
+      legal_reasoning_trace: legalReasoningTrace,
+      legal_reasoning_metrics: legalReasoningMetrics,
         gcam_mapping: Object.freeze({
         status: gcamMapping.status,
         articleId: gcamMapping.articleId,
