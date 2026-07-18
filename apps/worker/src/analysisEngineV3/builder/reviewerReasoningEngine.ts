@@ -70,6 +70,26 @@ function uniqueStringsWithNormalization(values: readonly string[]): readonly str
   return Object.freeze([...new Set(values.map((value) => normalizeText(value)).filter((value) => value.length > 0))].sort((left, right) => left.localeCompare(right)));
 }
 
+function estimateTextFootprint(value: unknown): number {
+  if (typeof value === "string") {
+    return value.length;
+  }
+
+  if (typeof value === "number" || typeof value === "bigint" || typeof value === "boolean") {
+    return String(value).length;
+  }
+
+  if (Array.isArray(value)) {
+    return value.reduce<number>((total, item) => total + estimateTextFootprint(item), 0);
+  }
+
+  if (value !== null && typeof value === "object") {
+    return Object.values(value as Record<string, unknown>).reduce<number>((total, item) => total + estimateTextFootprint(item), 0);
+  }
+
+  return 0;
+}
+
 function getKnowledgeRegistry(): ReturnType<typeof createKnowledgeRegistry> {
   knowledgeRegistryCache ??= createKnowledgeRegistry();
   return knowledgeRegistryCache;
@@ -422,7 +442,9 @@ function buildPromptReviewerDecisionPipeline(
       Object.freeze({
         key: "gcam_applicability",
         title: "GCAM Applicability",
-        summary: primaryArticleIds.length > 0 ? articleEvaluationSummary : "No GCAM articles were preselected.",
+        summary: primaryArticleIds.length > 0
+          ? `${articleEvaluationSummary} | Evidence candidates are the primary unit of work; article ids may repeat across independent violations.`
+          : "No GCAM articles were preselected.",
         confidence: conceptContext.confidence,
       }),
       Object.freeze({
@@ -639,10 +661,10 @@ function buildGptReviewerAssistant(
     decision_template: Object.freeze({
       answer_with: Object.freeze(["reasoning", "article_evaluations", "supporting_evidence", "contradicting_evidence", "applicable_articles", "rejected_articles", "confidence", "recommendation"]),
       reasoning: "Explain why each supplied article passes or fails based only on quote-based evidence candidates. Keep it evidence-first and quote-grounded. Analyze every suspicious sentence independently and do not stop after the first exception. One evidence candidate may support multiple articles.",
-      article_evaluations: "For each supplied article return articleId, PASS or FAIL, evidence, reason, and confidence. Do not choose the closest category. Evaluate all suspicious evidence candidates before merging findings. One candidate may produce multiple PASS articles.",
-      supporting_evidence: "Cite the exact quote and current-scene context that support the reasoning.",
+      article_evaluations: "For each independent violation evidence unit return articleId, PASS or FAIL, evidence, reason, and confidence. Do not choose the closest category. Evaluate all suspicious evidence candidates before merging findings. One evidence unit may produce multiple PASS article entries, and articleId values may repeat when different grounded violations map to the same GCAM article.",
+      supporting_evidence: "Cite the exact quote and current-scene context that support the reasoning. Preserve one quote per independent evidence unit when possible.",
       contradicting_evidence: "State the strongest counter-reading and why it loses.",
-      applicable_articles: "List only the article ids whose evaluations are PASS. Do not suppress a PASS because of quotation, condemnation, education, historical context, satire, or dialogue; those exceptions are handled after generation.",
+      applicable_articles: "List only the unique article ids whose evaluations are PASS. Do not suppress a PASS because of quotation, condemnation, education, historical context, satire, or dialogue; those exceptions are handled after generation.",
       rejected_articles: "List the articles that were considered but rejected.",
       confidence: "Provide a calibrated confidence value between 0 and 1.",
       recommendation: "State the reviewer recommendation only as reasoning support for the legal engine. Do not use recommendation to apply exceptions.",
@@ -726,7 +748,7 @@ export function buildReviewerReasoningEnginePayload(
   }));
   logStep("lesson_summaries", {
     summaryCount: lessonSummaries.length,
-    summaryCharacters: JSON.stringify(lessonSummaries).length,
+    summaryCharacters: estimateTextFootprint(lessonSummaries),
   });
 
   logger.info("V3 instrumentation ENTER: blueprint scoring", {
@@ -850,11 +872,10 @@ export function buildReviewerReasoningEnginePayload(
     decisionRecords,
     reasoningPipeline,
   );
-  const gptReviewerAssistantJson = JSON.stringify(gptReviewerAssistant);
   logStep("gpt_reviewer_assistant_build", {
     reviewerCount: gptReviewerAssistant.reviewerCount ?? null,
-    promptLengthChars: gptReviewerAssistantJson.length,
-    estimatedPromptTokens: Math.ceil(gptReviewerAssistantJson.length / 4),
+    promptLengthChars: estimateTextFootprint(gptReviewerAssistant),
+    estimatedPromptTokens: Math.ceil(estimateTextFootprint(gptReviewerAssistant) / 4),
   });
 
   logger.info("V3 instrumentation ENTER: payload construction", {
@@ -991,7 +1012,7 @@ export function buildReviewerReasoningEnginePayload(
       reasoning: "Explain the reviewer conclusion in plain language.",
       supporting_evidence: "Cite the exact supporting chunk, context, and precedent evidence.",
       contradicting_evidence: "State the strongest alternative interpretation and why it loses.",
-      applicable_articles: "List the article ids that support the final decision.",
+      applicable_articles: "List the unique article ids that support the final decision. Repeated article ids may appear in article_evaluations when multiple evidence units map to the same article.",
       rejected_articles: "List the article ids that were considered and rejected, if any.",
       confidence: "Provide a calibrated confidence value between 0 and 1.",
       recommendation: "State the reviewer recommendation only as reasoning support for the legal engine.",
@@ -1002,7 +1023,7 @@ export function buildReviewerReasoningEnginePayload(
     blueprintCount: blueprints.length,
     patternCount: patterns.length,
     decisionRecordCount: decisionRecords.length,
-    payloadSizeChars: JSON.stringify(payload).length,
+    payloadSizeChars: estimateTextFootprint(payload),
   });
   logger.info("V3 instrumentation EXIT: buildReviewerReasoningEnginePayload", {
     selectedReviewerKnowledgeCount: selectedReviewerKnowledge.length,

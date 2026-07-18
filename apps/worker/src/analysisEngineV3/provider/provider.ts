@@ -133,6 +133,7 @@ function appendValidationRepairInstruction(userPrompt: string, issues: readonly 
     "Requirements:",
     "- Keep every claim grounded in the exact quoted evidence or current scene.",
     "- Evaluate every GCAM article independently and return PASS or FAIL for each one.",
+    "- Preserve repeated article evaluations when separate evidence units support the same GCAM article.",
     "- Do not suppress a detection because a scene is quoted, condemnatory, educational, historical, satirical, or contextual; those exceptions are handled after generation.",
     "- Do not add facts, actors, objects, injuries, or events not present in the source evidence.",
     "Validation issues:",

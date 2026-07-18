@@ -201,6 +201,8 @@ function testReviewerKnowledgePackRendered(): void {
   assert(rendered.prompt.includes("find all policy violations"), "prompt should instruct exhaustive violation hunting");
   assert(rendered.prompt.includes("Do not stop after finding one exception"), "prompt should forbid stopping after a single exception");
   assert(rendered.prompt.includes("Analyze every threatening, abusive, violent, sexual, political, religious, criminal, or profane statement independently"), "prompt should require per-statement analysis");
+  assert(rendered.prompt.includes("independent violation evidence unit"), "prompt should treat evidence units as the atomic unit of work");
+  assert(rendered.prompt.includes("article ids may repeat"), "prompt should allow repeated article ids for separate evidence units");
   assert(rendered.prompt.includes("facts, actors, objects, injuries, or events"), "prompt should prohibit unsupported facts");
   assert(!rendered.prompt.includes('"rules": ['), "subject rule bundles should no longer be rendered directly");
   console.log("✓ reviewer knowledge packs are rendered instead of subject rule bundles");
