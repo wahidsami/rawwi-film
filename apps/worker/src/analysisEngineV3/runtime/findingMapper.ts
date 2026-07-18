@@ -517,7 +517,7 @@ export function mapLegalDecisionToFindings(args: {
         exceptionReason: policyAssessment.reasons.join(" | ") || decision.finding?.exceptionReason || null,
         recommendedAction: decision.status === "needs_review" ? "Needs Review" : "Approve",
         legalRecommendation: decision.finding?.legalRecommendation ?? (decision.status === "needs_review" ? "Needs Review" : "Approve"),
-        final_ruling: "violation",
+        final_ruling: decision.status === "needs_review" ? "needs_review" : "violation",
         detection_pass: `v3_runtime_${decision.moduleId}`,
         location,
         start_offset_global: clampOffset(primaryEvidence?.startOffset, chunkStart),

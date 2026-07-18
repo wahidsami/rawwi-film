@@ -1,5 +1,6 @@
 import type { V3PromptBuilderInput } from "../builder/builderTypes.js";
 import type { V3ProviderReasoningResult, V3ReasonedDecisionArticleEvaluation, V3ReasonedDecisionResult } from "./providerTypes.js";
+import { config } from "../../config.js";
 import { logger } from "../../logger.js";
 
 export type V3ReasonedDecisionValidationIssue = Readonly<{
@@ -710,6 +711,11 @@ function createValidationIssue(
   });
 }
 
+function isStabilizationRecoverableIssue(code: string): boolean {
+  if (!config.V3_STABILIZATION_MODE) return false;
+  return code === "article_outside_candidate_set" || code === "atom_outside_candidate_set" || code === "unsupported_factual_claim";
+}
+
 export function validateReasonedDecisionAgainstEvidence(
   input: V3PromptBuilderInput,
   result: V3ProviderReasoningResult,
@@ -778,6 +784,7 @@ export function validateReasonedDecisionAgainstEvidence(
         "article_outside_candidate_set",
         `${evaluationPath}.articleId`,
         `The reviewer returned article ${evaluation.articleId}, but it was not supplied in the candidate article set.`,
+        isStabilizationRecoverableIssue("article_outside_candidate_set") ? "recoverable" : "error",
       );
       issues.push(issue);
       evaluationIssues.push(issue);
@@ -862,6 +869,7 @@ export function validateReasonedDecisionAgainstEvidence(
           "The evaluation introduces factual claims that are not grounded in the quoted evidence or supplied candidates.",
           `Unsupported sentences: ${evaluationFactualClaimDiagnostics.slice(0, 3).map((diagnostic) => diagnostic.sentence).join(" | ")}`,
         ].join(" "),
+        isStabilizationRecoverableIssue("unsupported_factual_claim") ? "recoverable" : "error",
       );
       issues.push(issue);
       evaluationIssues.push(issue);
@@ -895,6 +903,7 @@ export function validateReasonedDecisionAgainstEvidence(
             "atom_outside_candidate_set",
             `${evaluationPath}.reason`,
             `The reviewer referenced atom ${atomId}, but it was not supplied in the candidate atom set.`,
+            isStabilizationRecoverableIssue("atom_outside_candidate_set") ? "recoverable" : "error",
           );
           issues.push(issue);
           evaluationIssues.push(issue);
@@ -957,6 +966,7 @@ export function validateReasonedDecisionAgainstEvidence(
         "The reviewer reasoning introduces factual claims that are not grounded in the quoted evidence or supplied candidates.",
         `Unsupported sentences: ${sharedClaimDiagnostics.slice(0, 3).map((diagnostic) => diagnostic.sentence).join(" | ")}`,
       ].join(" "),
+      isStabilizationRecoverableIssue("unsupported_factual_claim") ? "recoverable" : "error",
     );
     issues.push(issue);
     logger.warn("V3 reasoned decision grounding diagnostics", {

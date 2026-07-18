@@ -1407,9 +1407,11 @@ export function applyPersistenceFilters(input: Readonly<{
     if ((finding.article_id ?? 0) === 4) return false;
     return true;
   });
+  const stabilizationMode = config.V3_STABILIZATION_MODE;
 
   for (const candidate of afterObjectiveFilters) {
-    if (isV3RuntimeFinding(candidate) || (candidate.article_id ?? 0) !== 4 || String(candidate.source ?? "ai").toLowerCase() === "lexicon_mandatory") {
+    const isV3 = isV3RuntimeFinding(candidate);
+    if (isV3 || (candidate.article_id ?? 0) !== 4 || String(candidate.source ?? "ai").toLowerCase() === "lexicon_mandatory") {
       accepted.push(candidate);
       continue;
     }
@@ -1434,6 +1436,9 @@ export function applyPersistenceFilters(input: Readonly<{
         "article_four_duplicate_owner",
         "Legacy article-4 redundancy rule rejected the finding because a stronger specific finding already owned the same incident.",
       ));
+      if (isV3 && stabilizationMode) {
+        accepted.push(candidate);
+      }
       continue;
     }
 
@@ -1449,6 +1454,9 @@ export function applyPersistenceFilters(input: Readonly<{
           "article_four_nearby_specific_owner",
           "Legacy article-4 redundancy rule rejected the finding because a nearby specific finding already covered the same incident.",
         ));
+        if (isV3 && stabilizationMode) {
+          accepted.push(candidate);
+        }
         continue;
       }
     }
@@ -1460,6 +1468,9 @@ export function applyPersistenceFilters(input: Readonly<{
         "article_four_deferred_by_specific_pass",
         "Legacy article-4 redundancy rule rejected the finding because a stronger specific pass existed.",
       ));
+      if (isV3 && stabilizationMode) {
+        accepted.push(candidate);
+      }
       continue;
     }
 
@@ -1579,6 +1590,7 @@ export async function processChunkJudge(
       : "balanced";
   const pipelineVersion = jobConfig.pipeline_version === "v2" ? "v2" : "v1";
   const analysisEngine = resolveAnalysisEngineForJob(jobConfig, pipelineVersion);
+  const v3StabilizationMode = analysisEngine === "v3" && config.V3_STABILIZATION_MODE;
   const hybridMode = resolveHybridModeForJob(jobConfig, pipelineVersion, analysisEngine);
   const policyV1Mode = resolvePolicyV1ModeForJob(jobConfig, pipelineVersion, analysisEngine);
   const chunkText = chunk.text;
@@ -2501,7 +2513,11 @@ export async function processChunkJudge(
           });
         })
       );
-      const enriched = grounded.map((f) => {
+      const enriched: FindingWithGlobal[] = (grounded as any[]).map((rawFinding: any) => {
+        const f = rawFinding as FindingWithGlobal;
+        if (v3StabilizationMode && isV3RuntimeFinding(f)) {
+          return f;
+        }
         const localStart = Math.max(0, f.location?.start_offset ?? 0);
         const localEnd = Math.min(chunkText.length, f.location?.end_offset ?? localStart);
         const fallback = localEnd > localStart ? chunkText.slice(localStart, localEnd) : "";
@@ -2515,8 +2531,8 @@ export async function processChunkJudge(
         return { ...f, evidence_snippet: fallback };
       });
       const qualityFiltered = enriched.filter((f) => {
-        const qualityIssue = getEvidenceQualityIssue(f, chunkText);
-        if (qualityIssue) {
+        const qualityIssue = getEvidenceQualityIssue(f as unknown as JudgeFinding, chunkText);
+        if (qualityIssue && !v3StabilizationMode) {
           logger.warn("Low-quality evidence snippet (dropping finding)", {
             chunkId: chunk.id,
             article: f.article_id,
@@ -2525,9 +2541,17 @@ export async function processChunkJudge(
           });
           return false;
         }
+        if (qualityIssue && v3StabilizationMode && isV3RuntimeFinding(f)) {
+          logger.warn("Low-quality evidence snippet (advisory only under V3 stabilization mode)", {
+            chunkId: chunk.id,
+            article: f.article_id,
+            issue: qualityIssue,
+            evidence: f.evidence_snippet?.slice(0, 80),
+          });
+        }
         return true;
       });
-      const withGlobal = qualityFiltered.map((f) => toGlobalFinding(f, chunkStart));
+      const withGlobal = (qualityFiltered as readonly FindingWithGlobal[]).map((f) => toGlobalFinding(f as unknown as JudgeFinding, chunkStart));
       withGlobal.forEach((finding, index) => {
         ensureFindingLineageId(finding, {
           jobId,
@@ -2578,8 +2602,11 @@ export async function processChunkJudge(
         chunkId: chunk.id,
         runKey,
         findingsToCheck: beforeVerbatimCount,
+        stabilizationMode: v3StabilizationMode,
       });
-      allFindings = withGlobal.filter((f) => {
+      allFindings = v3StabilizationMode
+        ? withGlobal
+        : withGlobal.filter((f) => {
         const isExact = isDetectionVerbatim(chunkText, f.evidence_snippet);
         if (!isExact) {
           logger.warn("Evidence mismatch (dropping finding)", { 
@@ -2591,6 +2618,18 @@ export async function processChunkJudge(
         }
         return isExact;
       });
+      if (v3StabilizationMode) {
+        for (const f of withGlobal) {
+          if (!isDetectionVerbatim(chunkText, f.evidence_snippet)) {
+            logger.warn("Evidence mismatch (advisory only under V3 stabilization mode)", {
+              chunkId: chunk.id,
+              article: f.article_id,
+              evidence: f.evidence_snippet?.slice(0, 50),
+              severity: f.severity,
+            });
+          }
+        }
+      }
       allFindings = sortFindingsStable(allFindings);
       logger.info("Verbatim guardrail completed", {
         jobId,
@@ -2599,6 +2638,7 @@ export async function processChunkJudge(
         beforeVerbatim: beforeVerbatimCount,
         afterVerbatim: allFindings.length,
         dropped: beforeVerbatimCount - allFindings.length,
+        stabilizationMode: v3StabilizationMode,
       });
       
       logger.info("Multi-pass detection stats", {
@@ -2644,9 +2684,9 @@ export async function processChunkJudge(
     // 5) Dedupe + overlap
     const beforeDedupeCount = allFindings.length;
     const beforeCanonicalization = [...allFindings];
-    allFindings = dedupeByHash(allFindings);
+    allFindings = v3StabilizationMode ? allFindings : dedupeByHash(allFindings);
     const afterDedupeCount = allFindings.length;
-    allFindings = overlapCollapse(allFindings);
+    allFindings = v3StabilizationMode ? allFindings : overlapCollapse(allFindings);
     const afterOverlapCount = allFindings.length;
     const persistenceFilterResult = applyPersistenceFilters({
       findings: allFindings,
@@ -3188,11 +3228,11 @@ export async function processChunkJudge(
         source: rejection.source,
       });
     }
-    const rows = resolvedFindings.flatMap((f) => {
-      const initialStart = f.start_offset_global ?? 0;
-      const initialEnd = f.end_offset_global ?? initialStart;
-      const start = initialStart;
-      const end = initialEnd;
+      const rows = resolvedFindings.flatMap((f) => {
+        const initialStart = f.start_offset_global ?? 0;
+        const initialEnd = f.end_offset_global ?? initialStart;
+        const start = initialStart;
+        const end = initialEnd;
       const hasSaneGlobalOffsets =
         normalizedText != null &&
         start >= 0 &&
@@ -3202,8 +3242,10 @@ export async function processChunkJudge(
 
       const modelSnippet = typeof f.evidence_snippet === "string" ? f.evidence_snippet : "";
       const canonicalSnippet = hasSaneGlobalOffsets ? normalizedText!.slice(start, end) : "";
-      // Prefer canonical script text whenever offsets are sane so report evidence stays literal.
-      const excerpt = canonicalSnippet.length > 0 ? canonicalSnippet : modelSnippet;
+      // Preserve the provider's exact evidence text for V3 stabilization; otherwise fall back to canonical text.
+      const excerpt = v3StabilizationMode && isV3RuntimeFinding(f)
+        ? (modelSnippet.length > 0 ? modelSnippet : canonicalSnippet)
+        : (canonicalSnippet.length > 0 ? canonicalSnippet : modelSnippet);
 
       const glossarySafeTitle = normalizeMisusedGlossaryPassTitle({
         titleAr: f.title_ar,
