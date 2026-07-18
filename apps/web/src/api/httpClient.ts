@@ -532,7 +532,7 @@ export const httpClient = {
 
       const res = await fetch(`${API_BASE_URL}${url}`, { ...options, headers });
       if (!res.ok) {
-        if (res.status === 401 && token) {
+        if (res.status === 401 && token && url !== '/me') {
           await supabase.auth.signOut();
           window.location.href = '/login';
           throw new Error('Session expired');
