@@ -69,6 +69,18 @@ export type FindingWithGlobal = Omit<JudgeFinding, "source" | "evidence_hash" | 
   secondary_pillar_ids?: readonly string[];
 };
 
+export type PersistenceFilterRejection = Readonly<{
+  filterName: string;
+  diagnosticCode: string;
+  rejectionReason: string;
+  reviewer: string | null;
+  article: number | null;
+  atom: string | null;
+  evidence: readonly string[];
+  runtimeFindingId: string | null;
+  source: string | null;
+}>;
+
 type AnalysisEngineMode = "v2" | "v3" | "hybrid" | "policy_v1";
 type HybridRunMode = "off" | "shadow" | "enforce";
 type PolicyV1RunMode = "shadow" | "enforce";
@@ -1270,6 +1282,182 @@ function dropRedundantArticleFourFindings(findings: FindingWithGlobal[]): Findin
   });
 }
 
+function normalizePersistenceSource(value: string | null | undefined): string {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+export function isV3RuntimeFinding(finding: FindingWithGlobal): boolean {
+  return normalizePersistenceSource(finding.source) === "v3" || normalizePersistenceSource(finding.detection_pass).startsWith("v3_runtime");
+}
+
+function buildPersistenceFilterRejection(
+  finding: FindingWithGlobal,
+  filterName: string,
+  diagnosticCode: string,
+  rejectionReason: string,
+): PersistenceFilterRejection {
+  return Object.freeze({
+    filterName,
+    diagnosticCode,
+    rejectionReason,
+    reviewer: (finding as { moduleId?: string | null }).moduleId ?? finding.detection_pass ?? null,
+    article: finding.article_id ?? null,
+    atom: finding.atom_id ?? finding.canonical_atom ?? null,
+    evidence: Object.freeze([finding.evidence_snippet].filter((value): value is string => typeof value === "string" && value.trim().length > 0)),
+    runtimeFindingId: finding.canonical_finding_id ?? finding.lineage_id ?? null,
+    source: finding.source ?? null,
+  });
+}
+
+export function applyPersistenceFilters(input: Readonly<{
+  findings: readonly FindingWithGlobal[];
+  normalizedText: string | null;
+}>): Readonly<{
+  accepted: readonly FindingWithGlobal[];
+  rejected: readonly PersistenceFilterRejection[];
+}> {
+  const rejected: PersistenceFilterRejection[] = [];
+  const afterObjectiveFilters: FindingWithGlobal[] = [];
+  const sceneIndex = buildSceneIndex(input.normalizedText);
+
+  for (const finding of input.findings) {
+    const isV3 = isV3RuntimeFinding(finding);
+    const initialStart = finding.start_offset_global ?? 0;
+    const initialEnd = finding.end_offset_global ?? initialStart;
+    const hasSaneGlobalOffsets =
+      input.normalizedText != null &&
+      initialStart >= 0 &&
+      initialEnd > initialStart &&
+      initialEnd <= input.normalizedText.length &&
+      (initialEnd - initialStart) <= MAX_EVIDENCE_SPAN;
+
+    const modelSnippet = typeof finding.evidence_snippet === "string" ? finding.evidence_snippet : "";
+    const canonicalSnippet = hasSaneGlobalOffsets ? input.normalizedText!.slice(initialStart, initialEnd) : "";
+    const excerpt = canonicalSnippet.length > 0 ? canonicalSnippet : modelSnippet;
+
+    const evidenceIssue = getStoredEvidenceQualityIssue(
+      excerpt,
+      input.normalizedText,
+      hasSaneGlobalOffsets ? initialStart : null,
+      hasSaneGlobalOffsets ? initialEnd : null,
+    );
+    if (evidenceIssue) {
+      rejected.push(buildPersistenceFilterRejection(
+        finding,
+        "getStoredEvidenceQualityIssue",
+        `stored_evidence_quality:${evidenceIssue}`,
+        `Stored evidence excerpt failed objective validation: ${evidenceIssue}.`,
+      ));
+      continue;
+    }
+
+    if (!isV3) {
+      const passSpecificEvidenceIssue = getPassSpecificEvidenceIssue(finding, excerpt, input.normalizedText, sceneIndex);
+      if (passSpecificEvidenceIssue) {
+        rejected.push(buildPersistenceFilterRejection(
+          finding,
+          "getPassSpecificEvidenceIssue",
+          `pass_specific:${passSpecificEvidenceIssue}`,
+          `Legacy pass-specific evidence rule rejected the finding: ${passSpecificEvidenceIssue}.`,
+        ));
+        continue;
+      }
+
+      if (canonicalSnippet.length > 0 && modelSnippet.length > 0 && !snippetsReasonablyAlign(modelSnippet, canonicalSnippet)) {
+        rejected.push(buildPersistenceFilterRejection(
+          finding,
+          "snippetsReasonablyAlign",
+          "snippet_alignment_mismatch",
+          "Legacy snippet alignment heuristic rejected the finding because the model snippet diverged from canonical evidence.",
+        ));
+        continue;
+      }
+
+      if (hasExplicitSceneMismatch(finding.rationale_ar ?? null, sceneIndex, finding.start_offset_global ?? null)) {
+        rejected.push(buildPersistenceFilterRejection(
+          finding,
+          "hasExplicitSceneMismatch",
+          "explicit_scene_mismatch",
+          "Legacy scene-reference heuristic rejected the finding because the rationale referenced a different scene granularity.",
+        ));
+        continue;
+      }
+    }
+
+    afterObjectiveFilters.push(finding);
+  }
+
+  const accepted: FindingWithGlobal[] = [];
+  const articleFourSpecific = afterObjectiveFilters.filter((finding) => {
+    if (isV3RuntimeFinding(finding)) return true;
+    if ((finding.article_id ?? 0) === 4) return false;
+    return true;
+  });
+
+  for (const candidate of afterObjectiveFilters) {
+    if (isV3RuntimeFinding(candidate) || (candidate.article_id ?? 0) !== 4 || String(candidate.source ?? "ai").toLowerCase() === "lexicon_mandatory") {
+      accepted.push(candidate);
+      continue;
+    }
+
+    const candidateEvidence = compactNormalizedEvidence(candidate.evidence_snippet);
+    const candidateAtom = String(candidate.canonical_atom ?? "").toUpperCase();
+    const duplicateOwner = articleFourSpecific.some((other) => {
+      const otherEvidence = compactNormalizedEvidence(other.evidence_snippet);
+      const sameEvidence =
+        candidateEvidence.length >= 3 &&
+        otherEvidence.length >= 3 &&
+        (candidateEvidence.includes(otherEvidence) || otherEvidence.includes(candidateEvidence));
+      const sameIncident = sameEvidence || spansOverlapEnough(candidate, other);
+      if (!sameIncident) return false;
+      if (candidateAtom && String(other.canonical_atom ?? "").toUpperCase() !== candidateAtom) return false;
+      return severityRank(other.severity) >= severityRank(candidate.severity);
+    });
+    if (duplicateOwner) {
+      rejected.push(buildPersistenceFilterRejection(
+        candidate,
+        "dropRedundantArticleFourFindings",
+        "article_four_duplicate_owner",
+        "Legacy article-4 redundancy rule rejected the finding because a stronger specific finding already owned the same incident.",
+      ));
+      continue;
+    }
+
+    if (isWeakArticleFourEvidence(candidate)) {
+      const nearbySpecificOwner = articleFourSpecific.some((other) => {
+        if (!incidentsAreNearby(candidate, other)) return false;
+        return severityRank(other.severity) >= severityRank(candidate.severity);
+      });
+      if (nearbySpecificOwner) {
+        rejected.push(buildPersistenceFilterRejection(
+          candidate,
+          "dropRedundantArticleFourFindings",
+          "article_four_nearby_specific_owner",
+          "Legacy article-4 redundancy rule rejected the finding because a nearby specific finding already covered the same incident.",
+        ));
+        continue;
+      }
+    }
+
+    if (isArticleFourDeferredBySpecificPass(candidate, articleFourSpecific)) {
+      rejected.push(buildPersistenceFilterRejection(
+        candidate,
+        "dropRedundantArticleFourFindings",
+        "article_four_deferred_by_specific_pass",
+        "Legacy article-4 redundancy rule rejected the finding because a stronger specific pass existed.",
+      ));
+      continue;
+    }
+
+    accepted.push(candidate);
+  }
+
+  return Object.freeze({
+    accepted: Object.freeze(sortFindingsStable(accepted)),
+    rejected: Object.freeze(rejected),
+  });
+}
+
 function articleListsAreEquivalent(a: number[], b: number[]): boolean {
   if (a.length !== b.length) return false;
   const left = [...a].sort((x, y) => x - y);
@@ -1831,6 +2019,7 @@ export async function processChunkJudge(
 
   // Variables for subsequent steps
   let allFindings: FindingWithGlobal[] = [];
+  let persistenceFilterRejections: PersistenceFilterRejection[] = [];
   let groundedFindingCount: number | null = null;
   let validatedFindingCount: number | null = null;
   let selectedIds: number[];
@@ -2439,7 +2628,12 @@ export async function processChunkJudge(
     const afterDedupeCount = allFindings.length;
     allFindings = overlapCollapse(allFindings);
     const afterOverlapCount = allFindings.length;
-    allFindings = dropRedundantArticleFourFindings(allFindings);
+    const persistenceFilterResult = applyPersistenceFilters({
+      findings: allFindings,
+      normalizedText,
+    });
+    allFindings = [...persistenceFilterResult.accepted];
+    persistenceFilterRejections = [...persistenceFilterResult.rejected];
     const afterArticleFourCollapseCount = allFindings.length;
     logger.info("[DEBUG] Dedupe/overlap stage complete", {
       jobId,
@@ -2958,15 +3152,27 @@ export async function processChunkJudge(
   }
   if (resolvedFindings.length > 0) {
     const insertStartedAt = Date.now();
-    const sceneIndex = buildSceneIndex(normalizedText);
-    let postCanonicalEvidenceDroppedCount = 0;
-    let canonicalModelMismatchDroppedCount = 0;
-    let explicitSceneMismatchDroppedCount = 0;
+    for (const rejection of persistenceFilterRejections) {
+      logger.warn("V3 persistence filter rejected finding", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+        filterName: rejection.filterName,
+        diagnosticCode: rejection.diagnosticCode,
+        rejectionReason: rejection.rejectionReason,
+        reviewer: rejection.reviewer,
+        article: rejection.article,
+        atom: rejection.atom,
+        evidence: [...rejection.evidence],
+        runtimeFindingId: rejection.runtimeFindingId,
+        source: rejection.source,
+      });
+    }
     const rows = resolvedFindings.flatMap((f) => {
       const initialStart = f.start_offset_global ?? 0;
       const initialEnd = f.end_offset_global ?? initialStart;
-      let start = initialStart;
-      let end = initialEnd;
+      const start = initialStart;
+      const end = initialEnd;
       const hasSaneGlobalOffsets =
         normalizedText != null &&
         start >= 0 &&
@@ -2975,73 +3181,9 @@ export async function processChunkJudge(
         (end - start) <= MAX_EVIDENCE_SPAN;
 
       const modelSnippet = typeof f.evidence_snippet === "string" ? f.evidence_snippet : "";
-      let canonicalSnippet = hasSaneGlobalOffsets ? normalizedText!.slice(start, end) : "";
+      const canonicalSnippet = hasSaneGlobalOffsets ? normalizedText!.slice(start, end) : "";
       // Prefer canonical script text whenever offsets are sane so report evidence stays literal.
-      let excerpt = canonicalSnippet.length > 0 ? canonicalSnippet : modelSnippet;
-
-      let finalEvidenceIssue = getStoredEvidenceQualityIssue(
-        excerpt,
-        normalizedText,
-        hasSaneGlobalOffsets ? start : null,
-        hasSaneGlobalOffsets ? end : null,
-      );
-      if (finalEvidenceIssue) {
-        postCanonicalEvidenceDroppedCount++;
-        logger.warn("Low-quality final evidence excerpt (dropping finding before insert)", {
-          jobId,
-          chunkId: chunk.id,
-          runKey,
-          article: f.article_id,
-          issue: finalEvidenceIssue,
-          excerpt: excerpt.slice(0, 80),
-          modelSnippet: modelSnippet.slice(0, 80),
-          canonicalSnippet: canonicalSnippet.slice(0, 80),
-        });
-        return [];
-      }
-
-      const passSpecificEvidenceIssue = getPassSpecificEvidenceIssue(f, excerpt, normalizedText, sceneIndex);
-      if (passSpecificEvidenceIssue) {
-        postCanonicalEvidenceDroppedCount++;
-        logger.warn("Pass-specific final evidence issue (dropping finding before insert)", {
-          jobId,
-          chunkId: chunk.id,
-          runKey,
-          article: f.article_id,
-          pass: f.detection_pass ?? null,
-          canonicalAtom: f.canonical_atom ?? null,
-          issue: passSpecificEvidenceIssue,
-          excerpt: excerpt.slice(0, 120),
-        });
-        return [];
-      }
-
-      if (canonicalSnippet.length > 0 && modelSnippet.length > 0 && !snippetsReasonablyAlign(modelSnippet, canonicalSnippet)) {
-        canonicalModelMismatchDroppedCount++;
-        logger.warn("Canonical/model evidence mismatch (dropping finding before insert)", {
-          jobId,
-          chunkId: chunk.id,
-          runKey,
-          article: f.article_id,
-          modelSnippet: modelSnippet.slice(0, 120),
-          canonicalSnippet: canonicalSnippet.slice(0, 120),
-        });
-        return [];
-      }
-
-      if (hasExplicitSceneMismatch(f.rationale_ar ?? null, sceneIndex, f.start_offset_global ?? null)) {
-        explicitSceneMismatchDroppedCount++;
-        logger.warn("Explicit scene mismatch between rationale and resolved offset (dropping finding before insert)", {
-          jobId,
-          chunkId: chunk.id,
-          runKey,
-          article: f.article_id,
-          rationale: (f.rationale_ar ?? "").slice(0, 160),
-          excerpt: excerpt.slice(0, 120),
-          startOffsetGlobal: f.start_offset_global ?? null,
-        });
-        return [];
-      }
+      const excerpt = canonicalSnippet.length > 0 ? canonicalSnippet : modelSnippet;
 
       const glossarySafeTitle = normalizeMisusedGlossaryPassTitle({
         titleAr: f.title_ar,
@@ -3135,7 +3277,7 @@ export async function processChunkJudge(
           anchorText: excerpt,
           documentContent: normalizedText,
         }),
-      }];
+      } as unknown as FindingWithGlobal];
     });
 
     // Log first row shape for debugging column mismatch
@@ -3162,14 +3304,17 @@ export async function processChunkJudge(
       runKey,
       resolvedFindingsCount: resolvedFindings.length,
       normalizedTextLength: normalizedText?.length ?? 0,
+      persistenceRejectedCount: persistenceFilterRejections.length,
     });
     logger.info("AI findings upsert starting", {
       jobId,
       chunkId: chunk.id,
       runKey,
-      postCanonicalEvidenceDroppedCount,
-      canonicalModelMismatchDroppedCount,
-      explicitSceneMismatchDroppedCount,
+      persistenceRejectedCount: persistenceFilterRejections.length,
+      persistenceRejectedByFilter: persistenceFilterRejections.reduce<Record<string, number>>((acc, rejection) => {
+        acc[rejection.filterName] = (acc[rejection.filterName] ?? 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
       rows: rows.length,
       timeoutMs: CRITICAL_DB_TIMEOUT_MS,
     });
@@ -3190,6 +3335,7 @@ export async function processChunkJudge(
       attempted: rows.length,
       inserted: data?.length ?? 0,
       dropped: rows.length - (data?.length ?? 0),
+      persistenceRejectedCount: persistenceFilterRejections.length,
     });
     logger.info("AI findings upsert result", {
       jobId, chunkId: chunk.id,
@@ -3311,7 +3457,7 @@ export async function processChunkJudge(
               hint: error.hint ?? null,
             }
           : null,
-        rows,
+        rows: rows as unknown as readonly Record<string, unknown>[],
       });
       await v3InspectionRecorder.recordStages([inspectionRecord]);
     }
@@ -3328,7 +3474,7 @@ export async function processChunkJudge(
     } else {
       await persistLineageEvents(
         rows.map((row) =>
-          buildLineageEvent(row, {
+          buildLineageEvent(row as unknown as FindingWithGlobal, {
             jobId,
             chunkId: chunk.id,
             stageName: "aggregation",

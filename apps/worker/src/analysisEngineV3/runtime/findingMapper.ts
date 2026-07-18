@@ -477,7 +477,7 @@ export function mapLegalDecisionToFindings(args: {
     const location = buildLocation(locationEvidence, chunkStart, startLine, endLine, diagnostics, decision.moduleId);
 
     return [{
-      source: "ai",
+      source: "v3",
       article_id: articleId,
       atom_id: atomId,
       severity: inferSeverity(evaluation.status === "PASS" ? "accept" : "needs_review", evaluation.confidence),
