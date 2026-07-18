@@ -240,6 +240,39 @@ const GENERIC_EXPLANATORY_TOKENS = new Set([
   "الرجل",
   "المرآة",
   "المرأة",
+  "quotation",
+  "quoted",
+  "quote",
+  "educational",
+  "education",
+  "condemnation",
+  "condemnatory",
+  "historical",
+  "history",
+  "satire",
+  "satirical",
+  "dialogue",
+  "narration",
+  "contextual",
+  "exception",
+  "exceptions",
+  "exempt",
+  "exemption",
+  "reportable",
+  "policy",
+  "اقتباس",
+  "مقتبس",
+  "تعليمي",
+  "تعليمية",
+  "إدانة",
+  "تاريخي",
+  "تاريخية",
+  "سخرية",
+  "حوار",
+  "سرد",
+  "سياقي",
+  "استثناء",
+  "معفى",
 ]);
 
 const CONCRETE_CLAIM_TOKENS = new Set([
@@ -407,7 +440,7 @@ function buildNoViolationDecision(
 
   return Object.freeze({
     ...result.reasonedDecision,
-    reasoning: "NO VIOLATION",
+    reasoning: "NO DETECTION",
     alternativeInterpretations: Object.freeze([]),
     confidence: Math.min(result.reasonedDecision.confidence, result.semantic.confidence, result.evidence.confidence, result.context.confidence, 0.5),
     supportingEvidence: Object.freeze(supportingEvidence),
@@ -418,10 +451,10 @@ function buildNoViolationDecision(
       ...(result.reasonedDecision.applicableArticles ?? []),
       ...(input.subjectModule.articleIds ?? []),
     ])].sort((left, right) => left - right)),
-    riskAnalysis: "Insufficient grounded evidence. Conservative NO VIOLATION fallback.",
+    riskAnalysis: "Insufficient grounded evidence. Conservative no-detection fallback.",
     narrativeAnalysis: "Insufficient grounded evidence.",
-    humanLikeExplanation: "NO VIOLATION",
-    recommendation: "NO VIOLATION",
+    humanLikeExplanation: "NO DETECTION",
+    recommendation: "NO DETECTION",
   });
 }
 
@@ -524,8 +557,6 @@ export function validateReasonedDecisionAgainstEvidence(
       .filter((text) => text.length > 0),
   );
 
-  const recommendation = normalizeText(result.reasonedDecision.recommendation);
-  const noViolationRecommendation = recommendation.includes("no violation");
   const candidateArticleIds = normalizeIdSet(
     candidateDiagnostics?.articleRanking.selectedPolicyArticleIds.map((articleId) => String(articleId))
       ?? compiledReviewerContext?.selectedArticles.map((article) => article.articleId),
@@ -737,25 +768,6 @@ export function validateReasonedDecisionAgainstEvidence(
         })),
       })),
       line_of_code: "reasonedDecisionValidation.ts:504-670",
-    });
-  }
-
-  const acceptedPassCount = acceptedEvaluations.filter((evaluation) => evaluation.status === "PASS").length;
-  if (acceptedPassCount === 0 && !noViolationRecommendation) {
-    const issue: V3ReasonedDecisionValidationIssue = {
-      code: "unsupported_legal_conclusion",
-      path: "reasonedDecision.recommendation",
-      message: "When no article passes, the reviewer must return NO VIOLATION instead of guessing.",
-    };
-    issues.push(issue);
-    logger.warn("V3 reasoned decision grounding diagnostics", {
-      validator_name: "reasonedDecisionValidation",
-      diagnostic_type: "unsupported_legal_conclusion",
-      candidate_reviewers: [...candidateReviewerIds],
-      candidate_reviewer_labels: [...candidateReviewerLabels],
-      candidate_articles: [...candidateArticleIds],
-      candidate_atoms: [...candidateAtomIds],
-      line_of_code: "reasonedDecisionValidation.ts:549-557",
     });
   }
 

@@ -280,8 +280,12 @@ async function testReligionModuleIsReachableAtRuntime(): Promise<void> {
       "system prompt should explicitly request the GPT reviewer assistant explanation",
     );
     assert(
-      capturedRequestBody?.messages?.[0]?.content?.includes("NO VIOLATION"),
-      "system prompt should explicitly require NO VIOLATION when no article passes",
+      capturedRequestBody?.messages?.[0]?.content?.includes("policy engine"),
+      "system prompt should explicitly hand exception handling to the policy engine",
+    );
+    assert(
+      capturedRequestBody?.messages?.[0]?.content?.includes("Do not suppress a detection"),
+      "system prompt should not suppress detections because of exceptions",
     );
     assert(
       capturedRequestBody?.messages?.[0]?.content?.includes("article-by-article"),

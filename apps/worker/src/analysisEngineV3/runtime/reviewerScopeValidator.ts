@@ -132,28 +132,19 @@ export function validateReviewerScope(input: ReviewerScopeValidatorInput): Revie
     }
   }
 
-  const acceptedDecision: LegalDecision = acceptedFindings.length > 0
-    ? Object.freeze({
-        ...input.decision,
-        status: "accept",
-        finding: acceptedFindings[0] ?? input.decision.finding,
-        trace: Object.freeze([
-          ...input.decision.trace,
-          "scope_validation:accepted",
-        ]),
-      })
-    : Object.freeze({
-        ...input.decision,
-        status: "reject",
-        reason: rejectedFindingsByScope.length > 0
-          ? `${input.decision.reason} | Scope validation rejected the returned evaluation(s) because they are outside the declared reviewer scope.`
-          : input.decision.reason,
-        finding: null,
-        trace: Object.freeze([
-          ...input.decision.trace,
-          rejectedFindingsByScope.length > 0 ? "scope_validation:rejected" : "scope_validation:accepted",
-        ]),
-      });
+  const acceptedDecision: LegalDecision = Object.freeze({
+    ...input.decision,
+    status: acceptedFindings.length > 0 ? "accept" : input.decision.status,
+    finding: acceptedFindings[0] ?? input.decision.finding,
+    trace: Object.freeze([
+      ...input.decision.trace,
+      acceptedFindings.length > 0
+        ? "scope_validation:accepted"
+        : rejectedFindingsByScope.length > 0
+          ? "scope_validation:policy_applied"
+          : "scope_validation:accepted",
+    ]),
+  });
 
   const scopeReason = acceptedFindings.length > 0
     ? "Selected reviewer scope owns the returned finding."
@@ -189,24 +180,9 @@ export function validateReviewerScope(input: ReviewerScopeValidatorInput): Revie
     sanitizedReasonedDecision: input.reasonedDecision
       ? Object.freeze({
           ...input.reasonedDecision,
-          articleEvaluations: Object.freeze(
-            input.reasonedDecision.articleEvaluations.filter((evaluation) =>
-              evaluation.status !== "PASS"
-                ? true
-                : acceptedFindings.some((finding) => finding.articleIds.includes(evaluation.articleId)),
-            ),
-          ),
-          applicableArticles: Object.freeze(
-            input.reasonedDecision.applicableArticles.filter((articleId) =>
-              acceptedFindings.some((finding) => finding.articleIds.includes(articleId)),
-            ),
-          ),
-          rejectedArticles: Object.freeze([
-            ...new Set([
-              ...input.reasonedDecision.rejectedArticles,
-              ...rejectedFindingsByScope.flatMap((finding) => finding.articleIds),
-            ]),
-          ].sort((left, right) => left - right)),
+          articleEvaluations: Object.freeze([...input.reasonedDecision.articleEvaluations]),
+          applicableArticles: Object.freeze([...input.reasonedDecision.applicableArticles]),
+          rejectedArticles: Object.freeze([...input.reasonedDecision.rejectedArticles]),
         })
       : null,
     scopeReason,

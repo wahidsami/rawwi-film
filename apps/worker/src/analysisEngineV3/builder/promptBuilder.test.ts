@@ -193,7 +193,8 @@ function testReviewerKnowledgePackRendered(): void {
   assert(rendered.prompt.includes("reasoned_decision"), "output schema should request a reasoned decision");
   assert(rendered.prompt.includes("recommendation"), "output schema should request a recommendation");
   assert(rendered.prompt.includes("contradicting_evidence"), "prompt should request contradicting evidence using the parser's canonical field");
-  assert(rendered.prompt.includes("NO VIOLATION"), "prompt should instruct NO VIOLATION when no article passes");
+  assert(rendered.prompt.includes("policy engine"), "prompt should hand exception handling to the policy engine");
+  assert(rendered.prompt.includes("Do not suppress a detection"), "prompt should not suppress detections because of exceptions");
   assert(rendered.prompt.includes("article-by-article"), "prompt should instruct article-by-article evaluation");
   assert(rendered.prompt.includes("PASS or FAIL"), "prompt should instruct PASS or FAIL per article");
   assert(rendered.prompt.includes("find all policy violations"), "prompt should instruct exhaustive violation hunting");

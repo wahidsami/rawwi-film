@@ -209,8 +209,154 @@ function testLegalArticleWinsOverGcamMapping(): void {
   console.log("✓ legal article wins over GCAM mapping when the mapper disagrees");
 }
 
+function testPolicyAppliedFindingIsPreserved(): void {
+  const legalDecision = createLegalDecision({
+    moduleId: "v4_11_profanity",
+    moduleTitle: "الألفاظ النابية",
+    articleIds: [4],
+    applies: true,
+    status: "accept",
+    reason: "The quote contains profanity but the policy engine marks it exempt.",
+    confidence: 0.91,
+    semantic: {
+      semanticMeaning: "literal profanity",
+      narrativeIntent: "attack",
+      conversationRole: "speaker",
+      sceneRole: "dialogue",
+      speaker: "A",
+      listener: "B",
+      target: "B",
+      victim: "B",
+      emotion: "hostile",
+      riskContext: "high",
+      confidence: 0.91,
+      notes: [],
+    },
+    narrative: {
+      speaker: "A",
+      listener: "B",
+      target: "B",
+      narrativeVoice: "dialogue",
+      sceneType: "dialogue",
+      narrativeIntent: "attack",
+      storyPosition: "middle",
+      relationship: "unknown",
+      emotionalTone: "hostile",
+      condemnation: true,
+      approval: false,
+      neutrality: false,
+      historicalContext: false,
+      dream: false,
+      flashback: false,
+      comedy: false,
+      satire: false,
+      threat: false,
+      instruction: false,
+      news: false,
+      documentary: false,
+      dialogue: true,
+      narration: false,
+      sceneDescription: false,
+      confidence: 0.92,
+      notes: [],
+    },
+    evidence: {
+      candidates: [
+        {
+          text: "كس امة",
+          startOffset: 18,
+          endOffset: 24,
+          confidence: 0.96,
+          source: "chunk",
+          notes: [],
+        },
+      ],
+      primaryCandidateIndex: 0,
+      admissible: true,
+      confidence: 0.96,
+      notes: [],
+    },
+    context: {
+      storyMemory: null,
+      sceneMemory: null,
+      localContext: "كس امة",
+      chunkContext: "chunk",
+      neighboringSentences: [],
+      narrativeContext: "dialogue",
+      confidence: 0.92,
+      notes: [],
+    },
+    exceptions: [
+      {
+        code: "condemnation_context",
+        label: "Condemnation Context",
+        applies: true,
+        disposition: "allow",
+        reason: "The scene condemns the profanity but does not erase the detected violation.",
+        confidence: 0.88,
+      },
+    ],
+    finding: null,
+    trace: ["finding_built"],
+  });
+
+  const findings = mapLegalDecisionToFindings({
+    decision: legalDecision,
+    reasonedDecision: {
+      reasoning: "The profanity is detected and preserved for policy review.",
+      alternativeInterpretations: [],
+      confidence: 0.91,
+      articleEvaluations: [
+        {
+          articleId: 4,
+          status: "PASS",
+          evidence: ["كس امة"],
+          reason: "The profanity is explicitly quoted.",
+          confidence: 0.91,
+        },
+      ],
+      supportingEvidence: ["كس امة"],
+      contradictingEvidence: [],
+      applicableArticles: [4],
+      rejectedArticles: [],
+      riskAnalysis: "Low ambiguity.",
+      narrativeAnalysis: "The scene is condemnatory, so policy marks it exempt after detection.",
+      humanLikeExplanation: "The finding should still exist even if exempted.",
+      recommendation: "RETURN VIOLATION",
+    },
+    chunkStart: 0,
+    chunkEnd: 24,
+    startLine: 1,
+    endLine: 1,
+    diagnostics: {
+      engineVersion: "v3",
+      providerName: "openai",
+      modelName: "gpt-4.1",
+      modelVersion: "test",
+      rawResponseHash: "raw",
+      responseId: "response-2",
+      responseTimestamp: "2026-07-16T00:00:00.000Z",
+      promptHash: "prompt",
+      semanticHash: "semantic",
+      legalHash: "legal",
+      executionSignatureHash: "execution",
+      stageHashes: [],
+      stageTimings: [],
+      subjectModuleId: "v4_11_profanity",
+      chunkHash: "chunk",
+      findingCount: 1,
+    } as never,
+  });
+
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].article_id, 4);
+  assert.equal(findings[0].policy_links?.[0]?.role, "exception_applied");
+  console.log("✓ policy-applied profanity findings are preserved");
+}
+
 function main(): void {
   testLegalArticleWinsOverGcamMapping();
+  testPolicyAppliedFindingIsPreserved();
   console.log("\nAll V3 finding mapper tests passed.");
 }
 

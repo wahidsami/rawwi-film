@@ -14,6 +14,7 @@ import type {
 import type { V3RuntimeDiagnostics } from "./runtimeDiagnostics.js";
 import type { V3RuntimeFinding } from "./runtimeTypes.js";
 import { logger } from "../../logger.js";
+import { evaluatePolicyDisposition } from "../policy/policyEngine.js";
 
 const DEFAULT_GCAM_MAPPER_REGISTRY = createGcamMapperRegistry();
 
@@ -455,6 +456,7 @@ export function mapLegalDecisionToFindings(args: {
 
   return passEvaluations.flatMap((evaluation, index) => {
     const articleId = Number(evaluation.articleId);
+    const policyAssessment = evaluatePolicyDisposition(decision, evaluation);
     const mappedArticleId = gcamMapping?.status === "MAPPED" ? gcamMapping.articleId : null;
     const mappedAtomId = gcamMapping?.status === "MAPPED" && mappedArticleId === articleId
       ? gcamMapping.atomId
@@ -502,6 +504,13 @@ export function mapLegalDecisionToFindings(args: {
       context_confidence: decision.context.confidence,
       lexical_confidence: decision.evidence.confidence,
       policy_confidence: decision.semantic.confidence,
+      policy_links: [
+        {
+          article_id: articleId,
+          atom_concept_id: canonicalAtom ?? null,
+          role: policyAssessment.disposition,
+        },
+      ],
       primary_article_id: articleId,
       related_article_ids: [...new Set([articleId, ...(gcamMapping?.status === "MAPPED" && gcamMapping.articleId !== null ? [gcamMapping.articleId] : [])])].sort((left, right) => left - right),
     }];
