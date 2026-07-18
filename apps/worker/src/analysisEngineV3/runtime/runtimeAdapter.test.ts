@@ -13,6 +13,7 @@ function buildMockOpenAIResponse(options?: Readonly<{
   semanticMeaning?: string;
   narrativeIntent?: string;
   localContext?: string;
+  evidenceText?: string;
   reasoning?: string;
   humanLikeExplanation?: string;
 }>): string {
@@ -21,6 +22,7 @@ function buildMockOpenAIResponse(options?: Readonly<{
   const semanticMeaning = options?.semanticMeaning ?? "هذا الدين سخيف";
   const narrativeIntent = options?.narrativeIntent ?? "attack";
   const localContext = options?.localContext ?? "هذا الدين سخيف";
+  const evidenceText = options?.evidenceText ?? "النبي كذاب والدين باطل";
   const reasonText = options?.reasoning ?? "The quote directly supports the semantic conclusion.";
   const humanLikeExplanation = options?.humanLikeExplanation ?? "A human reviewer would likely treat this as a direct religion attack.";
   const reasoningPayload = {
@@ -54,9 +56,9 @@ function buildMockOpenAIResponse(options?: Readonly<{
     evidence: {
       candidates: [
         {
-          text: "النبي كذاب والدين باطل",
+          text: evidenceText,
           startOffset: 4,
-          endOffset: 24,
+          endOffset: 4 + evidenceText.length,
           confidence: 0.99,
           source: "chunk",
         },
@@ -280,6 +282,10 @@ async function testReligionModuleIsReachableAtRuntime(): Promise<void> {
       "system prompt should explicitly request the GPT reviewer assistant explanation",
     );
     assert(
+      capturedRequestBody?.messages?.[0]?.content?.includes("articleEvaluations"),
+      "system prompt should explicitly request article evaluations",
+    );
+    assert(
       capturedRequestBody?.messages?.[0]?.content?.includes("policy engine"),
       "system prompt should explicitly hand exception handling to the policy engine",
     );
@@ -317,6 +323,7 @@ async function testProfanityModuleIsReachableAtRuntime(): Promise<void> {
     semanticMeaning: "Direct profanity is present.",
     narrativeIntent: "attack",
     localContext: "كس امة",
+    evidenceText: "كس امة",
     reasoning: "The quote directly supports the profanity conclusion.",
     humanLikeExplanation: "A human reviewer would likely treat this as direct profanity.",
   }));

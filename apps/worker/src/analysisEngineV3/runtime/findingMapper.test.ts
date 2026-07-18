@@ -511,10 +511,154 @@ function testPolicyAppliedFindingIsPreserved(): void {
   console.log("✓ policy-applied profanity findings are preserved");
 }
 
+function testMultipleEvidenceItemsYieldMultipleFindings(): void {
+  const legalDecision = createLegalDecision({
+    moduleId: "v4_11_profanity",
+    moduleTitle: "الألفاظ النابية",
+    articleIds: [4],
+    applies: true,
+    status: "accept",
+    reason: "The quote contains multiple distinct profanity sentences.",
+    confidence: 0.93,
+    semantic: {
+      semanticMeaning: "literal profanity",
+      narrativeIntent: "attack",
+      conversationRole: "speaker",
+      sceneRole: "dialogue",
+      speaker: "A",
+      listener: "B",
+      target: "B",
+      victim: "B",
+      emotion: "hostile",
+      riskContext: "high",
+      confidence: 0.93,
+      notes: [],
+    },
+    narrative: {
+      speaker: "A",
+      listener: "B",
+      target: "B",
+      narrativeVoice: "dialogue",
+      sceneType: "dialogue",
+      narrativeIntent: "attack",
+      storyPosition: "middle",
+      relationship: "unknown",
+      emotionalTone: "hostile",
+      condemnation: false,
+      approval: false,
+      neutrality: false,
+      historicalContext: false,
+      dream: false,
+      flashback: false,
+      comedy: false,
+      satire: false,
+      threat: false,
+      instruction: false,
+      news: false,
+      documentary: false,
+      dialogue: true,
+      narration: false,
+      sceneDescription: false,
+      confidence: 0.93,
+      notes: [],
+    },
+    evidence: {
+      candidates: [
+        {
+          text: "كس امة",
+          startOffset: 10,
+          endOffset: 16,
+          confidence: 0.96,
+          source: "chunk",
+          notes: [],
+        },
+        {
+          text: "يا حمار",
+          startOffset: 18,
+          endOffset: 24,
+          confidence: 0.95,
+          source: "chunk",
+          notes: [],
+        },
+      ],
+      primaryCandidateIndex: 0,
+      admissible: true,
+      confidence: 0.96,
+      notes: [],
+    },
+    context: {
+      storyMemory: null,
+      sceneMemory: null,
+      localContext: "كس امة | يا حمار",
+      chunkContext: "chunk",
+      neighboringSentences: [],
+      narrativeContext: "dialogue",
+      confidence: 0.93,
+      notes: [],
+    },
+    exceptions: [],
+    finding: null,
+    trace: ["finding_built"],
+  });
+
+  const findings = mapLegalDecisionToFindings({
+    decision: legalDecision,
+    reasonedDecision: {
+      reasoning: "The decision contains two distinct profanity evidence items.",
+      alternativeInterpretations: [],
+      confidence: 0.93,
+      articleEvaluations: [
+        {
+          articleId: 4,
+          status: "PASS",
+          evidence: ["كس امة", "يا حمار"],
+          reason: "Both quotes are explicit profanity.",
+          confidence: 0.93,
+        },
+      ],
+      supportingEvidence: ["كس امة", "يا حمار"],
+      contradictingEvidence: [],
+      applicableArticles: [4],
+      rejectedArticles: [],
+      riskAnalysis: "Low ambiguity.",
+      narrativeAnalysis: "Two separate explicit insults.",
+      humanLikeExplanation: "Each sentence should become its own finding.",
+      recommendation: "RETURN VIOLATION",
+    },
+    chunkStart: 0,
+    chunkEnd: 24,
+    startLine: 1,
+    endLine: 1,
+    diagnostics: {
+      engineVersion: "v3",
+      providerName: "openai",
+      modelName: "gpt-4.1",
+      modelVersion: "test",
+      rawResponseHash: "raw",
+      responseId: "response-4",
+      responseTimestamp: "2026-07-16T00:00:00.000Z",
+      promptHash: "prompt",
+      semanticHash: "semantic",
+      legalHash: "legal",
+      executionSignatureHash: "execution",
+      stageHashes: [],
+      stageTimings: [],
+      subjectModuleId: "v4_11_profanity",
+      chunkHash: "chunk",
+      findingCount: 2,
+    } as never,
+  });
+
+  assert.equal(findings.length, 2);
+  assert.deepEqual(findings.map((finding) => finding.evidence_snippet), ["كس امة", "يا حمار"]);
+  console.log("✓ multiple evidence items yield multiple findings");
+}
+
 function main(): void {
   testLegalArticleWinsOverGcamMapping();
   testArticleFourteenResolvesFromPolicyCatalog();
   testPolicyAppliedFindingIsPreserved();
+  testMultipleEvidenceItemsYieldMultipleFindings();
   console.log("\nAll V3 finding mapper tests passed.");
 }
 

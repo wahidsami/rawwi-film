@@ -36,8 +36,24 @@ function pickEvaluationEvidence(decision: LegalDecision, evaluationEvidence: rea
   return matchingCandidate ?? pickPrimaryEvidence(decision) ?? decision.evidence.candidates[0] ?? null;
 }
 
+function pickEvidenceCandidate(decision: LegalDecision, evidenceText: string): LegalEvidenceCandidate | null {
+  return pickEvaluationEvidence(decision, [evidenceText]);
+}
+
 function normalizeText(value: string): string {
   return value.normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function uniqueEvidenceTexts(values: readonly string[]): readonly string[] {
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const value of values) {
+    const normalized = normalizeText(value);
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    unique.push(value);
+  }
+  return unique;
 }
 
 function uniqueSorted(values: readonly string[]): readonly string[] {
@@ -467,62 +483,69 @@ export function mapLegalDecisionToFindings(args: {
     const atomId = normalizeAtomId(mappedAtomId ?? fallbackAtomId ?? null, articleId) || null;
     const canonicalAtom = getPrimaryCanonicalAtomForGcam(articleId, atomId);
     const policyAtomTitle = getPolicyAtomTitle(articleId, atomId) ?? null;
-    const primaryEvidence = pickEvaluationEvidence(decision, evaluation.evidence);
-    const evidenceSnippet = String(primaryEvidence?.text ?? evaluation.evidence[0] ?? "").trim();
-    const locationEvidence = primaryEvidence ?? pickPrimaryEvidence(decision) ?? decision.evidence.candidates[0] ?? {
-      text: evidenceSnippet,
-      startOffset: chunkStart,
-      endOffset: Math.max(chunkStart + evidenceSnippet.length, chunkStart + 1),
-      confidence: decision.evidence.confidence,
-      source: "chunk" as const,
-      notes: [],
-    };
-    const location = buildLocation(locationEvidence, chunkStart, startLine, endLine, diagnostics, decision.moduleId);
+    const evidenceTexts = uniqueEvidenceTexts(evaluation.evidence.length > 0
+      ? evaluation.evidence
+      : [pickPrimaryEvidence(decision)?.text ?? evaluation.reason ?? ""]);
 
-    return [{
-      source: "v3",
-      exists: true,
-      article_id: articleId,
-      atom_id: atomId,
-      severity: inferSeverity(evaluation.status === "PASS" ? "accept" : "needs_review", evaluation.confidence),
-      confidence: Number(Math.max(0, Math.min(1, evaluation.confidence)).toFixed(6)),
-      title_ar: policyArticleTitle ?? gcamMapping?.findingTitle ?? decision.moduleTitle,
-      description_ar: policyAtomTitle ?? gcamMapping?.reviewerExplanation ?? evaluation.reason ?? decision.reason,
-      evidence_snippet: evidenceSnippet,
-      rationale_ar: evaluation.reason ?? decision.reason,
-      exceptionApplied: policyAssessment.disposition === "exception_applied",
-      exceptionType: policyAssessment.exceptionCodes[0] ?? decision.finding?.exceptionType ?? null,
-      exceptionReason: policyAssessment.reasons.join(" | ") || decision.finding?.exceptionReason || null,
-      recommendedAction: decision.status === "needs_review" ? "Needs Review" : "Approve",
-      legalRecommendation: decision.finding?.legalRecommendation ?? (decision.status === "needs_review" ? "Needs Review" : "Approve"),
-      final_ruling: "violation",
-      detection_pass: `v3_runtime_${decision.moduleId}`,
-      location,
-      start_offset_global: clampOffset(primaryEvidence?.startOffset, chunkStart),
-      end_offset_global: clampOffset(primaryEvidence?.endOffset, chunkStart),
-      canonical_atom: canonicalAtom ?? derivePolicyConceptCode(articleId, atomId),
-      lineage_id: null,
-      parent_lineage_id: null,
-      evidence_hash: null,
-      canonical_hash: null,
-      is_interpretive: evaluation.status === "needs_review",
-      depiction_type: "unknown",
-      speaker_role: "unknown",
-      narrative_consequence: "unknown",
-      context_window_id: null,
-      context_confidence: decision.context.confidence,
-      lexical_confidence: decision.evidence.confidence,
-      policy_confidence: decision.semantic.confidence,
-      policy_links: [
-        {
-          article_id: articleId,
-          atom_concept_id: canonicalAtom ?? null,
-          role: policyAssessment.disposition,
-        },
-      ],
-      primary_article_id: articleId,
-      related_article_ids: [...new Set([articleId, ...(gcamMapping?.status === "MAPPED" && gcamMapping.articleId !== null ? [gcamMapping.articleId] : [])])].sort((left, right) => left - right),
-    }];
+    return evidenceTexts.map((evidenceText) => {
+      const primaryEvidence = pickEvidenceCandidate(decision, evidenceText);
+      const fallbackText = evidenceText.trim();
+      const evidenceSnippet = String(primaryEvidence?.text ?? fallbackText).trim();
+      const locationEvidence = primaryEvidence ?? pickPrimaryEvidence(decision) ?? decision.evidence.candidates[0] ?? {
+        text: evidenceSnippet,
+        startOffset: chunkStart,
+        endOffset: Math.max(chunkStart + evidenceSnippet.length, chunkStart + 1),
+        confidence: decision.evidence.confidence,
+        source: "chunk" as const,
+        notes: [],
+      };
+      const location = buildLocation(locationEvidence, chunkStart, startLine, endLine, diagnostics, decision.moduleId);
+
+      return {
+        source: "v3",
+        exists: true,
+        article_id: articleId,
+        atom_id: atomId,
+        severity: inferSeverity(evaluation.status === "PASS" ? "accept" : "needs_review", evaluation.confidence),
+        confidence: Number(Math.max(0, Math.min(1, evaluation.confidence)).toFixed(6)),
+        title_ar: policyArticleTitle ?? gcamMapping?.findingTitle ?? decision.moduleTitle,
+        description_ar: policyAtomTitle ?? gcamMapping?.reviewerExplanation ?? evaluation.reason ?? decision.reason,
+        evidence_snippet: evidenceSnippet,
+        rationale_ar: evaluation.reason ?? decision.reason,
+        exceptionApplied: policyAssessment.disposition === "exception_applied",
+        exceptionType: policyAssessment.exceptionCodes[0] ?? decision.finding?.exceptionType ?? null,
+        exceptionReason: policyAssessment.reasons.join(" | ") || decision.finding?.exceptionReason || null,
+        recommendedAction: decision.status === "needs_review" ? "Needs Review" : "Approve",
+        legalRecommendation: decision.finding?.legalRecommendation ?? (decision.status === "needs_review" ? "Needs Review" : "Approve"),
+        final_ruling: "violation",
+        detection_pass: `v3_runtime_${decision.moduleId}`,
+        location,
+        start_offset_global: clampOffset(primaryEvidence?.startOffset, chunkStart),
+        end_offset_global: clampOffset(primaryEvidence?.endOffset, chunkStart),
+        canonical_atom: canonicalAtom ?? derivePolicyConceptCode(articleId, atomId),
+        lineage_id: null,
+        parent_lineage_id: null,
+        evidence_hash: null,
+        canonical_hash: null,
+        is_interpretive: evaluation.status === "needs_review",
+        depiction_type: "unknown",
+        speaker_role: "unknown",
+        narrative_consequence: "unknown",
+        context_window_id: null,
+        context_confidence: decision.context.confidence,
+        lexical_confidence: decision.evidence.confidence,
+        policy_confidence: decision.semantic.confidence,
+        policy_links: [
+          {
+            article_id: articleId,
+            atom_concept_id: canonicalAtom ?? null,
+            role: policyAssessment.disposition,
+          },
+        ],
+        primary_article_id: articleId,
+        related_article_ids: [...new Set([articleId, ...(gcamMapping?.status === "MAPPED" && gcamMapping.articleId !== null ? [gcamMapping.articleId] : [])])].sort((left, right) => left - right),
+      } satisfies V3RuntimeFinding;
+    });
   });
 }
 
