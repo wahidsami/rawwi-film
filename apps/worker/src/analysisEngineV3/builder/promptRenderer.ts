@@ -17,6 +17,35 @@ import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewer
 import { buildReviewerReasoningEnginePayload } from "./reviewerReasoningEngine.js";
 import { compileReviewerContext } from "../reviewerCompiler/compiler.js";
 import { renderCompiledReviewerContextSection } from "../reviewerCompiler/compilerRenderer.js";
+import { logger } from "../../logger.js";
+
+type PromptRenderStepMetric = Readonly<{
+  step: string;
+  durationMs: number;
+  characters?: number;
+  tokens?: number;
+  items?: number;
+}>;
+
+function estimatePromptTokens(value: string): number {
+  return Math.max(1, Math.ceil(value.length / 4));
+}
+
+function measurePromptRenderStep<T>(
+  metrics: PromptRenderStepMetric[],
+  step: string,
+  fn: () => T,
+  metadata?: Omit<PromptRenderStepMetric, "step" | "durationMs">,
+): T {
+  const startedAt = performance.now();
+  const result = fn();
+  metrics.push(Object.freeze({
+    step,
+    durationMs: Number((performance.now() - startedAt).toFixed(3)),
+    ...(metadata ?? {}),
+  }));
+  return result;
+}
 
 function renderDecisionGraphSection(decisionGraph: V3PromptBuilderInput["decisionGraph"]): string {
   const nodeSections = decisionGraph.nodes.map((node) =>
@@ -72,46 +101,60 @@ function renderDecisionGraphSection(decisionGraph: V3PromptBuilderInput["decisio
 export function renderV3Prompt(input: V3PromptBuilderInput): string {
   const context = normalizePromptBuilderInput(input);
   const useReviewerCompiler = config.REVIEWER_COMPILER_ENABLED || config.DETERMINISTIC_CANDIDATES_ENABLED;
-  const conceptContext = createPromptConceptContext(context);
-  const reviewerAssessment = runReviewerMethodology({ promptInput: context, conceptContext });
-  const reviewerQuestionSet = getDefaultReviewerQuestionSet();
-  const compiledReviewerContext = useReviewerCompiler
-    ? (context.compiledReviewerContext ?? compileReviewerContext({
-        promptInput: context,
-        conceptContext,
-        assessment: reviewerAssessment,
-      }).compiledReviewerContext)
-    : null;
-  const reviewerKnowledgeSelection = useReviewerCompiler
-    ? null
-    : createEmergencyContextualReviewerKnowledgeSelection({
-        promptInput: context,
-        conceptContext,
-        assessment: reviewerAssessment,
-      });
-  const knowledgeRetrieval = useReviewerCompiler
-    ? null
-    : createReviewerKnowledgeRetrievalReport({
-        assessment: reviewerAssessment,
-        conceptContext,
-        subjectModule: context.subjectModule,
-        registry: reviewerKnowledgeSelection!.reviewerKnowledgeRegistry,
-        topK: Math.max(1, reviewerKnowledgeSelection!.routing.selectedReviewerPackIds.length),
-      });
+  const profile: PromptRenderStepMetric[] = [];
+  const conceptContext = measurePromptRenderStep(profile, "createPromptConceptContext", () => createPromptConceptContext(context), {
+    items: context.glossary.entries.length,
+  });
+  const reviewerAssessment = measurePromptRenderStep(profile, "runReviewerMethodology", () => runReviewerMethodology({ promptInput: context, conceptContext }), {
+    items: conceptContext.concepts.length,
+  });
+  const reviewerQuestionSet = measurePromptRenderStep(profile, "getDefaultReviewerQuestionSet", () => getDefaultReviewerQuestionSet());
+  const compiledReviewerContext = measurePromptRenderStep(profile, "resolveCompiledReviewerContext", () =>
+    useReviewerCompiler
+      ? (context.compiledReviewerContext ?? compileReviewerContext({
+          promptInput: context,
+          conceptContext,
+          assessment: reviewerAssessment,
+        }).compiledReviewerContext)
+      : null,
+  );
+  const reviewerKnowledgeSelection = measurePromptRenderStep(profile, "selectReviewerKnowledge", () =>
+    useReviewerCompiler
+      ? null
+      : createEmergencyContextualReviewerKnowledgeSelection({
+          promptInput: context,
+          conceptContext,
+          assessment: reviewerAssessment,
+        }),
+  );
+  const knowledgeRetrieval = measurePromptRenderStep(profile, "createReviewerKnowledgeRetrievalReport", () =>
+    useReviewerCompiler
+      ? null
+      : createReviewerKnowledgeRetrievalReport({
+          assessment: reviewerAssessment,
+          conceptContext,
+          subjectModule: context.subjectModule,
+          registry: reviewerKnowledgeSelection!.reviewerKnowledgeRegistry,
+          topK: Math.max(1, reviewerKnowledgeSelection!.routing.selectedReviewerPackIds.length),
+        }),
+  );
   const reviewerKnowledgePacks = knowledgeRetrieval?.selectedPacks ?? [];
-  const reviewerReasoningEngine = useReviewerCompiler
-    ? null
-    : buildReviewerReasoningEnginePayload(
-        context,
-        conceptContext,
-        reviewerAssessment,
-        reviewerKnowledgePacks,
-        reviewerKnowledgeSelection!.knowledgeRegistry,
-        knowledgeRetrieval!,
-      );
-  const reviewerMethodology = getDefaultReviewerMethodology();
+  const reviewerReasoningEngine = measurePromptRenderStep(profile, "buildReviewerReasoningEnginePayload", () =>
+    useReviewerCompiler
+      ? null
+      : buildReviewerReasoningEnginePayload(
+          context,
+          conceptContext,
+          reviewerAssessment,
+          reviewerKnowledgePacks,
+          reviewerKnowledgeSelection!.knowledgeRegistry,
+          knowledgeRetrieval!,
+        ),
+  );
+  const reviewerMethodology = measurePromptRenderStep(profile, "getDefaultReviewerMethodology", () => getDefaultReviewerMethodology());
 
-  return joinPromptSections([
+  const promptAssemblyStartedAt = performance.now();
+  const prompt = joinPromptSections([
     "# Analysis Engine V3 System Prompt",
     renderReviewerMethodologySection(reviewerMethodology, reviewerAssessment),
     renderReviewerQuestionSetSection(reviewerQuestionSet),
@@ -140,6 +183,27 @@ export function renderV3Prompt(input: V3PromptBuilderInput): string {
     renderSubjectModuleSection(context),
     renderOutputSchemaSection(context.outputSchema),
   ]);
+  profile.push(Object.freeze({
+    step: "assemblePromptSections",
+    durationMs: Number((performance.now() - promptAssemblyStartedAt).toFixed(3)),
+    characters: prompt.length,
+    tokens: estimatePromptTokens(prompt),
+    items: context.decisionGraph.nodes.length + (context.decisionGraph.edges?.length ?? 0),
+  }));
+
+  const promptTokens = estimatePromptTokens(prompt);
+  logger.info("V3 instrumentation PROMPT RENDER PROFILE", {
+    promptCharacterCount: prompt.length,
+    promptTokenEstimate: promptTokens,
+    useReviewerCompiler,
+    evidenceCandidateCount: reviewerAssessment?.reasoningTrace?.length ?? 0,
+    selectedReviewerCount: reviewerKnowledgeSelection?.routing.selectedReviewerIds.length ?? compiledReviewerContext?.selection.selectedReviewerIds.length ?? 0,
+    selectedArticleCount: compiledReviewerContext?.selectedArticles.length ?? 0,
+    selectedAtomCount: compiledReviewerContext?.selectedAtoms.length ?? 0,
+    stepTimings: profile,
+  });
+
+  return prompt;
 }
 
 export function renderPromptHash(renderedPrompt: string): string {

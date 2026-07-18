@@ -19,6 +19,9 @@ export function buildV3RenderedPrompt(input: V3PromptBuilderInput): V3RenderedPr
   const rendered = renderV3RenderedPrompt(input);
   logger.info("V3 instrumentation EXIT: buildV3RenderedPrompt", {
     durationMs: Date.now() - startedAt,
+    promptCharacterCount: rendered.prompt.length,
+    promptTokenEstimate: Math.max(1, Math.ceil(rendered.prompt.length / 4)),
+    promptHash: rendered.promptHash,
   });
   return rendered;
 }
