@@ -108,6 +108,13 @@ function testDirectProfanity(): void {
   console.log("✓ direct profanity");
 }
 
+function testDirectExactProfanityPhrase(): void {
+  const decision = evaluate(makeInput(createBuilderInput("كس امة")));
+  assert(decision.status === "accept", "exact profanity phrase should be accepted");
+  assert(decision.finding !== null, "exact profanity phrase should produce a finding");
+  console.log("✓ direct exact profanity phrase");
+}
+
 function testQuotedProfanity(): void {
   const base = createBuilderInput("قال: «يا حمار»");
   const input = makeInput({
@@ -353,6 +360,7 @@ function testRulesAndExamples(): void {
 async function main(): Promise<void> {
   testRulesAndExamples();
   testDirectProfanity();
+  testDirectExactProfanityPhrase();
   testQuotedProfanity();
   testEducationalDiscussion();
   testCondemnationOfProfanity();

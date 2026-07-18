@@ -7,8 +7,23 @@ import { strict as assert } from "node:assert";
 import type { AddressInfo } from "node:net";
 import type { V3RuntimeAdapterRequest } from "./runtimeTypes.js";
 
-function buildMockOpenAIResponse(): string {
-  const reasoning = {
+function buildMockOpenAIResponse(options?: Readonly<{
+  articleId?: number;
+  rejectedArticleId?: number;
+  semanticMeaning?: string;
+  narrativeIntent?: string;
+  localContext?: string;
+  reasoning?: string;
+  humanLikeExplanation?: string;
+}>): string {
+  const articleId = options?.articleId ?? 3;
+  const rejectedArticleId = options?.rejectedArticleId ?? 17;
+  const semanticMeaning = options?.semanticMeaning ?? "هذا الدين سخيف";
+  const narrativeIntent = options?.narrativeIntent ?? "attack";
+  const localContext = options?.localContext ?? "هذا الدين سخيف";
+  const reasonText = options?.reasoning ?? "The quote directly supports the semantic conclusion.";
+  const humanLikeExplanation = options?.humanLikeExplanation ?? "A human reviewer would likely treat this as a direct religion attack.";
+  const reasoningPayload = {
     narrative: {
       speaker: "Character A",
       listener: "religious_group",
@@ -51,8 +66,8 @@ function buildMockOpenAIResponse(): string {
       confidence: 0.99,
     },
     semantic: {
-      semanticMeaning: "هذا الدين سخيف",
-      narrativeIntent: "attack",
+      semanticMeaning,
+      narrativeIntent,
       conversationRole: "speaker",
       sceneRole: "dialogue",
       speaker: "Character A",
@@ -66,51 +81,51 @@ function buildMockOpenAIResponse(): string {
     context: {
       storyMemory: "The scene is hostile.",
       sceneMemory: "Interior confrontation.",
-      localContext: "هذا الدين سخيف",
+      localContext,
       chunkContext: "Chunk context",
       neighboringSentences: ["قبلها كان هناك جدال.", "بعدها ساد الصمت."],
       narrativeContext: "Direct hostile dialogue about religion.",
       confidence: 0.95,
     },
     reasoned_decision: {
-      reasoning: "The quote directly supports the semantic conclusion.",
+      reasoning: reasonText,
       alternative_interpretations: ["It could be commentary, but the context supports a direct attack."],
       article_evaluations: [
         {
-          article_id: 3,
+          article_id: articleId,
           status: "PASS",
-          evidence: ["النبي كذاب والدين باطل"],
-          reason: "The quote directly attacks religion.",
+          evidence: [localContext],
+          reason: reasonText,
           confidence: 0.97,
         },
         {
-          article_id: 17,
+          article_id: rejectedArticleId,
           status: "FAIL",
-          evidence: ["النبي كذاب والدين باطل"],
+          evidence: [localContext],
           reason: "A different article does not fit the same quote.",
           confidence: 0.97,
         },
       ],
-      supporting_evidence: ["النبي كذاب والدين باطل"],
+      supporting_evidence: [localContext],
       contradicting_evidence: [],
-      applicable_articles: [3],
-      rejected_articles: [17],
+      applicable_articles: [articleId],
+      rejected_articles: [rejectedArticleId],
       risk_analysis: "Low ambiguity because the evidence is explicit.",
       narrative_analysis: "Direct hostile dialogue with no blocking exception.",
-      human_like_explanation: "A human reviewer would likely treat this as a direct religion attack.",
+      human_like_explanation: humanLikeExplanation,
       confidence: 0.97,
     },
   };
 
   return JSON.stringify({
-    reasoning,
+    reasoning: reasoningPayload,
     metadata: {
       model: "gpt-4.1",
     },
   });
 }
 
-async function createMockOpenAIEndpoint(): Promise<{
+async function createMockOpenAIEndpoint(buildResponse: () => string = () => buildMockOpenAIResponse()): Promise<{
   baseURL: string;
   getCapturedRequestBody: () => unknown;
   close: () => Promise<void>;
@@ -134,7 +149,7 @@ async function createMockOpenAIEndpoint(): Promise<{
       } catch {
         capturedRequestBody = requestBody;
       }
-      const body = buildMockOpenAIResponse();
+      const body = buildResponse();
       response.statusCode = 200;
       response.setHeader("content-type", "application/json");
       response.end(
@@ -286,8 +301,93 @@ async function testReligionModuleIsReachableAtRuntime(): Promise<void> {
   }
 }
 
+async function testProfanityModuleIsReachableAtRuntime(): Promise<void> {
+  const originalOpenAIKey = process.env.OPENAI_API_KEY;
+  const originalOpenAIBaseURL = process.env.OPENAI_BASE_URL;
+  const originalSupabaseUrl = process.env.SUPABASE_URL;
+  const originalSupabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  const endpoint = await createMockOpenAIEndpoint(() => buildMockOpenAIResponse({
+    articleId: 4,
+    rejectedArticleId: 17,
+    semanticMeaning: "Direct profanity is present.",
+    narrativeIntent: "attack",
+    localContext: "كس امة",
+    reasoning: "The quote directly supports the profanity conclusion.",
+    humanLikeExplanation: "A human reviewer would likely treat this as direct profanity.",
+  }));
+  process.env.OPENAI_API_KEY = "test-openai-key";
+  process.env.OPENAI_BASE_URL = endpoint.baseURL;
+  process.env.SUPABASE_URL = "http://127.0.0.1:54321";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "test-supabase-service-role-key";
+
+  try {
+    const { runV3RuntimeAdapter } = await import("./runtimeAdapter.js");
+
+    const request: V3RuntimeAdapterRequest = {
+      jobId: "job-profanity-1",
+      chunkId: "chunk-profanity-1",
+      scriptId: "script-profanity-1",
+      versionId: "version-profanity-1",
+      chunkText: "حاضر. فهد يتمتم: كس امة",
+      chunkStart: 0,
+      chunkEnd: "حاضر. فهد يتمتم: كس امة".length,
+      chunkIndex: 0,
+      startLine: 1,
+      endLine: 1,
+      storyMemory: "Story memory is present.",
+      sceneMemory: "Scene memory is present.",
+      neighboringSentences: ["قبلها كان هناك جدال.", "بعدها ساد الصمت."],
+      analysisPromptContext: "Profanity content should route through the profanity module.",
+      promptLexiconTerms: [
+        {
+          term: "شتيمة",
+          gcam_article_id: 4,
+          severity_floor: "low",
+          gcam_article_title_ar: "الألفاظ النابية",
+          term_variants: ["سباب"],
+          description: "Profanity anchor.",
+          example_usage: "كس امة",
+        },
+      ],
+    };
+
+    const result = await runV3RuntimeAdapter(request, {
+      subjectModule: {
+        id: "v4_11_profanity",
+        titleAr: "الألفاظ النابية",
+        scope: "Direct profanity analysis",
+        rules: ["Detect literal profanity in the chunk."],
+        exclusions: ["Do not classify neutral quotations."],
+        requiredEvidence: ["Literal profanity present in the chunk."],
+        decisionTree: ["Is there literal profanity?", "Does context negate the literal reading?"],
+        examples: ["A direct profanity in dialogue."],
+        nonExamples: ["Educational mention of a profanity term."],
+        articleIds: [4, 5, 17],
+        notes: ["Runtime smoke test subject module."],
+      },
+      responseFormat: "json_object",
+    });
+
+    const gcamMapping = result.truthLayerMeta.gcam_mapping as { status?: string; article_id?: number };
+    assert.equal(result.diagnostics.subjectModuleId, "v4_11_profanity");
+    assert.equal(result.truthLayerMeta.subject_module_id, "v4_11_profanity");
+    assert.equal(result.findings.length > 0, true, "profanity module should persist a finding at runtime");
+    assert.equal(gcamMapping.status, "MAPPED");
+    assert.equal(result.findings[0]?.article_id, 4);
+    console.log("✓ profanity module reachable through runtime adapter");
+  } finally {
+    await endpoint.close();
+    process.env.OPENAI_API_KEY = originalOpenAIKey;
+    process.env.OPENAI_BASE_URL = originalOpenAIBaseURL;
+    process.env.SUPABASE_URL = originalSupabaseUrl;
+    process.env.SUPABASE_SERVICE_ROLE_KEY = originalSupabaseServiceRoleKey;
+  }
+}
+
 async function main(): Promise<void> {
   await testReligionModuleIsReachableAtRuntime();
+  await testProfanityModuleIsReachableAtRuntime();
   console.log("\nAll runtime adapter tests passed.");
 }
 

@@ -10,6 +10,8 @@ function findFirstProfanitySpan(text: string): { start: number; end: number } | 
     "يا حمار",
     "يا كلب",
     "يا خرا",
+    "كس امة",
+    "كس أمة",
     "يا نصاب",
     "يا حرامي",
     "يا كذاب",
@@ -95,4 +97,3 @@ export function runEvidenceStage(chunk: V3PipelineChunk): LegalEvidenceResult {
     notes: isProfanityEvidenceText(raw) ? [] : ["no literal profanity detected"],
   });
 }
-

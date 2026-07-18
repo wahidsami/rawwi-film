@@ -335,6 +335,56 @@ function testEmergencyRouterIsDeterministicAndSelective(): void {
   console.log("✓ emergency router is deterministic and selective");
 }
 
+function testEmergencyRouterDetectsExactProfanityPhrase(): void {
+  const promptInputBase = makeProfanityPromptInput() as unknown as Record<string, unknown>;
+  const promptInput = {
+    ...promptInputBase,
+    chunkContext: {
+      localChunk: "حاضر. فهد يتمتم: كس امة",
+      neighboringSentences: [],
+      sceneMemory: "",
+    },
+  } as never;
+  const conceptContext = Object.freeze({
+    ...makeConceptContext(),
+    concepts: Object.freeze([
+      Object.freeze({
+        id: "profanity",
+        label: "Profanity",
+        confidence: normalizeConceptConfidence({
+          narrative: 0.82,
+          semantic: 0.88,
+          storyMemory: 0.1,
+          entity: 0,
+          glossary: 0.92,
+          evidence: 0.97,
+        }),
+        evidenceSources: Object.freeze([]),
+        originatingSentences: Object.freeze(["فهد يتمتم: كس امة"]),
+        entityReferences: Object.freeze([]),
+        glossaryReferences: Object.freeze(["كس امة"]),
+      }),
+    ]),
+    conceptIds: Object.freeze(["profanity"]),
+    primaryConceptId: "profanity",
+  });
+  const assessment = runReviewerMethodology({
+    promptInput,
+    conceptContext,
+  });
+
+  const selection = createEmergencyContextualReviewerKnowledgeSelection({
+    promptInput,
+    conceptContext,
+    assessment,
+  });
+
+  assert.equal(selection.routing.selectedReviewerIds.includes("v4_11_profanity"), true);
+  assert.equal(selection.routing.selectedReviewerIds.includes("v3_01_religion"), false);
+  assert.equal(selection.routing.selectedReviewerIds.includes("v3_03_security"), false);
+  console.log("✓ emergency router detects the exact profanity phrase");
+}
+
 function testEmergencyRouterIgnoresStoryMemory(): void {
   const promptInput = makeProfanityPromptInput() as unknown as Record<string, unknown>;
   const pollutedPromptInput = {
@@ -406,6 +456,7 @@ async function main(): Promise<void> {
   testMethodologyRenderer();
   testSelectorFindsProfanityPack();
   testEmergencyRouterIsDeterministicAndSelective();
+  testEmergencyRouterDetectsExactProfanityPhrase();
   testEmergencyRouterIgnoresStoryMemory();
   testSelectorFindsSecurityPack();
   testSelectorFindsSexualPack();

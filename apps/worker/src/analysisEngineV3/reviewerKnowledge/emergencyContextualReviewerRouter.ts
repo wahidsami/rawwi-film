@@ -134,6 +134,8 @@ const REVIEWER_ROUTING_PROFILES: readonly ReviewerRoutingProfile[] = Object.free
       "يا كلب",
       "يا حمار",
       "يا خرا",
+      "كس امة",
+      "كس أمة",
       "لعنة",
       "سباب",
       "شتيمة",

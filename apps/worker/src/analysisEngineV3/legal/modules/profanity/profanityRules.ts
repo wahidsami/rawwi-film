@@ -46,6 +46,8 @@ export const PROFANITY_RULES: ProfanityRuleSet = {
     "يا حمار",
     "يا كلب",
     "يا خرا",
+    "كس امة",
+    "كس أمة",
     "العن امك",
     "العن أمك",
     "العن والديك",
