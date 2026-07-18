@@ -33,7 +33,7 @@ import type { V3PromptGlossary, V3PromptOutputSchema, V3PromptSubjectModule } fr
 import type { V3RuntimeAdapterRequest, V3RuntimeAdapterOptions, V3RuntimeAdapterResult } from "./runtimeTypes.js";
 import type { ReviewerScopeValidatorResult } from "./reviewerScopeValidator.js";
 import { createV3RuntimeDiagnostics } from "./runtimeDiagnostics.js";
-import { buildRuntimeTruthLayerMeta } from "./reportMapper.js";
+import { attachV3DiagnosticReport, buildRuntimeTruthLayerMeta } from "./reportMapper.js";
 import { evaluateRuntimeGcamMapping, mapLegalDecisionToFindings } from "./findingMapper.js";
 import { canonicalStringify } from "../../canonicalJson.js";
 import { sha256 } from "../../hash.js";
@@ -1414,9 +1414,9 @@ export async function runV3RuntimeAdapter(
     diagnostics,
     gptAssistant,
   });
-  if (diagnosticReport) {
-    truthLayerMeta.v3_diagnostic_report = diagnosticReport;
-  }
+  const truthLayerMetaWithDiagnosticReport = diagnosticReport
+    ? attachV3DiagnosticReport(truthLayerMeta, diagnosticReport)
+    : truthLayerMeta;
   const reviewerDebate = buildReviewerDebatePackage({
     analysisResponse,
     legalModules,
@@ -1758,12 +1758,12 @@ export async function runV3RuntimeAdapter(
     analysisResponse,
     findings,
     diagnostics,
-      truthLayerMeta: Object.freeze({
-      ...truthLayerMeta,
+    truthLayerMeta: Object.freeze({
+      ...truthLayerMetaWithDiagnosticReport,
       explanation,
       legal_reasoning_trace: legalReasoningTrace,
       legal_reasoning_metrics: legalReasoningMetrics,
-        gcam_mapping: Object.freeze({
+      gcam_mapping: Object.freeze({
         status: gcamMapping.status,
         articleId: gcamMapping.articleId,
         articleNumber: gcamMapping.articleNumber,

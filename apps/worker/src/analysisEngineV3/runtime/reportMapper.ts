@@ -42,3 +42,13 @@ export function buildRuntimeReportMetadata(diagnostics: V3RuntimeDiagnostics): R
     finding_count: diagnostics.findingCount,
   };
 }
+
+export function attachV3DiagnosticReport(
+  truthLayerMeta: Readonly<Record<string, unknown>>,
+  diagnosticReport: Readonly<Record<string, unknown>>,
+): Record<string, unknown> {
+  return {
+    ...truthLayerMeta,
+    v3_diagnostic_report: diagnosticReport,
+  };
+}
