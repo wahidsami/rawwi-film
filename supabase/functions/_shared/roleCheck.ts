@@ -1,5 +1,6 @@
 
 import { createSupabaseAdmin } from "./supabaseAdmin.ts";
+import { traceEdgeStep } from "./trace.ts";
 
 /**
  * Checks if a user has Admin, Super Admin, or Regulator privileges
@@ -11,10 +12,15 @@ export async function isUserAdmin(
     userId: string
 ): Promise<boolean> {
     try {
-        const { data: roleRows, error } = await supabase
-            .from("user_roles")
-            .select("role_id, roles(key)")
-            .eq("user_id", userId);
+        const { data: roleRows, error } = await traceEdgeStep(
+            "roleCheck",
+            "isUserAdmin.user_roles",
+            { userId },
+            () => supabase
+                .from("user_roles")
+                .select("role_id, roles(key)")
+                .eq("user_id", userId),
+        );
 
         if (error) {
             console.error("[roleCheck] Error fetching roles:", error);
@@ -48,10 +54,15 @@ export async function isSuperAdmin(
     userId: string
 ): Promise<boolean> {
     try {
-        const { data: roleRows, error } = await supabase
-            .from("user_roles")
-            .select("role_id, roles(key)")
-            .eq("user_id", userId);
+        const { data: roleRows, error } = await traceEdgeStep(
+            "roleCheck",
+            "isSuperAdmin.user_roles",
+            { userId },
+            () => supabase
+                .from("user_roles")
+                .select("role_id, roles(key)")
+                .eq("user_id", userId),
+        );
 
         if (error || !roleRows || roleRows.length === 0) return false;
 
@@ -82,10 +93,15 @@ export async function isSuperAdminOrAdmin(
     userId: string
 ): Promise<boolean> {
     try {
-        const { data: roleRows, error } = await supabase
-            .from("user_roles")
-            .select("role_id, roles(key)")
-            .eq("user_id", userId);
+        const { data: roleRows, error } = await traceEdgeStep(
+            "roleCheck",
+            "isSuperAdminOrAdmin.user_roles",
+            { userId },
+            () => supabase
+                .from("user_roles")
+                .select("role_id, roles(key)")
+                .eq("user_id", userId),
+        );
 
         if (error || !roleRows || roleRows.length === 0) return false;
 
@@ -106,10 +122,15 @@ export async function isRegulatorOnly(
     userId: string
 ): Promise<boolean> {
     try {
-        const { data: roleRows, error } = await supabase
-            .from("user_roles")
-            .select("role_id, roles(key)")
-            .eq("user_id", userId);
+        const { data: roleRows, error } = await traceEdgeStep(
+            "roleCheck",
+            "isRegulatorOnly.user_roles",
+            { userId },
+            () => supabase
+                .from("user_roles")
+                .select("role_id, roles(key)")
+                .eq("user_id", userId),
+        );
 
         if (error || !roleRows || roleRows.length === 0) return false;
 
@@ -131,10 +152,15 @@ export async function isClientUser(
     userId: string
 ): Promise<boolean> {
     try {
-        const { data: roleRows, error } = await supabase
-            .from("user_roles")
-            .select("role_id, roles(key)")
-            .eq("user_id", userId);
+        const { data: roleRows, error } = await traceEdgeStep(
+            "roleCheck",
+            "isClientUser.user_roles",
+            { userId },
+            () => supabase
+                .from("user_roles")
+                .select("role_id, roles(key)")
+                .eq("user_id", userId),
+        );
 
         if (error || !roleRows || roleRows.length === 0) return false;
         return (roleRows as any[]).some((r) => (r.roles?.key ?? "").toLowerCase() === "client");

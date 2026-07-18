@@ -10,6 +10,7 @@ import { jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { isUserAdmin } from "../_shared/roleCheck.ts";
+import { traceEdgeStep } from "../_shared/trace.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
 import { validateArticleAtomLink } from "../_shared/policyValidation.ts";
 
@@ -641,11 +642,12 @@ async function recomputeReportAggregates(
 
 Deno.serve(async (req: Request) => {
   try {
+    console.log("[findings] ENTER handler", { method: req.method, path: new URL(req.url).pathname });
     const origin = req.headers.get("origin") ?? undefined;
     const json = (body: unknown, status = 200) => jsonResponse(body, status, { origin });
     if (req.method === "OPTIONS") return optionsResponse(req);
 
-    const auth = await requireAuth(req);
+    const auth = await traceEdgeStep("findings", "requireAuth", { path: new URL(req.url).pathname }, () => requireAuth(req));
     if (auth instanceof Response) return auth;
     const uid = auth.userId;
 
@@ -654,7 +656,7 @@ Deno.serve(async (req: Request) => {
     const method = req.method;
 
     // Admin role check (Robust DB check)
-    const isAdmin = await isUserAdmin(supabase, uid);
+    const isAdmin = await traceEdgeStep("findings", "isUserAdmin", { uid }, () => isUserAdmin(supabase, uid));
 
     // ── GET /findings/review-layer?jobId=... or ?reportId=... ──
     if (method === "GET" && rest === "review-layer") {

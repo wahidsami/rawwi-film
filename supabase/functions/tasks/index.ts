@@ -27,6 +27,7 @@ import { saveScriptEditorContent } from "../_shared/scriptEditor.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
 import { isUserAdmin } from "../_shared/roleCheck.ts";
 import { offsetRangeToPageMinMax, type ScriptPageRow } from "../_shared/offsetToPage.ts";
+import { traceEdgeStep } from "../_shared/trace.ts";
 
 
 import {
@@ -370,8 +371,9 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return optionsResponse(req);
 
   try {
+  console.log("[tasks] ENTER handler", { method: req.method, path: new URL(req.url).pathname });
 
-  const auth = await requireAuth(req);
+  const auth = await traceEdgeStep("tasks", "requireAuth", { path: new URL(req.url).pathname }, () => requireAuth(req));
   if (auth instanceof Response) return auth;
 
   const correlationId = getCorrelationId(req);
@@ -379,7 +381,7 @@ Deno.serve(async (req: Request) => {
   const supabase = createSupabaseAdmin();
 
   // Admin bypass check (Robust DB check)
-  const isAdmin = await isUserAdmin(supabase, uid);
+  const isAdmin = await traceEdgeStep("tasks", "isUserAdmin", { uid }, () => isUserAdmin(supabase, uid));
 
   if (req.method === "GET") {
     const url = new URL(req.url);

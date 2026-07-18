@@ -1,3 +1,5 @@
+import { traceEdgeStep } from "./trace.ts";
+
 type AdminClient = {
   from: (table: string) => {
     select: (cols: string) => any;
@@ -73,11 +75,16 @@ export async function validateArticleAtomLink(
   if (!normalizedAtomId) return { ok: true, normalizedAtomId: null };
 
   const matchCandidates = buildAtomMatchCandidates(articleId, normalizedAtomId);
-  const { data: rows, error } = await supabase
-    .from("policy_article_atom_map")
-    .select("id, local_atom_code")
-    .eq("article_id", articleId)
-    .eq("is_active", true);
+  const { data: rows, error } = await traceEdgeStep(
+    "policyValidation",
+    "policy_article_atom_map.lookup",
+    { articleId, atomId: normalizedAtomId },
+    () => supabase
+      .from("policy_article_atom_map")
+      .select("id, local_atom_code")
+      .eq("article_id", articleId)
+      .eq("is_active", true),
+  );
   if (error) {
     return { ok: true, normalizedAtomId };
   }

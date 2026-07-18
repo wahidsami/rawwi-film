@@ -3,6 +3,7 @@
  * Avoids getUserInfo / auth.admin lookups to keep the deploy graph smaller.
  */
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { traceEdgeStep } from "./trace.ts";
 
 export async function insertAuditEventMinimal(
   supabase: SupabaseClient,
@@ -41,7 +42,12 @@ export async function insertAuditEventMinimal(
     meta: payload.metadata ?? null,
   };
 
-  const { error } = await supabase.from("audit_events").insert(row);
+  const { error } = await traceEdgeStep(
+    "auditInsertMinimal",
+    "audit_events.insert",
+    { event_type, actor_user_id },
+    () => supabase.from("audit_events").insert(row),
+  );
   if (error) {
     console.warn(`[auditInsertMinimal] ${event_type} failed:`, error.message);
   }

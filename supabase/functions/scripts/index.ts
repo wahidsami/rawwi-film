@@ -12,6 +12,7 @@ import { getDefaultPermissionsForRoleKey, uniqueStrings } from "../_shared/userL
 import { canOverrideOwnScriptDecision, isClientUser, isRegulatorOnly, isSuperAdminOrAdmin, isUserAdmin } from "../_shared/roleCheck.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
 import { loadDefaultCertificateTemplate, renderCertificatePdfBytes } from "../_shared/certificatePdf.ts";
+import { traceEdgeStep } from "../_shared/trace.ts";
 
 const CERTIFICATE_FILES_BUCKET = "script-certificates";
 const CERTIFICATE_BASE_AMOUNT = 3500;
@@ -1288,7 +1289,8 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return optionsResponse(req);
 
   try {
-    const auth = await requireAuth(req);
+    console.log("[scripts] ENTER handler", { method: req.method, path: new URL(req.url).pathname });
+    const auth = await traceEdgeStep("scripts", "requireAuth", { path: new URL(req.url).pathname }, () => requireAuth(req));
     if (auth instanceof Response) return auth;
 
     const correlationId = getCorrelationId(req);
@@ -1310,9 +1312,9 @@ Deno.serve(async (req: Request) => {
       .select("id, client_id, company_id, title, type, work_classification, episode_count, expected_rank, received_at, status, synopsis, story_summary, script_summary_pdf_url, has_security_scenes, security_content_attachment_url, file_url, created_by, created_at, assignee_id, current_version_id, is_quick_analysis")
       .eq("is_quick_analysis", false)
       .order("created_at", { ascending: false });
-    const seeAll = await isSuperAdminOrAdmin(supabase, uid);
+    const seeAll = await traceEdgeStep("scripts", "isSuperAdminOrAdmin", { uid }, () => isSuperAdminOrAdmin(supabase, uid));
     if (!seeAll) {
-      const regulatorOnly = await isRegulatorOnly(supabase, uid);
+      const regulatorOnly = await traceEdgeStep("scripts", "isRegulatorOnly", { uid }, () => isRegulatorOnly(supabase, uid));
       if (regulatorOnly) {
         query = query.eq("assignee_id", uid);
       } else {

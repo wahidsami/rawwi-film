@@ -5,6 +5,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 export function createSupabaseAdmin() {
+  console.log("[shared] ENTER createSupabaseAdmin");
   const url = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
@@ -18,5 +19,7 @@ export function createSupabaseAdmin() {
     );
   }
 
-  return createClient(url, serviceRoleKey, { auth: { persistSession: false } });
+  const client = createClient(url, serviceRoleKey, { auth: { persistSession: false } });
+  console.log("[shared] EXIT createSupabaseAdmin", { persistSession: false });
+  return client;
 }

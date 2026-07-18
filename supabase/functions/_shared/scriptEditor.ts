@@ -4,6 +4,7 @@
  */
 import type { createSupabaseAdmin } from "./supabaseAdmin.ts";
 import { splitScriptSections, stripInvalidUnicodeForDb, sha256Hash } from "./utils.ts";
+import { traceEdgeStep } from "./trace.ts";
 
 export type SectionRow = {
   script_id: string;
@@ -42,9 +43,14 @@ export async function saveScriptEditorContent(
       content_hash: hash,
     };
     if (html != null) row.content_html = html;
-    const { error: textErr } = await supabase
-      .from("script_text")
-      .upsert(row, { onConflict: "version_id" });
+    const { error: textErr } = await traceEdgeStep(
+      "scriptEditor",
+      "script_text.upsert",
+      { versionId, scriptId, contentLength: content.length },
+      () => supabase
+        .from("script_text")
+        .upsert(row, { onConflict: "version_id" }),
+    );
 
     if (textErr) {
       return { error: textErr.message };
@@ -52,10 +58,15 @@ export async function saveScriptEditorContent(
 
     const sections = splitScriptSections(content);
 
-    const { error: delErr } = await supabase
-      .from("script_sections")
-      .delete()
-      .eq("version_id", versionId);
+    const { error: delErr } = await traceEdgeStep(
+      "scriptEditor",
+      "script_sections.delete",
+      { versionId, scriptId },
+      () => supabase
+        .from("script_sections")
+        .delete()
+        .eq("version_id", versionId),
+    );
 
     if (delErr) {
       return { error: delErr.message };
@@ -72,7 +83,12 @@ export async function saveScriptEditorContent(
         meta: {},
       }));
 
-      const { error: insErr } = await supabase.from("script_sections").insert(rows);
+      const { error: insErr } = await traceEdgeStep(
+        "scriptEditor",
+        "script_sections.insert",
+        { versionId, scriptId, sectionCount: rows.length },
+        () => supabase.from("script_sections").insert(rows),
+      );
       if (insErr) {
         return { error: insErr.message };
       }

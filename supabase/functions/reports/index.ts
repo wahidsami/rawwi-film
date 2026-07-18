@@ -22,6 +22,7 @@ import { corsHeaders, jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { isUserAdmin, isSuperAdminOrAdmin } from "../_shared/roleCheck.ts";
+import { traceEdgeStep } from "../_shared/trace.ts";
 // Imports for PDF generation removed (migrated to client-side)
 
 // Base columns always available; extended columns added by migrations 0005/0007/0010.
@@ -880,6 +881,7 @@ Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") ?? undefined;
   const json = (body: unknown, status = 200) => jsonResponse(body, status, { origin });
   try {
+    console.log("[reports] ENTER handler", { method: req.method, path: new URL(req.url).pathname });
     if (req.method === "OPTIONS") return optionsResponse(req);
 
     const url = new URL(req.url);
@@ -888,13 +890,13 @@ Deno.serve(async (req: Request) => {
     // ── GET /reports/debug-pdf (Public Debug Route) ──
     // ── GET /reports/debug-pdf (Removed) ──
 
-    const auth = await requireAuth(req);
+    const auth = await traceEdgeStep("reports", "requireAuth", { path: new URL(req.url).pathname }, () => requireAuth(req));
     if (auth instanceof Response) return auth;
     const uid = auth.userId;
     const supabase = createSupabaseAdmin();
 
     // Admin bypass check (Robust DB check)
-    const isAdmin = await isUserAdmin(supabase, uid);
+    const isAdmin = await traceEdgeStep("reports", "isUserAdmin", { uid }, () => isUserAdmin(supabase, uid));
 
     // ──────────────── GET ────────────────
     if (req.method === "GET") {

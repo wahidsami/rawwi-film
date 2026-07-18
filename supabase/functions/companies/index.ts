@@ -10,6 +10,7 @@ import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { corsHeaders, jsonResponse, optionsResponse } from "../_shared/cors.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
 import { isRegulatorOnly, isSuperAdminOrAdmin } from "../_shared/roleCheck.ts";
+import { traceEdgeStep } from "../_shared/trace.ts";
 
 const LOGO_BUCKET = "company-logos";
 const LOGO_MAX_BYTES = 2 * 1024 * 1024; // 2MB
@@ -340,16 +341,24 @@ async function ensureUniqueClientNames(
 }
 
 async function getActorUserId(req: Request, supabase: ReturnType<typeof createSupabaseAdmin>): Promise<string | null> {
+  console.log("[companies] ENTER getActorUserId", { path: new URL(req.url).pathname });
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) return null;
   const token = authHeader.slice(7).trim();
   if (!token) return null;
-  const { data: { user }, error } = await supabase.auth.getUser(token);
+  const { data: { user }, error } = await traceEdgeStep(
+    "companies",
+    "supabase.auth.getUser",
+    { path: new URL(req.url).pathname },
+    () => supabase.auth.getUser(token),
+  );
   if (error || !user) return null;
+  console.log("[companies] EXIT getActorUserId", { userId: user.id, path: new URL(req.url).pathname });
   return user.id;
 }
 
 Deno.serve(async (req: Request) => {
+  console.log("[companies] ENTER handler", { method: req.method, path: new URL(req.url).pathname });
   if (req.method === "OPTIONS") {
     return optionsResponse(req);
   }
@@ -373,7 +382,12 @@ Deno.serve(async (req: Request) => {
     // GET /companies → list all clients with script counts
     // Only Super Admin and Admin see all companies. Everyone else (regulators, no-roles) sees only companies with scripts assigned to them.
     if (method === "GET" && !pathAfter) {
-      const seeAll = await isSuperAdminOrAdmin(supabase, actorUserId);
+      const seeAll = await traceEdgeStep(
+        "companies",
+        "isSuperAdminOrAdmin",
+        { actorUserId, route: meta.route },
+        () => isSuperAdminOrAdmin(supabase, actorUserId),
+      );
 
       let rows: ClientRow[] | null = null;
       let scriptRows: { client_id?: string | null; company_id?: string | null; assignee_id?: string | null }[] = [];

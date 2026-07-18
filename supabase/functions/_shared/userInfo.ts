@@ -3,6 +3,7 @@
  * Fetches user email and role from user_id.
  */
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { traceEdgeStep } from "./trace.ts";
 
 export interface UserInfo {
     name: string | null;  // email or display name
@@ -22,16 +23,26 @@ export async function getUserInfo(
 
     try {
         // 1. Fetch user email from auth.users
-        const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+        const { data: authUser } = await traceEdgeStep(
+            "userInfo",
+            "auth.admin.getUserById",
+            { userId },
+            () => supabase.auth.admin.getUserById(userId),
+        );
         const userEmail = authUser?.user?.email ?? null;
 
         // 2. Fetch user roles from user_roles table
-        const { data: userRoles } = await supabase
-            .from("user_roles")
-            .select("role:roles(name)")
-            .eq("user_id", userId)
-            .limit(1)
-            .maybeSingle();
+        const { data: userRoles } = await traceEdgeStep(
+            "userInfo",
+            "user_roles.lookup",
+            { userId },
+            () => supabase
+                .from("user_roles")
+                .select("role:roles(name)")
+                .eq("user_id", userId)
+                .limit(1)
+                .maybeSingle(),
+        );
 
         const roleName = (userRoles as any)?.role?.name ?? null;
 

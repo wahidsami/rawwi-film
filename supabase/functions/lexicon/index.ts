@@ -10,6 +10,7 @@ import { requireAuth } from "../_shared/auth.ts";
 import { createSupabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { logAuditCanonical } from "../_shared/audit.ts";
 import { validateArticleAtomLink } from "../_shared/policyValidation.ts";
+import { traceEdgeStep } from "../_shared/trace.ts";
 
 const SEVERITIES = ["low", "medium", "high", "critical"] as const;
 const TERM_TYPES = ["word", "phrase", "regex"] as const;
@@ -159,11 +160,12 @@ async function upsertLexiconPolicyLink(
 }
 
 Deno.serve(async (req: Request) => {
+  console.log("[lexicon] ENTER handler", { method: req.method, path: new URL(req.url).pathname });
   const origin = req.headers.get("origin") ?? undefined;
   const json = (body: unknown, status = 200) => jsonResponse(body, status, { origin });
   if (req.method === "OPTIONS") return optionsResponse(req);
 
-  const auth = await requireAuth(req);
+  const auth = await traceEdgeStep("lexicon", "requireAuth", { path: new URL(req.url).pathname }, () => requireAuth(req));
   if (auth instanceof Response) return auth;
   const { userId, supabase } = auth;
 
