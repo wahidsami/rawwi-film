@@ -1,4 +1,5 @@
 import type { V3PromptBuilderInput } from "../builder/builderTypes.js";
+import { splitSentenceEvidenceCandidates } from "../evidence/evidenceCandidates.js";
 import { clampConceptConfidence } from "../concepts/conceptConfidence.js";
 import type { ConceptContext, ConceptRecognitionInput } from "../concepts/conceptTypes.js";
 import { createConceptRecognizer } from "../concepts/conceptRecognizer.js";
@@ -93,8 +94,9 @@ function buildPromptNarrative(input: V3PromptBuilderInput): ConceptRecognitionIn
 
 function buildPromptEvidence(input: V3PromptBuilderInput): ConceptRecognitionInput["evidence"] {
   const text = normalizeText(input.chunkContext.localChunk);
+  const candidates = splitSentenceEvidenceCandidates(text, 0, 0.5);
   return Object.freeze({
-    candidates: [
+    candidates: candidates.length > 0 ? candidates : [
       Object.freeze({
         text,
         startOffset: 0,

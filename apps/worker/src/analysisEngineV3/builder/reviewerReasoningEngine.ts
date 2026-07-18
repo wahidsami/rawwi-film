@@ -14,6 +14,7 @@ import type { V3PromptBuilderInput, V3PromptJsonObject, V3PromptSubjectModule } 
 import { buildKnowledgeRankingCorpus, scoreTerms, uniqueStrings } from "../reviewerKnowledge/knowledgeRanking/knowledgeRankingUtils.js";
 import { config } from "../../config.js";
 import { logger } from "../../logger.js";
+import { splitSentenceEvidenceCandidates } from "../evidence/evidenceCandidates.js";
 
 type ReasoningEngineEntry = Readonly<{
   id: string;
@@ -328,8 +329,9 @@ function buildPromptReviewerDecisionPipeline(
 ): V3PromptJsonObject {
   const primaryArticleIds = [...new Set(input.subjectModule.articleIds ?? [])].sort((left, right) => left - right);
   const precedentIds = uniqueStringsWithNormalization(precedents.map((precedent) => precedent.decisionId));
+  const evidenceCandidates = splitSentenceEvidenceCandidates(input.chunkContext.localChunk, 0, assessment.evidenceStrength);
   const evidenceSummary = uniqueStringsWithNormalization([
-    input.chunkContext.localChunk,
+    ...evidenceCandidates.map((candidate) => candidate.text),
     ...(input.chunkContext.neighboringSentences ?? []),
     assessment.reasoningTrace.join(" | "),
   ]);
@@ -353,11 +355,20 @@ function buildPromptReviewerDecisionPipeline(
   );
 
   return Object.freeze({
+    evidence_candidates: Object.freeze(evidenceCandidates.map((candidate, index) => Object.freeze({
+      index,
+      text: candidate.text,
+      start_offset: candidate.startOffset,
+      end_offset: candidate.endOffset,
+      confidence: candidate.confidence,
+      source: candidate.source,
+      notes: [...(candidate.notes ?? [])],
+    }))),
     stages: Object.freeze([
       Object.freeze({
         key: "literal_meaning",
         title: "Literal Meaning",
-        summary: evidenceSummary[0] ?? input.chunkContext.localChunk,
+        summary: evidenceCandidates.map((candidate) => candidate.text).join(" | ") || input.chunkContext.localChunk,
         confidence: assessment.evidenceStrength,
       }),
       Object.freeze({
@@ -431,7 +442,7 @@ function buildPromptReviewerDecisionPipeline(
         confidence: preliminaryConfidence,
       }),
     ]),
-    literalMeaning: evidenceSummary[0] ?? input.chunkContext.localChunk,
+    literalMeaning: evidenceCandidates[0]?.text ?? input.chunkContext.localChunk,
     impliedMeaning: assessment.literalVsImpliedMeaning,
     narrativeContext: assessment.narrativeUnderstanding,
     speakerAnalysis: assessment.speaker ?? "Unknown speaker.",
@@ -514,6 +525,10 @@ function buildGptReviewerAssistant(
     article_ids: [...precedent.articleIds],
     matched_concepts: [...precedent.matchedConcepts],
   }));
+  const promptEvidenceCandidates = splitSentenceEvidenceCandidates(input.chunkContext.localChunk, 0, assessment.evidenceStrength);
+  const pipelineEvidenceCandidates = Array.isArray((reasoningPipeline as Record<string, unknown>).evidence_candidates)
+    ? (reasoningPipeline as Record<string, unknown>).evidence_candidates as readonly V3PromptJsonObject[]
+    : [];
 
   return Object.freeze({
     role: "GPT Reviewer Assistant",
@@ -536,8 +551,9 @@ function buildGptReviewerAssistant(
       evidence_strength: assessment.evidenceStrength,
     }),
     evidence: Object.freeze({
-      literal_meaning: assessment.reasoningTrace[0] ?? null,
-      supporting_evidence: [...assessment.reasoningTrace],
+      literal_meaning: assessment.reasoningTrace[0] ?? reasoningPipeline.literalMeaning ?? null,
+      supporting_evidence: [...assessment.reasoningTrace, ...promptEvidenceCandidates.map((candidate) => candidate.text)],
+      evidence_candidates: pipelineEvidenceCandidates,
       confidence: assessment.evidenceStrength,
     }),
     knowledge: Object.freeze({
@@ -622,8 +638,8 @@ function buildGptReviewerAssistant(
     }),
     decision_template: Object.freeze({
       answer_with: Object.freeze(["reasoning", "article_evaluations", "supporting_evidence", "contradicting_evidence", "applicable_articles", "rejected_articles", "confidence", "recommendation"]),
-      reasoning: "Explain why each supplied article passes or fails based only on quote-based evidence. Keep it evidence-first and quote-grounded. Analyze every suspicious sentence independently and do not stop after the first exception.",
-      article_evaluations: "For each supplied article return articleId, PASS or FAIL, evidence, reason, and confidence. Do not choose the closest category. Evaluate all suspicious statements before merging findings.",
+      reasoning: "Explain why each supplied article passes or fails based only on quote-based evidence candidates. Keep it evidence-first and quote-grounded. Analyze every suspicious sentence independently and do not stop after the first exception. One evidence candidate may support multiple articles.",
+      article_evaluations: "For each supplied article return articleId, PASS or FAIL, evidence, reason, and confidence. Do not choose the closest category. Evaluate all suspicious evidence candidates before merging findings. One candidate may produce multiple PASS articles.",
       supporting_evidence: "Cite the exact quote and current-scene context that support the reasoning.",
       contradicting_evidence: "State the strongest counter-reading and why it loses.",
       applicable_articles: "List only the article ids whose evaluations are PASS. Do not suppress a PASS because of quotation, condemnation, education, historical context, satire, or dialogue; those exceptions are handled after generation.",

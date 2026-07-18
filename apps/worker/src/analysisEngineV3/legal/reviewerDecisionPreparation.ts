@@ -54,6 +54,10 @@ function normalizeArticleEvidence(values: readonly unknown[] | undefined): reado
   );
 }
 
+function collectEvidenceTexts(candidates: readonly { readonly text: string }[]): readonly string[] {
+  return uniqueStrings(candidates.map((candidate) => candidate.text));
+}
+
 function objectArray(value: unknown): readonly Record<string, unknown>[] {
   return Array.isArray(value) ? (value.filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null) as readonly Record<string, unknown>[]) : [];
 }
@@ -245,7 +249,12 @@ function buildReasoningStages(
   preliminaryDecision: ReviewerDecisionPreliminaryDecision,
 ): readonly ReviewerDecisionReasoningStage[] {
   const primaryEvidence = input.intelligence.evidence.candidates[input.intelligence.evidence.primaryCandidateIndex ?? 0] ?? input.intelligence.evidence.candidates[0] ?? null;
-  const literalMeaning = normalizeText(primaryEvidence?.text ?? input.intelligence.semantic.semanticMeaning ?? input.intelligence.context.localContext);
+  const literalMeaning = normalizeText(
+    collectEvidenceTexts(input.intelligence.evidence.candidates).join(" | ") ||
+      primaryEvidence?.text ||
+      input.intelligence.semantic.semanticMeaning ||
+      input.intelligence.context.localContext,
+  );
   const impliedMeaning = normalizeText(
     input.reasonedDecision?.reasoning ??
       input.reasonedDecision?.narrativeAnalysis ??
@@ -463,8 +472,8 @@ export function buildReviewerDecisionContext(input: ReviewerDecisionPreparationI
   );
   const reasoning = Object.freeze({
     literalMeaning: normalizeText(
-      input.intelligence.evidence.candidates[input.intelligence.evidence.primaryCandidateIndex ?? 0]?.text ??
-        input.intelligence.semantic.semanticMeaning ??
+      collectEvidenceTexts(input.intelligence.evidence.candidates).join(" | ") ||
+        input.intelligence.semantic.semanticMeaning ||
         input.intelligence.context.localContext,
     ),
     impliedMeaning: normalizeText(

@@ -1,6 +1,7 @@
 import type { LegalEvidenceResult } from "../legal/legalTypes.js";
 import type { V3PipelineChunk } from "./pipelineTypes.js";
 import { isProfanityEvidenceText } from "../legal/modules/profanity/profanityModule.js";
+import { splitSentenceEvidenceCandidates } from "../evidence/evidenceCandidates.js";
 
 function findFirstProfanitySpan(text: string): { start: number; end: number } | null {
   const candidates = [
@@ -77,6 +78,17 @@ export function runEvidenceStage(chunk: V3PipelineChunk): LegalEvidenceResult {
       admissible: true,
       confidence: 0.99,
       notes: [],
+    });
+  }
+
+  const sentenceCandidates = splitSentenceEvidenceCandidates(raw, chunk.startOffset, 0.9);
+  if (sentenceCandidates.length > 1) {
+    return Object.freeze({
+      candidates: sentenceCandidates,
+      primaryCandidateIndex: 0,
+      admissible: true,
+      confidence: 0.9,
+      notes: isProfanityEvidenceText(raw) ? [] : ["sentence_level_evidence_candidates"],
     });
   }
 
