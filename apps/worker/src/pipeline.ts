@@ -1291,6 +1291,19 @@ export function isV3RuntimeFinding(finding: FindingWithGlobal): boolean {
   return normalizePersistenceSource(finding.source) === "v3" || normalizePersistenceSource(finding.detection_pass).startsWith("v3_runtime");
 }
 
+export function getPersistenceFindingSource(finding: FindingWithGlobal): "ai" | "lexicon_mandatory" | "manual" {
+  if (isV3RuntimeFinding(finding)) {
+    return "ai";
+  }
+
+  const normalizedSource = normalizePersistenceSource(finding.source);
+  if (normalizedSource === "manual" || normalizedSource === "lexicon_mandatory") {
+    return normalizedSource;
+  }
+
+  return "ai";
+}
+
 function buildPersistenceFilterRejection(
   finding: FindingWithGlobal,
   filterName: string,
@@ -3206,6 +3219,7 @@ export async function processChunkJudge(
         evidenceSnippet: excerpt,
         source: f.source ?? "ai",
       });
+      const persistenceSource = getPersistenceFindingSource(f);
       const h = evidenceHash(
         f.article_id,
         f.atom_id ?? null,
@@ -3224,7 +3238,7 @@ export async function processChunkJudge(
         job_id: jobId,
         script_id: scriptId,
         version_id: versionId,
-        source: f.source ?? "ai",
+        source: persistenceSource,
         article_id: f.article_id,
         atom_id: f.atom_id ?? null,
         severity: f.severity,

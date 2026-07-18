@@ -8,7 +8,7 @@ import type { FindingWithGlobal } from "./pipeline.js";
 process.env.SUPABASE_URL ??= "http://localhost";
 process.env.SUPABASE_SERVICE_ROLE_KEY ??= "test-service-role-key";
 
-const { applyPersistenceFilters } = await import("./pipeline.js");
+const { applyPersistenceFilters, getPersistenceFindingSource } = await import("./pipeline.js");
 
 function buildFinding(overrides: Partial<FindingWithGlobal>): FindingWithGlobal {
   return {
@@ -115,9 +115,27 @@ function testLegacyArticleFourStillCollapses() {
   console.log("✓ Legacy article-4 redundancy still behaves as before");
 }
 
+function testV3PersistenceSourceMapsToAi() {
+  const finding = buildFinding({
+    source: "v3",
+    article_id: 4,
+    atom_id: "4-1",
+    canonical_atom: "4-1",
+    detection_pass: "v3_runtime_religion",
+  });
+
+  assert.equal(
+    getPersistenceFindingSource(finding),
+    "ai",
+    "V3 runtime findings must persist with a DB-legal source value",
+  );
+  console.log("✓ V3 runtime findings map to a DB-legal persistence source");
+}
+
 async function main() {
   testV3ArticleFourSurvivesLegacyCollision();
   testLegacyArticleFourStillCollapses();
+  testV3PersistenceSourceMapsToAi();
   console.log("\nAll persistence filter regression tests passed.");
 }
 
