@@ -183,30 +183,187 @@ function testLegalArticleWinsOverGcamMapping(): void {
       findingCount: 1,
     } as never,
     gcamMapping: {
-      status: "MAPPED",
-      articleId: 14,
-      articleNumber: "14",
-      articleTitleAr: "مادة 14",
-      atomId: "14-1",
-      atomNumber: "14.1",
-      atomTitleAr: "Atom 14.1",
-      findingTitle: "Mapped title",
-      findingCategory: "security",
-      reviewerExplanation: "Mapped explanation",
+      status: "UNMAPPED",
+      articleId: null,
+      articleNumber: null,
+      articleTitleAr: null,
+      atomId: null,
+      atomNumber: null,
+      atomTitleAr: null,
+      findingTitle: "UNMAPPED",
+      findingCategory: "UNMAPPED",
+      reviewerExplanation: "No official GCAM mapping exists. A mapping debt record was created instead of guessing.",
       supportingEvidence: ["هذا الكلام إساءة دينية"],
-      matchedRuleId: "rule-1",
-      matchedArticleMappingId: "article-mapping-1",
-      matchedAtomMappingId: "atom-mapping-1",
+      matchedRuleId: null,
+      matchedArticleMappingId: null,
+      matchedAtomMappingId: null,
       confidence: 0.9,
       mappingDebt: [],
       hash: "hash",
-    },
+    } as never,
   });
 
   assert.equal(findings.length, 1);
   assert.equal(findings[0].article_id, 8);
-  assert.notEqual(findings[0].atom_id, "14-1");
-  console.log("✓ legal article wins over GCAM mapping when the mapper disagrees");
+  assert.equal(findings[0].title_ar, "الكراهية والتمييز");
+  assert.equal(findings[0].description_ar, "التحريض ضد فئة اجتماعية أو ثقافية أو دينية");
+  console.log("✓ legal article 8 resolves through the official GCAM catalog");
+}
+
+function testArticleFourteenResolvesFromPolicyCatalog(): void {
+  const legalDecision = createLegalDecision({
+    moduleId: "v3_03_security",
+    moduleTitle: "National Security Reviewer",
+    articleIds: [14],
+    applies: true,
+    status: "accept",
+    reason: "The quote directly urges overthrow.",
+    confidence: 0.95,
+    semantic: {
+      semanticMeaning: "Direct overthrow incitement.",
+      narrativeIntent: "attack",
+      conversationRole: "speaker",
+      sceneRole: "dialogue",
+      speaker: "speaker",
+      listener: "listener",
+      target: "target",
+      victim: "victim",
+      emotion: "hostile",
+      riskContext: "high",
+      confidence: 0.95,
+      notes: [],
+    },
+    narrative: {
+      speaker: "speaker",
+      listener: "listener",
+      target: "target",
+      narrativeVoice: "dialogue",
+      sceneType: "dialogue",
+      narrativeIntent: "attack",
+      storyPosition: "middle",
+      relationship: "unknown",
+      emotionalTone: "hostile",
+      condemnation: false,
+      approval: false,
+      neutrality: false,
+      historicalContext: false,
+      dream: false,
+      flashback: false,
+      comedy: false,
+      satire: false,
+      threat: false,
+      instruction: false,
+      news: false,
+      documentary: false,
+      dialogue: true,
+      narration: false,
+      sceneDescription: false,
+      confidence: 0.95,
+      notes: [],
+    },
+    evidence: {
+      candidates: [
+        {
+          text: "سنسقط النظام الليلة",
+          startOffset: 12,
+          endOffset: 30,
+          confidence: 0.96,
+          source: "chunk",
+          notes: [],
+        },
+      ],
+      primaryCandidateIndex: 0,
+      admissible: true,
+      confidence: 0.96,
+      notes: [],
+    },
+    context: {
+      storyMemory: null,
+      sceneMemory: null,
+      localContext: "سنسقط النظام الليلة",
+      chunkContext: "chunk-14",
+      neighboringSentences: [],
+      narrativeContext: "dialogue",
+      confidence: 0.95,
+      notes: [],
+    },
+    exceptions: [],
+    finding: null,
+    trace: ["finding_built"],
+  });
+
+  const findings = mapLegalDecisionToFindings({
+    decision: legalDecision,
+    reasonedDecision: {
+      reasoning: "The text explicitly urges overthrow.",
+      alternativeInterpretations: [],
+      confidence: 0.95,
+      articleEvaluations: [
+        {
+          articleId: 14,
+          status: "PASS",
+          evidence: ["سنسقط النظام الليلة"],
+          reason: "The quote directly urges overthrow.",
+          confidence: 0.95,
+        },
+      ],
+      supportingEvidence: ["سنسقط النظام الليلة"],
+      contradictingEvidence: [],
+      applicableArticles: [14],
+      rejectedArticles: [],
+      riskAnalysis: "Low ambiguity.",
+      narrativeAnalysis: "Direct incitement.",
+      humanLikeExplanation: "The finding should resolve to the official GCAM article title and atom title.",
+      recommendation: "RETURN VIOLATION",
+    },
+    chunkStart: 0,
+    chunkEnd: 30,
+    startLine: 1,
+    endLine: 1,
+    diagnostics: {
+      engineVersion: "v3",
+      providerName: "openai",
+      modelName: "gpt-4.1",
+      modelVersion: "test",
+      rawResponseHash: "raw",
+      responseId: "response-3",
+      responseTimestamp: "2026-07-16T00:00:00.000Z",
+      promptHash: "prompt",
+      semanticHash: "semantic",
+      legalHash: "legal",
+      executionSignatureHash: "execution",
+      stageHashes: [],
+      stageTimings: [],
+      subjectModuleId: "v3_03_security",
+      chunkHash: "chunk",
+      findingCount: 1,
+    } as never,
+    gcamMapping: {
+      status: "UNMAPPED",
+      articleId: null,
+      articleNumber: null,
+      articleTitleAr: null,
+      atomId: null,
+      atomNumber: null,
+      atomTitleAr: null,
+      findingTitle: "UNMAPPED",
+      findingCategory: "UNMAPPED",
+      reviewerExplanation: "No official GCAM mapping exists. A mapping debt record was created instead of guessing.",
+      supportingEvidence: ["سنسقط النظام الليلة"],
+      matchedRuleId: null,
+      matchedArticleMappingId: null,
+      matchedAtomMappingId: null,
+      confidence: 0.95,
+      mappingDebt: [],
+      hash: "hash",
+    } as never,
+  });
+
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].article_id, 14);
+  assert.equal(findings[0].title_ar, "التحريض على قلب نظام الحكم أو الدعوة إلى العنف");
+  assert.equal(findings[0].description_ar, "التحريض الصريح على قلب نظام الحكم");
+  console.log("✓ article 14 resolves through the official GCAM catalog");
 }
 
 function testPolicyAppliedFindingIsPreserved(): void {
@@ -356,6 +513,7 @@ function testPolicyAppliedFindingIsPreserved(): void {
 
 function main(): void {
   testLegalArticleWinsOverGcamMapping();
+  testArticleFourteenResolvesFromPolicyCatalog();
   testPolicyAppliedFindingIsPreserved();
   console.log("\nAll V3 finding mapper tests passed.");
 }

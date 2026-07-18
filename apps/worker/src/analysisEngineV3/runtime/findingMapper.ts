@@ -1,5 +1,6 @@
 import { getPrimaryCanonicalAtomForGcam } from "../../canonicalAtomMapping.js";
 import { derivePolicyConceptCode, getPolicyAtomIdsForArticle, normalizeAtomId } from "../../policyMap.js";
+import { getPolicyArticle, getPolicyAtomTitle } from "../../policyMap.js";
 import type { JudgeFinding } from "../../schemas.js";
 import type { LegalDecision } from "../legal/legalDecision.js";
 import type { LegalEvidenceCandidate, LegalContextResult } from "../legal/legalTypes.js";
@@ -457,6 +458,7 @@ export function mapLegalDecisionToFindings(args: {
   return passEvaluations.flatMap((evaluation, index) => {
     const articleId = Number(evaluation.articleId);
     const policyAssessment = evaluatePolicyDisposition(decision, evaluation);
+    const policyArticleTitle = getPolicyArticle(articleId)?.title_ar ?? null;
     const mappedArticleId = gcamMapping?.status === "MAPPED" ? gcamMapping.articleId : null;
     const mappedAtomId = gcamMapping?.status === "MAPPED" && mappedArticleId === articleId
       ? gcamMapping.atomId
@@ -464,6 +466,7 @@ export function mapLegalDecisionToFindings(args: {
     const fallbackAtomId = getPolicyAtomIdsForArticle(articleId)[0] ?? null;
     const atomId = normalizeAtomId(mappedAtomId ?? fallbackAtomId ?? null, articleId) || null;
     const canonicalAtom = getPrimaryCanonicalAtomForGcam(articleId, atomId);
+    const policyAtomTitle = getPolicyAtomTitle(articleId, atomId) ?? null;
     const primaryEvidence = pickEvaluationEvidence(decision, evaluation.evidence);
     const evidenceSnippet = String(primaryEvidence?.text ?? evaluation.evidence[0] ?? "").trim();
     const locationEvidence = primaryEvidence ?? pickPrimaryEvidence(decision) ?? decision.evidence.candidates[0] ?? {
@@ -483,8 +486,8 @@ export function mapLegalDecisionToFindings(args: {
       atom_id: atomId,
       severity: inferSeverity(evaluation.status === "PASS" ? "accept" : "needs_review", evaluation.confidence),
       confidence: Number(Math.max(0, Math.min(1, evaluation.confidence)).toFixed(6)),
-      title_ar: gcamMapping?.findingTitle ?? decision.moduleTitle,
-      description_ar: gcamMapping?.reviewerExplanation ?? evaluation.reason ?? decision.reason,
+      title_ar: policyArticleTitle ?? gcamMapping?.findingTitle ?? decision.moduleTitle,
+      description_ar: policyAtomTitle ?? gcamMapping?.reviewerExplanation ?? evaluation.reason ?? decision.reason,
       evidence_snippet: evidenceSnippet,
       rationale_ar: evaluation.reason ?? decision.reason,
       exceptionApplied: policyAssessment.disposition === "exception_applied",
