@@ -41,10 +41,10 @@ CREATE TABLE IF NOT EXISTS analysis_jobs (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_analysis_jobs_script_id ON analysis_jobs(script_id);
-CREATE INDEX idx_analysis_jobs_version_id ON analysis_jobs(version_id);
-CREATE INDEX idx_analysis_jobs_status ON analysis_jobs(status);
-CREATE INDEX idx_analysis_jobs_script_content_hash ON analysis_jobs(script_content_hash) WHERE script_content_hash IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_analysis_jobs_script_id ON analysis_jobs(script_id);
+CREATE INDEX IF NOT EXISTS idx_analysis_jobs_version_id ON analysis_jobs(version_id);
+CREATE INDEX IF NOT EXISTS idx_analysis_jobs_status ON analysis_jobs(status);
+CREATE INDEX IF NOT EXISTS idx_analysis_jobs_script_content_hash ON analysis_jobs(script_content_hash) WHERE script_content_hash IS NOT NULL;
 
 -- ---------------------------------------------------------------------------
 -- 4) analysis_chunks
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS analysis_chunks (
   UNIQUE (job_id, chunk_index)
 );
 
-CREATE INDEX idx_analysis_chunks_job_status ON analysis_chunks(job_id, status);
+CREATE INDEX IF NOT EXISTS idx_analysis_chunks_job_status ON analysis_chunks(job_id, status);
 
 -- ---------------------------------------------------------------------------
 -- 5) analysis_findings (Phase 1B will use; create now)
@@ -91,8 +91,8 @@ CREATE TABLE IF NOT EXISTS analysis_findings (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_analysis_findings_job_id ON analysis_findings(job_id);
-CREATE UNIQUE INDEX idx_analysis_findings_job_evidence_hash ON analysis_findings(job_id, evidence_hash)
+CREATE INDEX IF NOT EXISTS idx_analysis_findings_job_id ON analysis_findings(job_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_analysis_findings_job_evidence_hash ON analysis_findings(job_id, evidence_hash)
   WHERE evidence_hash IS NOT NULL;
 
 -- ---------------------------------------------------------------------------
@@ -110,26 +110,31 @@ CREATE TABLE IF NOT EXISTS analysis_reports (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_analysis_reports_script_id ON analysis_reports(script_id);
+CREATE INDEX IF NOT EXISTS idx_analysis_reports_script_id ON analysis_reports(script_id);
 
 -- ---------------------------------------------------------------------------
 -- 7) RLS: scripts (ownership via created_by)
 -- ---------------------------------------------------------------------------
 ALTER TABLE scripts ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS scripts_select_own ON scripts;
 CREATE POLICY scripts_select_own ON scripts FOR SELECT
   USING (created_by = auth.uid());
 
+DROP POLICY IF EXISTS scripts_insert_own ON scripts;
 CREATE POLICY scripts_insert_own ON scripts FOR INSERT
   WITH CHECK (created_by = auth.uid());
 
+DROP POLICY IF EXISTS scripts_update_own ON scripts;
 CREATE POLICY scripts_update_own ON scripts FOR UPDATE
   USING (created_by = auth.uid());
 
+DROP POLICY IF EXISTS scripts_delete_own ON scripts;
 CREATE POLICY scripts_delete_own ON scripts FOR DELETE
   USING (created_by = auth.uid());
 
 -- Allow read by assignee for assigned scripts (optional)
+DROP POLICY IF EXISTS scripts_select_assignee ON scripts;
 CREATE POLICY scripts_select_assignee ON scripts FOR SELECT
   USING (assignee_id = auth.uid()::text);
 
@@ -138,21 +143,25 @@ CREATE POLICY scripts_select_assignee ON scripts FOR SELECT
 -- ---------------------------------------------------------------------------
 ALTER TABLE script_versions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS script_versions_select ON script_versions;
 CREATE POLICY script_versions_select ON script_versions FOR SELECT
   USING (
     EXISTS (SELECT 1 FROM scripts s WHERE s.id = script_versions.script_id AND (s.created_by = auth.uid() OR s.assignee_id = auth.uid()::text))
   );
 
+DROP POLICY IF EXISTS script_versions_insert ON script_versions;
 CREATE POLICY script_versions_insert ON script_versions FOR INSERT
   WITH CHECK (
     EXISTS (SELECT 1 FROM scripts s WHERE s.id = script_versions.script_id AND s.created_by = auth.uid())
   );
 
+DROP POLICY IF EXISTS script_versions_update ON script_versions;
 CREATE POLICY script_versions_update ON script_versions FOR UPDATE
   USING (
     EXISTS (SELECT 1 FROM scripts s WHERE s.id = script_versions.script_id AND s.created_by = auth.uid())
   );
 
+DROP POLICY IF EXISTS script_versions_delete ON script_versions;
 CREATE POLICY script_versions_delete ON script_versions FOR DELETE
   USING (
     EXISTS (SELECT 1 FROM scripts s WHERE s.id = script_versions.script_id AND s.created_by = auth.uid())
@@ -163,22 +172,26 @@ CREATE POLICY script_versions_delete ON script_versions FOR DELETE
 -- ---------------------------------------------------------------------------
 ALTER TABLE analysis_jobs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS analysis_jobs_all ON analysis_jobs;
 CREATE POLICY analysis_jobs_all ON analysis_jobs FOR ALL
   USING (created_by = auth.uid())
   WITH CHECK (created_by = auth.uid());
 
 ALTER TABLE analysis_chunks ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS analysis_chunks_select ON analysis_chunks;
 CREATE POLICY analysis_chunks_select ON analysis_chunks FOR SELECT
   USING (
     EXISTS (SELECT 1 FROM analysis_jobs j WHERE j.id = analysis_chunks.job_id AND j.created_by = auth.uid())
   );
 
+DROP POLICY IF EXISTS analysis_chunks_insert ON analysis_chunks;
 CREATE POLICY analysis_chunks_insert ON analysis_chunks FOR INSERT
   WITH CHECK (
     EXISTS (SELECT 1 FROM analysis_jobs j WHERE j.id = analysis_chunks.job_id AND j.created_by = auth.uid())
   );
 
+DROP POLICY IF EXISTS analysis_chunks_update ON analysis_chunks;
 CREATE POLICY analysis_chunks_update ON analysis_chunks FOR UPDATE
   USING (
     EXISTS (SELECT 1 FROM analysis_jobs j WHERE j.id = analysis_chunks.job_id AND j.created_by = auth.uid())
@@ -186,6 +199,7 @@ CREATE POLICY analysis_chunks_update ON analysis_chunks FOR UPDATE
 
 ALTER TABLE analysis_findings ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS analysis_findings_all ON analysis_findings;
 CREATE POLICY analysis_findings_all ON analysis_findings FOR ALL
   USING (
     EXISTS (SELECT 1 FROM analysis_jobs j WHERE j.id = analysis_findings.job_id AND j.created_by = auth.uid())
@@ -196,6 +210,7 @@ CREATE POLICY analysis_findings_all ON analysis_findings FOR ALL
 
 ALTER TABLE analysis_reports ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS analysis_reports_all ON analysis_reports;
 CREATE POLICY analysis_reports_all ON analysis_reports FOR ALL
   USING (
     EXISTS (SELECT 1 FROM analysis_jobs j WHERE j.id = analysis_reports.job_id AND j.created_by = auth.uid())
