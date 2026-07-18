@@ -15,14 +15,28 @@ export async function requireAuth(req: Request): Promise<{ userId: string; supab
   const origin = req.headers.get("origin") ?? undefined;
   const hasAuth = !!authHeader;
   const authLen = authHeader?.length ?? 0;
+  console.log("[auth] request auth snapshot", {
+    path: new URL(req.url).pathname,
+    hasAuth,
+    authLen,
+    bearerPrefix: authHeader?.startsWith("Bearer ") ?? false,
+  });
 
   if (!authHeader?.startsWith("Bearer ")) {
-    console.warn("[auth] 401: Authorization header present:", hasAuth, "length:", authLen);
+    console.warn("[auth] 401: missing_bearer", {
+      path: new URL(req.url).pathname,
+      hasAuth,
+      authLen,
+    });
     return jsonResponse({ error: "Unauthorized" }, 401, { origin });
   }
   const token = authHeader.slice(7).trim();
   if (!token) {
-    console.warn("[auth] 401: Bearer present but token empty, header length:", authLen);
+    console.warn("[auth] 401: empty_bearer_token", {
+      path: new URL(req.url).pathname,
+      hasAuth,
+      authLen,
+    });
     return jsonResponse({ error: "Unauthorized" }, 401, { origin });
   }
   const { data: { user }, error } = await traceEdgeStep(
@@ -32,7 +46,16 @@ export async function requireAuth(req: Request): Promise<{ userId: string; supab
     () => supabase.auth.getUser(token),
   );
   if (error || !user) {
-    console.warn("[auth] 401: getUser failed:", error?.message ?? "no user", "header length:", authLen);
+    console.warn("[auth] 401: getUser_failed", {
+      path: new URL(req.url).pathname,
+      hasAuth,
+      authLen,
+      errorMessage: error?.message ?? null,
+      errorStatus: (error as { status?: number } | null | undefined)?.status ?? null,
+      errorCode: (error as { code?: string | null } | null | undefined)?.code ?? null,
+      userId: user?.id ?? null,
+      email: user?.email ?? null,
+    });
     return jsonResponse({ error: "Unauthorized" }, 401, { origin });
   }
   console.log("[auth] EXIT requireAuth", {
