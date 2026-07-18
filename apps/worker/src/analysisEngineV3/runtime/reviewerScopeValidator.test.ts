@@ -1,6 +1,8 @@
 import { strict as assert } from "node:assert";
 import { createLegalDecision } from "../legal/legalDecision.js";
 import { createLegalFinding } from "../legal/legalResult.js";
+import { buildCanonicalArticleOwnershipMap } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
+import { createDefaultReviewerKnowledgeRegistry } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
 import { validateReviewerScope } from "./reviewerScopeValidator.js";
 
 function makeRouting(): Parameters<typeof validateReviewerScope>[0]["routing"] {
@@ -19,6 +21,10 @@ function makeRouting(): Parameters<typeof validateReviewerScope>[0]["routing"] {
     lowConfidence: false,
     reviewerScores: [],
   };
+}
+
+function makeCanonicalOwnershipMap(): Parameters<typeof validateReviewerScope>[0]["canonicalArticleOwnershipByArticleId"] {
+  return buildCanonicalArticleOwnershipMap(createDefaultReviewerKnowledgeRegistry());
 }
 
 function testScopeAcceptance(): void {
@@ -174,19 +180,21 @@ function testScopeAcceptance(): void {
 
   const result = validateReviewerScope({
     routing: makeRouting(),
+    canonicalArticleOwnershipByArticleId: makeCanonicalOwnershipMap(),
     decision,
   });
 
   assert.equal(result.acceptedFindingsCount, 1);
   assert.equal(result.rejectedFindingsByScopeCount, 0);
   assert.equal(result.sanitizedDecision.finding !== null, true);
+  assert.equal(result.sanitizedDecision.finding?.moduleId, "v4_11_profanity");
 }
 
 function testScopeRejection(): void {
   const decision = createLegalDecision({
     moduleId: "v3_01_religion",
     moduleTitle: "المسائل الدينية الأساسية",
-    articleIds: [1],
+    articleIds: [999],
     applies: true,
     status: "accept",
     reason: "Wrong reviewer scope.",
@@ -264,7 +272,7 @@ function testScopeRejection(): void {
       findingKey: "v3_01_religion:4-16:reject",
       moduleId: "v3_01_religion",
       moduleTitle: "المسائل الدينية الأساسية",
-      articleIds: [1],
+      articleIds: [999],
       status: "accept",
       reason: "Wrong reviewer scope.",
       confidence: 0.91,
@@ -335,6 +343,7 @@ function testScopeRejection(): void {
 
   const result = validateReviewerScope({
     routing: makeRouting(),
+    canonicalArticleOwnershipByArticleId: makeCanonicalOwnershipMap(),
     decision,
   });
 

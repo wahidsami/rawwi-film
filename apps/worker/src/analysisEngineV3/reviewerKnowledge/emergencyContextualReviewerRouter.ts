@@ -2,7 +2,12 @@ import type { ConceptContext } from "../concepts/conceptTypes.js";
 import type { V3PromptBuilderInput } from "../builder/builderTypes.js";
 import type { ReviewerAssessment } from "../reviewerMethodology/reviewerMethodologyTypes.js";
 import { createKnowledgeRegistryWithOptions, type KnowledgeRegistry } from "./knowledgeRegistry/index.js";
-import { createDefaultReviewerKnowledgeRegistry, type ReviewerKnowledgeRegistry } from "./reviewerKnowledgeRegistry.js";
+import {
+  buildCanonicalArticleOwnershipMap,
+  createDefaultReviewerKnowledgeRegistry,
+  type ReviewerCanonicalArticleOwnershipMap,
+  type ReviewerKnowledgeRegistry,
+} from "./reviewerKnowledgeRegistry.js";
 
 type ReviewerRoutingProfile = Readonly<{
   reviewerId: string;
@@ -45,6 +50,7 @@ export type EmergencyContextualReviewerKnowledgeSelection = Readonly<{
   routing: EmergencyContextualReviewerRoutingReport;
   reviewerKnowledgeRegistry: ReviewerKnowledgeRegistry;
   knowledgeRegistry: KnowledgeRegistry;
+  canonicalArticleOwnershipByArticleId: ReviewerCanonicalArticleOwnershipMap;
 }>;
 
 const UNIVERSAL_PROFILE: ReviewerRoutingProfile = Object.freeze({
@@ -526,6 +532,7 @@ export function createEmergencyContextualReviewerKnowledgeSelection(input: Reado
 }>): EmergencyContextualReviewerKnowledgeSelection {
   const routing = createEmergencyContextualReviewerRoutingReport(input);
   const reviewerKnowledgeRegistry = createDefaultReviewerKnowledgeRegistry(routing.selectedAcademyFolders);
+  const canonicalArticleOwnershipByArticleId = buildCanonicalArticleOwnershipMap(createDefaultReviewerKnowledgeRegistry());
   const knowledgeRegistry = createKnowledgeRegistryWithOptions(undefined, {
     academyFolders: routing.selectedAcademyFolders,
   });
@@ -534,5 +541,6 @@ export function createEmergencyContextualReviewerKnowledgeSelection(input: Reado
     routing,
     reviewerKnowledgeRegistry,
     knowledgeRegistry,
+    canonicalArticleOwnershipByArticleId,
   });
 }

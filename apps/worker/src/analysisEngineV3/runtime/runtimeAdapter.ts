@@ -1268,6 +1268,7 @@ export async function runV3RuntimeAdapter(
   });
   const scopeValidation = validateReviewerScope({
     routing: reviewerKnowledgeSelection.routing,
+    canonicalArticleOwnershipByArticleId: reviewerKnowledgeSelection.canonicalArticleOwnershipByArticleId,
     decision: legalDecision,
     reasonedDecision: validatedReasonedDecision,
   });

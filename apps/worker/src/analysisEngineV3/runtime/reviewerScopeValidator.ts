@@ -5,10 +5,12 @@ import { createLegalFinding } from "../legal/legalResult.js";
 import type { V3ReasonedDecisionResult } from "../provider/providerTypes.js";
 import type { ReviewerScopeDeclaration } from "../reviewerKnowledge/reviewerScopeMatrix.js";
 import { getReviewerScopeDeclaration, getReviewerScopeDeclarationsByIds } from "../reviewerKnowledge/reviewerScopeMatrix.js";
+import type { ReviewerCanonicalArticleOwner, ReviewerCanonicalArticleOwnershipMap } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
 import { logger } from "../../logger.js";
 
 export type ReviewerScopeValidatorInput = Readonly<{
   routing: EmergencyContextualReviewerRoutingReport;
+  canonicalArticleOwnershipByArticleId: ReviewerCanonicalArticleOwnershipMap;
   decision: LegalDecision;
   reasonedDecision?: V3ReasonedDecisionResult | null;
 }>;
@@ -59,6 +61,7 @@ function buildFindingFromEvaluation(
   input: ReviewerScopeValidatorInput,
   evaluation: V3ReasonedDecisionResult["articleEvaluations"][number],
   index: number,
+  canonicalOwner: ReviewerCanonicalArticleOwner,
 ): LegalFinding {
   const evidenceText = pickEvidenceText(input, evaluation.articleId);
   const baseEvidence = input.decision.evidence.candidates[0] ?? {
@@ -71,9 +74,9 @@ function buildFindingFromEvaluation(
   };
 
   return createLegalFinding({
-    findingKey: `${input.decision.moduleId}:${evaluation.articleId}:${index}:${normalizeText(evaluation.reason)}:${normalizeText(evaluation.status)}`,
-    moduleId: input.decision.moduleId,
-    moduleTitle: input.decision.moduleTitle,
+    findingKey: `${canonicalOwner.reviewerId}:${evaluation.articleId}:${index}:${normalizeText(evaluation.reason)}:${normalizeText(evaluation.status)}`,
+    moduleId: canonicalOwner.reviewerId,
+    moduleTitle: canonicalOwner.reviewerLabel,
     articleIds: [evaluation.articleId],
     status: "accept",
     reason: evaluation.reason,
@@ -98,9 +101,12 @@ export function validateReviewerScope(input: ReviewerScopeValidatorInput): Revie
   const selectedReviewerLabels = uniqueSorted(input.routing.selectedReviewerLabels);
   const rejectedReviewerIds = uniqueSorted(input.routing.rejectedReviewerIds);
   const rejectedReviewerLabels = uniqueSorted(input.routing.rejectedReviewerLabels);
+  const ownershipByArticleId = input.canonicalArticleOwnershipByArticleId;
+  const canonicalOwnerReviewerIds = uniqueSorted(Object.values(ownershipByArticleId).flatMap((owners) => owners.map((owner) => owner.reviewerId)));
+  const reviewerIdsForMatrix = uniqueSorted([...selectedReviewerIds, ...canonicalOwnerReviewerIds]);
   const scopeMatrix = Object.freeze([
-    ...getReviewerScopeDeclarationsByIds(selectedReviewerIds),
-    ...selectedReviewerIds
+    ...getReviewerScopeDeclarationsByIds(reviewerIdsForMatrix),
+    ...reviewerIdsForMatrix
       .filter((reviewerId) => !getReviewerScopeDeclaration(reviewerId))
       .map((reviewerId) => ({
         reviewerId,
@@ -112,24 +118,90 @@ export function validateReviewerScope(input: ReviewerScopeValidatorInput): Revie
       })),
   ]);
 
-  const findings = Array.isArray(input.reasonedDecision?.articleEvaluations) && input.reasonedDecision.articleEvaluations.length > 0
-    ? input.reasonedDecision.articleEvaluations
-        .filter((evaluation) => evaluation.status === "PASS")
-        .map((evaluation, index) => buildFindingFromEvaluation(input, evaluation, index))
-    : input.decision.finding ? [input.decision.finding] : [];
+  const evaluations = Array.isArray(input.reasonedDecision?.articleEvaluations) && input.reasonedDecision.articleEvaluations.length > 0
+    ? input.reasonedDecision.articleEvaluations.filter((evaluation) => evaluation.status === "PASS")
+    : input.decision.finding
+      ? [{
+          articleId: input.decision.finding.articleIds[0] ?? input.decision.articleIds[0] ?? 0,
+          status: "PASS" as const,
+          evidence: [input.decision.finding.evidence.text],
+          reason: input.decision.finding.reason,
+          confidence: input.decision.finding.confidence,
+        }]
+      : [];
   const acceptedFindings: LegalFinding[] = [];
   const rejectedFindingsByScope: LegalFinding[] = [];
-  const selectedReviewerSet = new Set(selectedReviewerIds.map((reviewerId) => reviewerId.toLowerCase()));
 
-  for (const finding of findings) {
-    const findingReviewerId = String(finding.moduleId ?? input.decision.moduleId).trim().toLowerCase();
-    const moduleOwned = selectedReviewerSet.has(findingReviewerId);
-    const articleOwned = finding.articleIds.length > 0;
-    if (moduleOwned && articleOwned) {
-      acceptedFindings.push(finding);
-    } else {
-      rejectedFindingsByScope.push(finding);
+  for (const [index, evaluation] of evaluations.entries()) {
+    const articleId = evaluation.articleId ?? null;
+    const canonicalOwners = articleId === null ? [] : (ownershipByArticleId[String(articleId)] ?? []);
+    const canonicalOwner = canonicalOwners.length === 1 ? canonicalOwners[0] : null;
+    const routerReviewerLabel = selectedReviewerLabels[0] ?? null;
+    const gptReviewerLabel = input.decision.moduleTitle;
+    const gptReviewerId = input.decision.moduleId;
+
+    if (!canonicalOwner) {
+      const rejectedFinding = createLegalFinding({
+        findingKey: `${articleId === null ? "unknown" : articleId}:${index}:${normalizeText(evaluation.reason)}:${normalizeText(evaluation.status)}`,
+        moduleId: input.decision.moduleId,
+        moduleTitle: input.decision.moduleTitle,
+        articleIds: articleId === null ? [] : [articleId],
+        status: "accept",
+        reason: evaluation.reason,
+        confidence: evaluation.confidence,
+        semantic: input.decision.semantic,
+        narrative: input.decision.narrative,
+        evidence: input.decision.evidence.candidates[0] ?? {
+          text: evaluation.evidence[0] ?? "",
+          startOffset: 0,
+          endOffset: Math.max(1, (evaluation.evidence[0] ?? "").length),
+          confidence: input.decision.evidence.confidence,
+          source: "chunk",
+          notes: [],
+        },
+        context: input.decision.context,
+        exceptionCodes: [],
+      });
+      rejectedFindingsByScope.push(rejectedFinding);
+      logger.warn("V3 reviewer scope validation rejected finding", {
+        validator_name: "reviewerScopeValidator",
+        router_reviewer: routerReviewerLabel,
+        canonical_owner: canonicalOwners.map((owner) => owner.reviewerLabel),
+        gpt_reviewer: gptReviewerLabel,
+        final_reviewer: null,
+        reassignment_reason: null,
+        rejection_occurred: true,
+        rejection_reason: canonicalOwners.length === 0 ? "article_has_no_canonical_owner" : "article_owner_ambiguous",
+        line_of_code: "reviewerScopeValidator.ts:95-145",
+        article_id: articleId,
+      });
+      continue;
     }
+
+    const finalReviewerLabel = canonicalOwner.reviewerLabel;
+    const finalReviewerId = canonicalOwner.reviewerId;
+    const routerSelected = selectedReviewerIds.includes(finalReviewerId);
+    const reassignmentReason = gptReviewerId !== finalReviewerId
+      ? (routerSelected
+        ? "GPT reviewer differed from the canonical owner; reassigning to canonical reviewer."
+        : "Router excluded the canonical reviewer; reassigning to canonical reviewer.")
+      : null;
+
+    acceptedFindings.push(buildFindingFromEvaluation(input, evaluation, index, canonicalOwner));
+
+    logger.info("V3 reviewer scope validation ownership resolution", {
+      validator_name: "reviewerScopeValidator",
+      router_reviewer: routerReviewerLabel,
+      canonical_owner: finalReviewerLabel,
+      gpt_reviewer: gptReviewerLabel,
+      final_reviewer: finalReviewerLabel,
+      reassignment_reason: reassignmentReason,
+      rejection_occurred: false,
+      article_id: articleId,
+      evaluation_index: index,
+      selected_reviewers: selectedReviewerLabels,
+      candidate_reviewers: selectedReviewerIds,
+    });
   }
 
   const acceptedDecision: LegalDecision = Object.freeze({
@@ -151,9 +223,9 @@ export function validateReviewerScope(input: ReviewerScopeValidatorInput): Revie
   });
 
   const scopeReason = acceptedFindings.length > 0
-    ? "Selected reviewer scope owns the returned finding."
+    ? "Canonical article ownership resolved and the returned finding was reassigned to the canonical reviewer."
     : rejectedFindingsByScope.length > 0
-      ? "The returned finding was rejected because the reviewer did not own the classified category."
+      ? "The returned finding was rejected because the article did not have a unique canonical owner."
       : "No legal finding was returned.";
 
   logger.info("V3 reviewer scope validation", {
