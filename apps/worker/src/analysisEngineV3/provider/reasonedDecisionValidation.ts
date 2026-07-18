@@ -6,6 +6,8 @@ export type V3ReasonedDecisionValidationIssue = Readonly<{
   code: string;
   path: string;
   message: string;
+  severity?: "error" | "recoverable";
+  details?: Readonly<Record<string, unknown>>;
 }>;
 
 export type V3ReasonedDecisionValidationResult = Readonly<{
@@ -321,6 +323,21 @@ function normalizeText(value: string | null | undefined): string {
   return typeof value === "string" ? value.normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase() : "";
 }
 
+function normalizeGroundingText(value: string | null | undefined): string {
+  if (typeof value !== "string") return "";
+  return value
+    .normalize("NFKC")
+    .replace(/\u2026/g, "...")
+    .replace(/[\u0640]/g, "")
+    .replace(/[\p{M}]/gu, "")
+    .replace(/[«»‹›„“”‟]/gu, " ")
+    .replace(/[،؛؟]/gu, " ")
+    .replace(/[\p{P}\p{S}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
 function normalizeIdSet(values: readonly string[] | null | undefined): ReadonlySet<string> {
   return new Set((values ?? []).map((value) => normalizeText(value)).filter((value) => value.length > 0));
 }
@@ -372,17 +389,29 @@ function logValidationRejection(input: V3PromptBuilderInput, result: V3ProviderR
   });
 }
 
+function isFatalValidationIssue(issue: V3ReasonedDecisionValidationIssue): boolean {
+  return (issue.severity ?? "error") === "error";
+}
+
+function serializeIssueDetails(issue: V3ReasonedDecisionValidationIssue): Record<string, unknown> {
+  return {
+    code: issue.code,
+    path: issue.path,
+    message: issue.message,
+    severity: issue.severity ?? "error",
+    ...(issue.details ?? {}),
+  };
+}
+
 function splitTokens(value: string): readonly string[] {
-  return value
-    .normalize("NFC")
+  return normalizeGroundingText(value)
     .match(/[\p{L}\p{N}_-]+/gu)
     ?.map((token) => token.toLowerCase())
     .filter((token) => token.length > 0) ?? [];
 }
 
 function splitSentences(value: string): readonly string[] {
-  return value
-    .normalize("NFC")
+  return normalizeGroundingText(value)
     .split(/[.!?؟\n]+/u)
     .map((sentence) => sentence.trim())
     .filter((sentence) => sentence.length > 0);
@@ -425,6 +454,128 @@ function collectGroundingTokens(input: V3PromptBuilderInput, result: V3ProviderR
 function candidateText(candidate: V3ProviderReasoningResult["evidence"]["candidates"][number]): string {
   const quote = (candidate as { quote?: string }).quote;
   return typeof quote === "string" ? quote : "";
+}
+
+type GroundingEvidenceCandidate = Readonly<{
+  index: number;
+  quote: string;
+  quoteNormalized: string;
+  extractedSpan: string;
+  extractedSpanNormalized: string;
+  startOffset: number | null;
+  endOffset: number | null;
+}>;
+
+function extractChunkSpanText(input: V3PromptBuilderInput, startOffset: number | null | undefined, endOffset: number | null | undefined): string {
+  const chunkText = input.chunkContext.localChunk ?? "";
+  if (typeof startOffset !== "number" || typeof endOffset !== "number") return "";
+  if (!Number.isFinite(startOffset) || !Number.isFinite(endOffset)) return "";
+  if (startOffset < 0 || endOffset <= startOffset || endOffset > chunkText.length) return "";
+  return chunkText.slice(startOffset, endOffset);
+}
+
+function buildGroundingEvidenceCandidates(input: V3PromptBuilderInput, result: V3ProviderReasoningResult): readonly GroundingEvidenceCandidate[] {
+  return result.evidence.candidates.map((candidate, index) => {
+    const quote = String((candidateText(candidate) || candidate.text) ?? "").trim();
+    const extractedSpan = extractChunkSpanText(input, candidate.startOffset, candidate.endOffset).trim();
+    return Object.freeze({
+      index,
+      quote,
+      quoteNormalized: normalizeGroundingText(quote),
+      extractedSpan,
+      extractedSpanNormalized: normalizeGroundingText(extractedSpan),
+      startOffset: typeof candidate.startOffset === "number" ? candidate.startOffset : null,
+      endOffset: typeof candidate.endOffset === "number" ? candidate.endOffset : null,
+    });
+  });
+}
+
+type GroundingEvidenceMatch = Readonly<{
+  matched: boolean;
+  matchedBy: "exact_normalized_quote" | "exact_extracted_span" | "source_offsets" | "contained_within_extracted_span" | "contained_within_quote" | null;
+  matchedSpan: string | null;
+  matchedSpanIndex: number | null;
+  matchedStartOffset: number | null;
+  matchedEndOffset: number | null;
+  normalizedEvidence: string;
+}>;
+
+function matchGroundingEvidenceItem(
+  evidence: string,
+  candidates: readonly GroundingEvidenceCandidate[],
+): GroundingEvidenceMatch {
+  const normalizedEvidence = normalizeGroundingText(evidence);
+  if (normalizedEvidence.length === 0) {
+    return Object.freeze({
+      matched: false,
+      matchedBy: null,
+      matchedSpan: null,
+      matchedSpanIndex: null,
+      matchedStartOffset: null,
+      matchedEndOffset: null,
+      normalizedEvidence,
+    });
+  }
+
+  for (const candidate of candidates) {
+    if (candidate.quoteNormalized.length > 0 && normalizedEvidence === candidate.quoteNormalized) {
+      return Object.freeze({
+        matched: true,
+        matchedBy: "exact_normalized_quote",
+        matchedSpan: candidate.quote || candidate.extractedSpan || null,
+        matchedSpanIndex: candidate.index,
+        matchedStartOffset: candidate.startOffset,
+        matchedEndOffset: candidate.endOffset,
+        normalizedEvidence,
+      });
+    }
+
+    if (candidate.extractedSpanNormalized.length > 0 && normalizedEvidence === candidate.extractedSpanNormalized) {
+      return Object.freeze({
+        matched: true,
+        matchedBy: candidate.startOffset !== null && candidate.endOffset !== null ? "source_offsets" : "exact_extracted_span",
+        matchedSpan: candidate.extractedSpan || candidate.quote || null,
+        matchedSpanIndex: candidate.index,
+        matchedStartOffset: candidate.startOffset,
+        matchedEndOffset: candidate.endOffset,
+        normalizedEvidence,
+      });
+    }
+
+    if (candidate.extractedSpanNormalized.length > 0 && candidate.extractedSpanNormalized.includes(normalizedEvidence)) {
+      return Object.freeze({
+        matched: true,
+        matchedBy: "contained_within_extracted_span",
+        matchedSpan: candidate.extractedSpan || candidate.quote || null,
+        matchedSpanIndex: candidate.index,
+        matchedStartOffset: candidate.startOffset,
+        matchedEndOffset: candidate.endOffset,
+        normalizedEvidence,
+      });
+    }
+
+    if (candidate.quoteNormalized.length > 0 && candidate.quoteNormalized.includes(normalizedEvidence)) {
+      return Object.freeze({
+        matched: true,
+        matchedBy: "contained_within_quote",
+        matchedSpan: candidate.quote || candidate.extractedSpan || null,
+        matchedSpanIndex: candidate.index,
+        matchedStartOffset: candidate.startOffset,
+        matchedEndOffset: candidate.endOffset,
+        normalizedEvidence,
+      });
+    }
+  }
+
+  return Object.freeze({
+    matched: false,
+    matchedBy: null,
+    matchedSpan: null,
+    matchedSpanIndex: null,
+    matchedStartOffset: null,
+    matchedEndOffset: null,
+    normalizedEvidence,
+  });
 }
 
 function buildNoViolationDecision(
@@ -476,7 +627,7 @@ function sentenceHasExactGrounding(
   candidateAtomTokens: ReadonlySet<string>,
   candidateReviewerTokens: ReadonlySet<string>,
 ): boolean {
-  const normalizedSentence = normalizeText(sentence);
+  const normalizedSentence = normalizeGroundingText(sentence);
   if (normalizedSentence.length === 0) return true;
   if (exactEvidenceTexts.has(normalizedSentence)) return true;
   if (candidateArticleTokens.has(normalizedSentence)) return true;
@@ -498,8 +649,8 @@ function assessFactualClaimGrounding(
   candidateAtomTokens: ReadonlySet<string>,
   candidateReviewerTokens: ReadonlySet<string>,
 ): FactualClaimDiagnostic | null {
-  const normalizedSentence = normalizeText(sentence);
-  if (normalizedSentence.length === 0) return null;
+  const normalizedGroundedSentence = normalizeGroundingText(sentence);
+  if (normalizedGroundedSentence.length === 0) return null;
   if (sentenceHasExactGrounding(sentence, exactEvidenceTexts, candidateArticleTokens, candidateAtomTokens, candidateReviewerTokens)) {
     return null;
   }
@@ -526,7 +677,7 @@ function assessFactualClaimGrounding(
 
   const supportRatio = supportTokens.length / Math.max(1, tokens.length);
   const concreteClaimTokens = unsupportedVocabularyTokens.filter((token) => CONCRETE_CLAIM_TOKENS.has(token));
-  if (concreteClaimTokens.length === 0) return null;
+  if (concreteClaimTokens.length === 0 || supportRatio >= 0.6) return null;
 
   return Object.freeze({
     sentence,
@@ -535,6 +686,22 @@ function assessFactualClaimGrounding(
     reason: concreteClaimTokens.length > 0
       ? "The sentence introduces concrete factual content that is not grounded in the quoted evidence, current scene, candidate articles, candidate atoms, or reviewer scope."
       : "The sentence introduces factual content that is not grounded in the quoted evidence, current scene, candidate articles, candidate atoms, or reviewer scope.",
+  });
+}
+
+function createValidationIssue(
+  code: string,
+  path: string,
+  message: string,
+  severity: "error" | "recoverable" = "error",
+  details?: Readonly<Record<string, unknown>>,
+): V3ReasonedDecisionValidationIssue {
+  return Object.freeze({
+    code,
+    path,
+    message,
+    severity,
+    ...(details ? { details } : {}),
   });
 }
 
@@ -547,13 +714,11 @@ export function validateReasonedDecisionAgainstEvidence(
   const candidateDiagnostics = compiledReviewerContext?.candidateDiagnostics ?? null;
   const candidateReviewerIds = normalizeIdSet(compiledReviewerContext?.selection.selectedReviewerIds);
   const candidateReviewerLabels = normalizeIdSet(compiledReviewerContext?.selection.selectedReviewerLabels);
-  const groundingCorpus = normalizeText(collectGroundingCorpus(input, result));
   const groundingTokens = collectGroundingTokens(input, result);
-  const primaryCandidate = result.evidence.candidates[result.evidence.primaryCandidateIndex ?? 0] ?? result.evidence.candidates[0] ?? null;
+  const groundingEvidenceCandidates = buildGroundingEvidenceCandidates(input, result);
   const exactEvidenceTexts = new Set(
-    result.evidence.candidates
-      .flatMap((candidate) => [candidateText(candidate), candidate.text ?? ""])
-      .map((text) => normalizeText(text))
+    groundingEvidenceCandidates
+      .flatMap((candidate) => [candidate.quoteNormalized, candidate.extractedSpanNormalized])
       .filter((text) => text.length > 0),
   );
 
@@ -586,48 +751,72 @@ export function validateReasonedDecisionAgainstEvidence(
     const evaluationIssues: V3ReasonedDecisionValidationIssue[] = [];
     const evaluationPath = `reasonedDecision.articleEvaluations[${index}]`;
     const evaluationArticleId = normalizeText(String(evaluation.articleId));
-    const evaluationEvidence = [...new Set([
-      ...evaluation.evidence,
-      ...(evaluation.status === "PASS" ? result.reasonedDecision.supportingEvidence : []),
-    ].map((value) => String(value).normalize("NFC").replace(/\s+/g, " ").trim()).filter((value) => value.length > 0))];
+    const acceptedEvaluationEvidence: string[] = [];
 
     if (candidateArticleIds.size > 0 && !candidateArticleIds.has(evaluationArticleId)) {
-      const issue = {
-        code: "article_outside_candidate_set",
-        path: `${evaluationPath}.articleId`,
-        message: `The reviewer returned article ${evaluation.articleId}, but it was not supplied in the candidate article set.`,
-      };
+      const issue = createValidationIssue(
+        "article_outside_candidate_set",
+        `${evaluationPath}.articleId`,
+        `The reviewer returned article ${evaluation.articleId}, but it was not supplied in the candidate article set.`,
+      );
       issues.push(issue);
       evaluationIssues.push(issue);
     }
 
     for (const [evidenceIndex, evidence] of evaluation.evidence.entries()) {
-      const normalizedEvidence = normalizeText(evidence);
-      if (normalizedEvidence.length === 0) {
-        const issue = {
-          code: "unsupported_supporting_evidence",
-          path: `${evaluationPath}.evidence[${evidenceIndex}]`,
-          message: "Supporting evidence cannot be empty.",
-        };
-        issues.push(issue);
-        evaluationIssues.push(issue);
+      const normalizedEvidence = normalizeGroundingText(evidence);
+      const evidenceMatch = matchGroundingEvidenceItem(evidence, groundingEvidenceCandidates);
+      if (normalizedEvidence.length > 0 && evidenceMatch.matched) {
+        acceptedEvaluationEvidence.push(String(evidence).normalize("NFC").replace(/\s+/g, " ").trim());
         continue;
       }
-      if (exactEvidenceTexts.has(normalizedEvidence) || groundingCorpus.includes(normalizedEvidence)) {
-        continue;
-      }
-      const issue = {
-        code: "unsupported_supporting_evidence",
-        path: `${evaluationPath}.evidence[${evidenceIndex}]`,
-        message: `Supporting evidence must be an exact quote or scene span, but received: ${JSON.stringify(evidence)}.`,
-      };
+
+      const issue = createValidationIssue(
+        "unsupported_supporting_evidence",
+        `${evaluationPath}.evidence[${evidenceIndex}]`,
+        normalizedEvidence.length === 0
+          ? "Supporting evidence cannot be empty."
+          : `Supporting evidence must be an exact quote, an extracted span, or a contained quote, but received: ${JSON.stringify(evidence)}.`,
+        "recoverable",
+        {
+          validatorStage: "evidence_item_grounding",
+          expectedEvidence: groundingEvidenceCandidates.map((candidate) => candidate.quote || candidate.extractedSpan).filter((value): value is string => value.length > 0),
+          normalizedEvidence,
+          matchedSpan: evidenceMatch.matchedSpan,
+          matchedSpanIndex: evidenceMatch.matchedSpanIndex,
+          matchedStartOffset: evidenceMatch.matchedStartOffset,
+          matchedEndOffset: evidenceMatch.matchedEndOffset,
+          matchedBy: evidenceMatch.matchedBy,
+          rejectionReason: normalizedEvidence.length === 0 ? "empty_evidence" : "evidence_not_grounded",
+        },
+      );
       issues.push(issue);
       evaluationIssues.push(issue);
+      logger.warn("V3 reasoned decision evidence item rejected", {
+        validator_name: "reasonedDecisionValidation",
+        validator_stage: "evidence_item_grounding",
+        evaluation_index: index,
+        evaluation_article: evaluation.articleId,
+        candidate_reviewers: [...candidateReviewerIds],
+        candidate_reviewer_labels: [...candidateReviewerLabels],
+        candidate_articles: [...candidateArticleIds],
+        candidate_atoms: [...candidateAtomIds],
+        expected_evidence: groundingEvidenceCandidates.map((candidate) => candidate.quote || candidate.extractedSpan).filter((value): value is string => value.length > 0),
+        normalized_evidence: normalizedEvidence,
+        matched_span: evidenceMatch.matchedSpan,
+        matched_span_index: evidenceMatch.matchedSpanIndex,
+        matched_start_offset: evidenceMatch.matchedStartOffset,
+        matched_end_offset: evidenceMatch.matchedEndOffset,
+        matched_by: evidenceMatch.matchedBy,
+        rejection_reason: normalizedEvidence.length === 0 ? "empty_evidence" : "evidence_not_grounded",
+        evidence_index: evidenceIndex,
+        line_of_code: "reasonedDecisionValidation.ts:610-651",
+      });
     }
 
     const claimTexts = [
       evaluation.reason,
-      ...evaluation.evidence,
+      ...acceptedEvaluationEvidence,
     ];
 
     const evaluationFactualClaimDiagnostics: FactualClaimDiagnostic[] = [];
@@ -646,14 +835,14 @@ export function validateReasonedDecisionAgainstEvidence(
     }
 
     if (evaluationFactualClaimDiagnostics.length > 0) {
-      const issue = {
-        code: "unsupported_factual_claim",
-        path: `${evaluationPath}.reason`,
-        message: [
+      const issue = createValidationIssue(
+        "unsupported_factual_claim",
+        `${evaluationPath}.reason`,
+        [
           "The evaluation introduces factual claims that are not grounded in the quoted evidence or supplied candidates.",
           `Unsupported sentences: ${evaluationFactualClaimDiagnostics.slice(0, 3).map((diagnostic) => diagnostic.sentence).join(" | ")}`,
         ].join(" "),
-      };
+      );
       issues.push(issue);
       evaluationIssues.push(issue);
       logger.warn("V3 reasoned decision grounding diagnostics", {
@@ -665,6 +854,7 @@ export function validateReasonedDecisionAgainstEvidence(
         candidate_reviewer_labels: [...candidateReviewerLabels],
         candidate_articles: [...candidateArticleIds],
         candidate_atoms: [...candidateAtomIds],
+        expected_evidence: groundingEvidenceCandidates.map((candidate) => candidate.quote || candidate.extractedSpan).filter((value): value is string => value.length > 0),
         unsupported_sentences: evaluationFactualClaimDiagnostics.slice(0, 5).map((diagnostic) => ({
           sentence: diagnostic.sentence,
           unsupportedVocabularyTokens: diagnostic.unsupportedVocabularyTokens,
@@ -681,23 +871,41 @@ export function validateReasonedDecisionAgainstEvidence(
 
       for (const atomId of atomMentions) {
         if (!candidateAtomIds.has(normalizeText(atomId))) {
-          const issue = {
-            code: "atom_outside_candidate_set",
-            path: `${evaluationPath}.reason`,
-            message: `The reviewer referenced atom ${atomId}, but it was not supplied in the candidate atom set.`,
-          };
+          const issue = createValidationIssue(
+            "atom_outside_candidate_set",
+            `${evaluationPath}.reason`,
+            `The reviewer referenced atom ${atomId}, but it was not supplied in the candidate atom set.`,
+          );
           issues.push(issue);
           evaluationIssues.push(issue);
         }
       }
     }
 
-    if (evaluationIssues.length === 0) {
+    const evaluationHasFatalIssues = evaluationIssues.some(isFatalValidationIssue);
+    if (!evaluationHasFatalIssues && acceptedEvaluationEvidence.length > 0) {
       acceptedEvaluations.push(Object.freeze({
         ...evaluation,
-        evidence: Object.freeze(evaluationEvidence.length > 0 ? evaluationEvidence : [...evaluation.evidence]),
+        evidence: Object.freeze(acceptedEvaluationEvidence.length > 0 ? acceptedEvaluationEvidence : [...evaluation.evidence]),
       }));
     } else {
+      if (acceptedEvaluationEvidence.length === 0) {
+        const issue = createValidationIssue(
+          "no_valid_supporting_evidence",
+          `${evaluationPath}.evidence`,
+          "No grounded supporting evidence remained after validation.",
+          "error",
+          {
+            validatorStage: "evidence_item_grounding",
+            expectedEvidence: groundingEvidenceCandidates.map((candidate) => candidate.quote || candidate.extractedSpan).filter((value): value is string => value.length > 0),
+            rejectedEvidenceCount: evaluation.evidence.length,
+          },
+        );
+        if (!issues.some((existingIssue) => existingIssue.code === issue.code && existingIssue.path === issue.path)) {
+          issues.push(issue);
+        }
+        evaluationIssues.push(issue);
+      }
       rejectedEvaluationRecords.push(Object.freeze({
         index,
         evaluation,
@@ -722,14 +930,14 @@ export function validateReasonedDecisionAgainstEvidence(
   }
 
   if (sharedClaimDiagnostics.length > 0) {
-    const issue = {
-      code: "unsupported_factual_claim",
-      path: "reasonedDecision.reasoning",
-      message: [
+    const issue = createValidationIssue(
+      "unsupported_factual_claim",
+      "reasonedDecision.reasoning",
+      [
         "The reviewer reasoning introduces factual claims that are not grounded in the quoted evidence or supplied candidates.",
         `Unsupported sentences: ${sharedClaimDiagnostics.slice(0, 3).map((diagnostic) => diagnostic.sentence).join(" | ")}`,
       ].join(" "),
-    };
+    );
     issues.push(issue);
     logger.warn("V3 reasoned decision grounding diagnostics", {
       validator_name: "reasonedDecisionValidation",
@@ -740,6 +948,7 @@ export function validateReasonedDecisionAgainstEvidence(
       candidate_reviewer_labels: [...candidateReviewerLabels],
       candidate_articles: [...candidateArticleIds],
       candidate_atoms: [...candidateAtomIds],
+      expected_evidence: groundingEvidenceCandidates.map((candidate) => candidate.quote || candidate.extractedSpan).filter((value): value is string => value.length > 0),
       unsupported_sentences: sharedClaimDiagnostics.slice(0, 5).map((diagnostic) => ({
         sentence: diagnostic.sentence,
         unsupportedVocabularyTokens: diagnostic.unsupportedVocabularyTokens,
@@ -761,17 +970,15 @@ export function validateReasonedDecisionAgainstEvidence(
         article_id: evaluation.articleId,
         status: evaluation.status,
         reason: evaluation.reason,
-        issues: evaluationIssues.map((issue) => ({
-          code: issue.code,
-          path: issue.path,
-          message: issue.message,
-        })),
+        issues: evaluationIssues.map(serializeIssueDetails),
       })),
       line_of_code: "reasonedDecisionValidation.ts:504-670",
     });
   }
 
-  if (issues.length > 0) {
+  const fatalIssues = issues.filter(isFatalValidationIssue);
+
+  if (fatalIssues.length > 0) {
     logValidationRejection(input, result, issues, candidateArticleIds, candidateAtomIds, candidateReviewerIds, candidateReviewerLabels);
   }
 
@@ -792,15 +999,17 @@ export function validateReasonedDecisionAgainstEvidence(
   });
 
   return Object.freeze({
-    valid: issues.length === 0,
+    valid: fatalIssues.length === 0,
     issues: Object.freeze(issues),
-    validationNote: issues.length === 0
-      ? "The reasoned decision is evidence-first, quote-grounded, and article-by-article."
+    validationNote: fatalIssues.length === 0
+      ? (issues.length === 0
+        ? "The reasoned decision is evidence-first, quote-grounded, and article-by-article."
+        : "The reasoned decision is evidence-first, quote-grounded, and article-by-article. Recoverable evidence items were rejected, but valid evidence items were preserved.")
       : [
           "Validation failed.",
           "Return an evidence-first, quote-grounded answer evaluated article-by-article.",
           "Use only exact quotes from the current evidence or scene.",
-          ...issues.map((issue) => `${issue.path}: ${issue.message}`),
+          ...fatalIssues.map((issue) => `${issue.path}: ${issue.message}`),
         ].join(" "),
     sanitizedDecision,
   });
