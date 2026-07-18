@@ -199,7 +199,11 @@ export function renderV3Prompt(input: V3PromptBuilderInput): string {
     evidenceCandidateCount: reviewerAssessment?.reasoningTrace?.length ?? 0,
     selectedReviewerCount: reviewerKnowledgeSelection?.routing.selectedReviewerIds.length ?? compiledReviewerContext?.selection.selectedReviewerIds.length ?? 0,
     selectedArticleCount: compiledReviewerContext?.selectedArticles.length ?? 0,
+    selectedArticleIds: [...(compiledReviewerContext?.selectedArticles.map((article) => article.articleId) ?? [])],
+    selectedPolicyArticleIds: [...(compiledReviewerContext?.selectedPolicyArticleIds ?? compiledReviewerContext?.candidateDiagnostics?.articleRanking.selectedPolicyArticleIds ?? [])],
     selectedAtomCount: compiledReviewerContext?.selectedAtoms.length ?? 0,
+    selectedAtomIds: [...(compiledReviewerContext?.selectedAtoms.map((atom) => atom.atomId) ?? [])],
+    selectedPolicyAtomIds: [...(compiledReviewerContext?.selectedPolicyAtomIds ?? compiledReviewerContext?.candidateDiagnostics?.atomRanking.selectedPolicyAtomIds ?? [])],
     stepTimings: profile,
   });
 

@@ -329,6 +329,7 @@ function buildEvidenceTrace(input: Readonly<{
       details: {
         candidate_articles: articleScores,
         selected_articles: selectedArticles.map((article) => article.articleId),
+        selected_policy_article_ids: selectedArticles.map((article) => parsePolicyArticleId(article.articleId)),
       },
     }),
     buildTraceStage({
@@ -340,6 +341,7 @@ function buildEvidenceTrace(input: Readonly<{
       details: {
         selected_articles: selectedArticles.map((article) => ({
           articleId: article.articleId,
+          policyArticleId: parsePolicyArticleId(article.articleId),
           reviewer: article.reviewer,
           title: article.title,
         })),
@@ -438,6 +440,7 @@ function buildEvidenceTrace(input: Readonly<{
         },
         returned_findings_count: input.mapped.reasonedDecision.articleEvaluations.length,
         returned_articles: input.mapped.reasonedDecision.articleEvaluations.map((evaluation) => evaluation.articleId),
+        returned_policy_articles: input.mapped.reasonedDecision.articleEvaluations.map((evaluation) => parsePolicyArticleId(String(evaluation.articleId))),
         returned_atoms: input.mapped.reasonedDecision.applicableArticles.length > 0 ? input.mapped.reasonedDecision.applicableArticles : [],
         returned_evidence: input.mapped.reasonedDecision.supportingEvidence,
       },
@@ -819,6 +822,11 @@ function computeExecutionSignatureHash(row: ReturnType<typeof buildExecutionSign
 
 function estimatePromptTokens(systemPrompt: string, userPrompt: string): number {
   return Math.max(1, Math.ceil((systemPrompt.length + userPrompt.length) / 4));
+}
+
+function parsePolicyArticleId(articleId: string): number {
+  const numeric = Number.parseInt(articleId.replace(/[^\d]/g, ""), 10);
+  return Number.isFinite(numeric) ? numeric : 0;
 }
 
 function buildRawProviderTestSystemPrompt(): string {
@@ -1607,6 +1615,8 @@ export async function runV3RuntimeAdapter(
         selectedReviewers: [...routing.selectedReviewerLabels],
         selectedReviewerPackIds: [...routing.selectedReviewerPackIds],
         rejectedReviewers: [...routing.rejectedReviewerLabels],
+        selectedArticleIds: candidateDiagnostics?.articleRanking.selectedArticleIds ?? reviewerCompiledContext?.selectedArticles.map((article) => article.articleId) ?? [],
+        selectedPolicyArticleIds: reviewerCompiledContext?.selectedPolicyArticleIds ?? candidateDiagnostics?.articleRanking.selectedPolicyArticleIds ?? reviewerCompiledContext?.selectedArticles.map((article) => parsePolicyArticleId(article.articleId)) ?? [],
         loadedAcademyCount: routing.loadedAcademyCount,
         skippedAcademyCount: routing.skippedAcademyCount,
         knowledgeReductionPercent: routing.knowledgeReductionPercent,
@@ -1678,6 +1688,9 @@ export async function runV3RuntimeAdapter(
         reason: validatedLegalDecision.reason,
         confidence: validatedLegalDecision.confidence,
         articleIds: [...validatedLegalDecision.articleIds],
+        candidateArticleIds: candidateDiagnostics?.articleRanking.selectedArticleIds ?? reviewerCompiledContext?.selectedArticles.map((article) => article.articleId) ?? [],
+        candidatePolicyArticleIds: reviewerCompiledContext?.selectedPolicyArticleIds ?? candidateDiagnostics?.articleRanking.selectedPolicyArticleIds ?? reviewerCompiledContext?.selectedArticles.map((article) => parsePolicyArticleId(article.articleId)) ?? [],
+        providerArticleIds: mapped.reasonedDecision.articleEvaluations.map((evaluation) => evaluation.articleId),
         groundingValidation: groundingValidation as unknown as Record<string, unknown>,
         scopeValidation: scopeValidation as unknown as Record<string, unknown>,
         finding: validatedLegalDecision.finding as unknown as Record<string, unknown> | null,

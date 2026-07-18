@@ -342,6 +342,11 @@ function normalizeIdSet(values: readonly string[] | null | undefined): ReadonlyS
   return new Set((values ?? []).map((value) => normalizeText(value)).filter((value) => value.length > 0));
 }
 
+function parsePolicyArticleId(articleId: string): number {
+  const numeric = Number.parseInt(articleId.replace(/[^\d]/g, ""), 10);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
 function candidateReferenceTokenVariants(value: string): readonly string[] {
   const normalized = normalizeText(value);
   if (!normalized) return [];
@@ -723,8 +728,14 @@ export function validateReasonedDecisionAgainstEvidence(
   );
 
   const candidateArticleIds = normalizeIdSet(
-    candidateDiagnostics?.articleRanking.selectedPolicyArticleIds.map((articleId) => String(articleId))
-      ?? compiledReviewerContext?.selectedArticles.map((article) => article.articleId),
+    candidateDiagnostics?.articleRanking.selectedPolicyArticleIds.length
+      ? candidateDiagnostics.articleRanking.selectedPolicyArticleIds.map((articleId) => String(articleId))
+      : compiledReviewerContext?.selectedPolicyArticleIds?.length
+        ? compiledReviewerContext.selectedPolicyArticleIds.map((articleId) => String(articleId))
+        : compiledReviewerContext?.selectedArticles.map((article) => {
+            const policyArticleId = parsePolicyArticleId(article.articleId);
+            return policyArticleId > 0 ? String(policyArticleId) : article.articleId;
+          }),
   );
   const candidateAtomIds = normalizeIdSet(
     candidateDiagnostics?.atomRanking.selectedPolicyAtomIds
@@ -733,6 +744,15 @@ export function validateReasonedDecisionAgainstEvidence(
   const candidateArticleTokens = buildCandidateReferenceTokenSet([...candidateArticleIds]);
   const candidateAtomTokens = buildCandidateReferenceTokenSet([...candidateAtomIds]);
   const candidateReviewerTokens = buildCandidateReferenceTokenSet([...candidateReviewerIds, ...candidateReviewerLabels]);
+  logger.info("V3 reasoned decision validation candidate set", {
+    validator_name: "reasonedDecisionValidation",
+    candidate_reviewers: [...candidateReviewerIds],
+    candidate_reviewer_labels: [...candidateReviewerLabels],
+    candidate_articles: [...candidateArticleIds],
+    candidate_atoms: [...candidateAtomIds],
+    gpt_articles: [...new Set(result.reasonedDecision.articleEvaluations.map((evaluation) => String(evaluation.articleId)))],
+    gpt_recommendation: result.reasonedDecision.recommendation,
+  });
   const acceptedEvaluations: V3ReasonedDecisionArticleEvaluation[] = [];
   const rejectedEvaluationRecords: Array<Readonly<{
     index: number;

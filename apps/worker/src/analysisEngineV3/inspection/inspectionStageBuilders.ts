@@ -76,6 +76,8 @@ export function buildV3KnowledgeMatchingInspectionRecord(input: Readonly<{
   selectedReviewers?: readonly string[];
   selectedReviewerPackIds?: readonly string[];
   rejectedReviewers?: readonly string[];
+  selectedArticleIds?: readonly string[];
+  selectedPolicyArticleIds?: readonly number[];
   loadedAcademyCount?: number;
   skippedAcademyCount?: number;
   knowledgeReductionPercent?: number;
@@ -108,6 +110,8 @@ export function buildV3KnowledgeMatchingInspectionRecord(input: Readonly<{
     selected_reviewers: [...(input.selectedReviewers ?? [])],
     selected_reviewer_pack_ids: [...(input.selectedReviewerPackIds ?? [])],
     rejected_reviewers: [...(input.rejectedReviewers ?? [])],
+    selected_article_ids: [...(input.selectedArticleIds ?? [])],
+    selected_policy_article_ids: [...(input.selectedPolicyArticleIds ?? [])],
     loaded_academy_count: input.loadedAcademyCount ?? null,
     skipped_academy_count: input.skippedAcademyCount ?? null,
     knowledge_reduction_percent: input.knowledgeReductionPercent ?? null,
@@ -205,6 +209,9 @@ export function buildV3LegalReviewInspectionRecord(input: Readonly<{
   reason: string;
   confidence: number;
   articleIds: readonly number[];
+  candidateArticleIds?: readonly string[];
+  candidatePolicyArticleIds?: readonly number[];
+  providerArticleIds?: readonly (string | number)[];
   groundingValidation?: Readonly<Record<string, unknown>> | null;
   scopeValidation?: Readonly<Record<string, unknown>> | null;
   finding: Record<string, unknown> | null;
@@ -224,6 +231,9 @@ export function buildV3LegalReviewInspectionRecord(input: Readonly<{
     reason: input.reason,
     confidence: input.confidence,
     article_ids: [...input.articleIds],
+    candidate_article_ids: [...(input.candidateArticleIds ?? [])],
+    candidate_policy_article_ids: [...(input.candidatePolicyArticleIds ?? [])],
+    provider_article_ids: [...(input.providerArticleIds ?? [])],
     grounding_validation: input.groundingValidation ?? null,
     scope_validation: input.scopeValidation ?? null,
     finding: input.finding,

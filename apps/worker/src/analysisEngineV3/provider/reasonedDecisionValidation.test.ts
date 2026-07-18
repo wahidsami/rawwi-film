@@ -369,6 +369,9 @@ function main(): void {
   testCandidateAwareValidation();
   console.log("✓ reasoned decision grounding validator accepts deterministic candidate references");
 
+  testCanonicalFallbackUsesSelectedArticleIds();
+  console.log("✓ reasoned decision grounding validator accepts canonical selected article ids");
+
   testArabicNarrativeGrounding();
   console.log("✓ reasoned decision grounding validator accepts grounded Arabic explanation");
 
@@ -546,6 +549,165 @@ function testCandidateAwareValidation(): void {
       riskAnalysis: "Low risk.",
       narrativeAnalysis: "Direct dialogue.",
       humanLikeExplanation: "The returned article and atom are inside the deterministic candidate set.",
+      recommendation: "RETURN VIOLATION",
+    },
+  });
+
+  assert.equal(validation.valid, true);
+  assert.equal(validation.issues.length, 0);
+}
+
+function testCanonicalFallbackUsesSelectedArticleIds(): void {
+  const input = makePromptInput();
+  const compiledReviewerContext: any = {
+    academyRoot: "academy",
+    fingerprint: "fingerprint",
+    generatedAt: "2026-07-17T00:00:00.000Z",
+    selection: {
+      selectedReviewerIds: ["v4_11_profanity"],
+      selectedReviewerLabels: ["Profanity Reviewer"],
+      selectedAcademyFolders: ["profanity"],
+      rejectedReviewerIds: [],
+      rejectedReviewerLabels: [],
+      loadedAcademyCount: 1,
+      skippedAcademyCount: 0,
+      knowledgeReductionPercent: 0,
+      routingConfidence: 0.99,
+      routingReason: "Candidate aware route.",
+      lowConfidence: false,
+      reviewerScores: [],
+    },
+    universalManuals: [],
+    selectedReviewerManuals: [],
+    rejectedReviewerManuals: [],
+    selectedReviewerPackages: [],
+    selectedArticles: [
+      {
+        articleId: "article_11",
+        reviewer: "Religion",
+        title: "Article 11",
+        protectedInterest: "",
+        purpose: "",
+        neighboringArticles: [],
+        atoms: ["atom_11_1"],
+        inherits: [],
+        priority: null,
+        runtime: null,
+        retrieval: null,
+        status: null,
+        sourcePath: "a",
+      },
+    ],
+    selectedAtoms: [],
+    loadedManualCount: 0,
+    loadedReviewerCount: 1,
+    loadedArticleCount: 1,
+    loadedAtomCount: 0,
+    loadedCharacterCount: 0,
+    estimatedTokenCount: 1,
+    promptCharacterCount: 0,
+    promptTokenEstimate: 1,
+    promptPreview: "",
+    candidateDiagnostics: null,
+  };
+  (input as any).compiledReviewerContext = compiledReviewerContext;
+
+  const validation = validateReasonedDecisionAgainstEvidence(input, {
+    prompt: "prompt",
+    promptHash: "hash",
+    userPrompt: "user prompt",
+    rawResponse: {
+      providerName: "openai",
+      modelName: "test-model",
+      modelVersion: null,
+      rawResponse: "{}",
+      finishReason: "stop",
+      usage: null,
+      responseId: null,
+      responseTimestamp: null,
+    },
+    narrative: {
+      speaker: "speaker",
+      listener: "listener",
+      target: "listener",
+      narrativeVoice: "dialogue",
+      sceneType: "dialogue",
+      narrativeIntent: "attack",
+      storyPosition: "middle",
+      relationship: null,
+      emotionalTone: "hostile",
+      condemnation: false,
+      approval: false,
+      neutrality: false,
+      historicalContext: false,
+      dream: false,
+      flashback: false,
+      comedy: false,
+      satire: false,
+      threat: false,
+      instruction: false,
+      news: false,
+      documentary: false,
+      dialogue: true,
+      narration: false,
+      sceneDescription: false,
+      confidence: 0.9,
+      notes: [],
+    },
+    evidence: {
+      candidates: [
+        {
+          text: "أنت كذاب",
+          startOffset: 0,
+          endOffset: 8,
+          confidence: 0.98,
+          source: "chunk",
+          notes: [],
+        },
+      ],
+      primaryCandidateIndex: 0,
+      admissible: true,
+      confidence: 0.98,
+      notes: [],
+    },
+    semantic: {
+      semanticMeaning: "direct insult",
+      narrativeIntent: "attack",
+      conversationRole: "speaker",
+      sceneRole: "dialogue",
+      speaker: "speaker",
+      listener: "listener",
+      target: "listener",
+      victim: "listener",
+      emotion: "hostile",
+      riskContext: "high",
+      confidence: 0.93,
+      notes: [],
+    },
+    context: {
+      storyMemory: null,
+      sceneMemory: null,
+      localContext: "أنت كذاب",
+      chunkContext: "chunk-1",
+      neighboringSentences: ["قبلها كان صمت.", "بعدها غادروا."],
+      narrativeContext: "dialogue scene",
+      confidence: 0.9,
+      notes: [],
+    },
+    reasonedDecision: {
+      reasoning: "Candidate article 11 should be validated from the canonical fallback.",
+      alternativeInterpretations: ["Could be literal dialogue."],
+      confidence: 0.93,
+      articleEvaluations: [
+        { articleId: 11, status: "PASS", evidence: ["أنت كذاب"], reason: "The quote supports the conclusion.", confidence: 0.93 },
+      ],
+      supportingEvidence: ["أنت كذاب"],
+      contradictingEvidence: [],
+      applicableArticles: [11],
+      rejectedArticles: [],
+      riskAnalysis: "Low risk.",
+      narrativeAnalysis: "Direct dialogue.",
+      humanLikeExplanation: "The canonical policy article id should be accepted even when candidate diagnostics are absent.",
       recommendation: "RETURN VIOLATION",
     },
   });

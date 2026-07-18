@@ -115,6 +115,8 @@ export type ReviewerCompiledContext = Readonly<{
   selectedReviewerPackages: readonly ReviewerCompiledReviewerPackage[];
   selectedArticles: readonly ReviewerAcademyArticle[];
   selectedAtoms: readonly ReviewerAcademyAtom[];
+  selectedPolicyArticleIds?: readonly number[];
+  selectedPolicyAtomIds?: readonly string[];
   loadedManualCount: number;
   loadedReviewerCount: number;
   loadedArticleCount: number;

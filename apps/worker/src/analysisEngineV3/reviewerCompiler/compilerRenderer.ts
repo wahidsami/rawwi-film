@@ -98,7 +98,9 @@ export function renderCompiledReviewerContextSection(context: ReviewerCompiledCo
             selected_reviewer_ids: [...context.candidateDiagnostics.selectedReviewerIds],
             selected_reviewer_labels: [...context.candidateDiagnostics.selectedReviewerLabels],
             selected_article_ids: [...context.selectedArticles.map((article) => article.articleId)],
+            selected_policy_article_ids: [...(context.selectedPolicyArticleIds ?? context.candidateDiagnostics.articleRanking.selectedPolicyArticleIds)],
             selected_atom_ids: [...context.selectedAtoms.map((atom) => atom.atomId)],
+            selected_policy_atom_ids: [...(context.selectedPolicyAtomIds ?? context.candidateDiagnostics.atomRanking.selectedPolicyAtomIds)],
             instruction: "Evaluate only the supplied candidate articles and atoms. Do not invent any new article or atom ids.",
           })
         : null,

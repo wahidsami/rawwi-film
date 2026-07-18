@@ -38,6 +38,11 @@ function uniqueBy<T>(values: readonly T[], keyOf: (value: T) => string): readonl
   return Object.freeze(result);
 }
 
+function parsePolicyArticleId(articleId: string): number {
+  const numeric = Number.parseInt(articleId.replace(/[^\d]/g, ""), 10);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
 function selectManualsByFolder(manualsByFolder: Readonly<Record<string, readonly ReviewerAcademyManual[]>>, folders: readonly string[]): readonly ReviewerAcademyManual[] {
   const selected = folders.flatMap((folder) => manualsByFolder[normalizeFolderName(folder)] ?? []);
   return Object.freeze(selected.slice().sort((left, right) => left.relativePath.localeCompare(right.relativePath)));
@@ -197,6 +202,8 @@ function buildCompiledReviewerContext(input: ReviewerCompilerInput, registry: Re
     selectedReviewerPackages,
     selectedArticles,
     selectedAtoms,
+    selectedPolicyArticleIds: Object.freeze(selectedArticles.map((article) => parsePolicyArticleId(article.articleId))),
+    selectedPolicyAtomIds: Object.freeze(selectedAtoms.map((atom) => atom.atomId)),
     loadedManualCount: loadedManuals.length,
     loadedReviewerCount,
     loadedArticleCount,

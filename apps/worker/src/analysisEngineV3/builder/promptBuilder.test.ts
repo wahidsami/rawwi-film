@@ -5,6 +5,7 @@
 import { buildV3Prompt, buildV3RenderedPrompt, renderV3PromptHash } from "./promptBuilder.js";
 import type { V3PromptBuilderInput } from "./builderTypes.js";
 import { getDefaultReviewerQuestionSet } from "../reviewerQuestions/index.js";
+import { renderCompiledReviewerContextSection } from "../reviewerCompiler/compilerRenderer.js";
 
 function assert(condition: boolean, message: string): void {
   if (!condition) throw new Error(message);
@@ -208,6 +209,140 @@ function testReviewerKnowledgePackRendered(): void {
   console.log("✓ reviewer knowledge packs are rendered instead of subject rule bundles");
 }
 
+function testDeterministicCandidateContractUsesPolicyArticleIds(): void {
+  const input: V3PromptBuilderInput = {
+    ...makeBaseInput(),
+    compiledReviewerContext: {
+      academyRoot: "academy",
+      fingerprint: "fingerprint",
+      generatedAt: "2026-07-18T00:00:00.000Z",
+      selection: {
+        selectedReviewerIds: ["v3_01_religious"],
+        selectedReviewerLabels: ["Religion Reviewer"],
+        selectedAcademyFolders: ["religion"],
+        rejectedReviewerIds: [],
+        rejectedReviewerLabels: [],
+        loadedAcademyCount: 1,
+        skippedAcademyCount: 0,
+        knowledgeReductionPercent: 0,
+        routingConfidence: 0.99,
+        routingReason: "Candidate aware route.",
+        lowConfidence: false,
+        reviewerScores: [],
+      },
+      universalManuals: [],
+      selectedReviewerManuals: [],
+      rejectedReviewerManuals: [],
+      selectedReviewerPackages: [],
+      selectedArticles: [
+        {
+          articleId: "article_11",
+          reviewer: "Religion",
+          title: "Article 11",
+          protectedInterest: "",
+          purpose: "",
+          neighboringArticles: [],
+          atoms: ["atom_11_1"],
+          inherits: [],
+          priority: null,
+          runtime: null,
+          retrieval: null,
+          status: null,
+          sourcePath: "articles/article_11.md",
+        },
+      ],
+      selectedAtoms: [],
+      selectedPolicyArticleIds: [11],
+      selectedPolicyAtomIds: [],
+      loadedManualCount: 0,
+      loadedReviewerCount: 1,
+      loadedArticleCount: 1,
+      loadedAtomCount: 0,
+      loadedCharacterCount: 0,
+      estimatedTokenCount: 1,
+      promptCharacterCount: 0,
+      promptTokenEstimate: 1,
+      promptPreview: "",
+      candidateDiagnostics: {
+        enabled: true,
+      routing: {
+        selectedReviewerIds: ["v3_01_religious"],
+        selectedReviewerLabels: ["Religion Reviewer"],
+        selectedReviewerPackIds: ["v3_01_religious"],
+        selectedAcademyFolders: ["religion"],
+        rejectedReviewerIds: [],
+        rejectedReviewerLabels: [],
+          loadedAcademyCount: 1,
+          skippedAcademyCount: 0,
+          knowledgeReductionPercent: 0,
+          routingConfidence: 0.99,
+          routingReason: "Candidate aware route.",
+          lowConfidence: false,
+          reviewerScores: [],
+        },
+        resolvedReviewerFolders: ["religion"],
+        selectedReviewerIds: ["v3_01_religious"],
+        selectedReviewerLabels: ["Religion Reviewer"],
+        rejectedReviewerIds: [],
+        rejectedReviewerLabels: [],
+        reviewerScores: [],
+        articleRanking: {
+          enabled: true,
+          selectedReviewerIds: ["v3_01_religious"],
+          selectedReviewerFolders: ["religion"],
+          queryTerms: ["candidate"],
+          articleScores: [],
+          selectedArticleIdsByReviewer: { v3_01_religious: ["article_11"] },
+          selectedPolicyArticleIdsByReviewer: { v3_01_religious: [11] },
+          selectedArticleIds: ["article_11"],
+          selectedPolicyArticleIds: [11],
+          selectedArticleCount: 1,
+          rejectedArticleCount: 0,
+          articleReductionPercent: 0,
+          limitPerReviewer: 2,
+        },
+        atomRanking: {
+          enabled: true,
+          selectedReviewerIds: ["v3_01_religious"],
+          selectedReviewerFolders: ["religion"],
+          queryTerms: ["candidate"],
+          atomScores: [],
+          selectedAtomIdsByArticle: { article_11: [] },
+          selectedPolicyAtomIdsByArticle: { article_11: [] },
+          selectedAtomIds: [],
+          selectedPolicyAtomIds: [],
+          selectedAtomCount: 0,
+          rejectedAtomCount: 0,
+          atomReductionPercent: 0,
+          limitPerArticle: 3,
+        },
+        legacyArticleCount: 1,
+        legacyAtomCount: 0,
+        selectedArticleCount: 1,
+        selectedAtomCount: 0,
+        articleReductionPercent: 0,
+        atomReductionPercent: 0,
+        legacyPromptCharacterCount: 1,
+        candidatePromptCharacterCount: 1,
+        promptReductionPercent: 0,
+        finalAcceptedCandidate: {
+          articleId: "article_11",
+          policyArticleId: 11,
+          atomId: null,
+          policyAtomId: null,
+          reviewer: "Religion",
+          title: "Article 11",
+        },
+      },
+    },
+  } as V3PromptBuilderInput;
+
+  const rendered = renderCompiledReviewerContextSection(input.compiledReviewerContext as NonNullable<V3PromptBuilderInput["compiledReviewerContext"]>);
+  assert(rendered.includes('"selected_policy_article_ids"'), "compiled reviewer context should render canonical policy article ids");
+  assert(rendered.includes("11"), "compiled reviewer context should include the canonical article id value");
+  console.log("✓ deterministic candidate contract renders policy article ids");
+}
+
 function testStoryMemoryChangesHash(): void {
   const base = makeBaseInput();
   const changed: V3PromptBuilderInput = {
@@ -272,6 +407,7 @@ function testGlossaryChangesHash(): void {
 async function main(): Promise<void> {
   testIdenticalInputStable();
   testReviewerKnowledgePackRendered();
+  testDeterministicCandidateContractUsesPolicyArticleIds();
   testStoryMemoryChangesHash();
   testSubjectModuleChangesHash();
   testGlossaryChangesHash();
