@@ -193,6 +193,23 @@ type ImportDocumentCases = {
   htmlTableDetected: boolean;
 };
 
+type RuntimeTraceRow = {
+  id: string;
+  job_id: string;
+  created_at: string;
+  router_trace: Record<string, unknown> | null;
+  provider_trace: Record<string, unknown> | null;
+  runtime_adapter_trace: Record<string, unknown> | null;
+  reviewer_scope_trace: Record<string, unknown> | null;
+  finding_mapper_trace: Record<string, unknown> | null;
+  persistence_trace: Record<string, unknown> | null;
+  report_builder_trace: Record<string, unknown> | null;
+  api_payload_trace: Record<string, unknown> | null;
+  first_divergence: Record<string, unknown> | null;
+  trace_json: Record<string, unknown> | null;
+  trace_html: string | null;
+};
+
 type RevisionHistorySnapshot = {
   exportedAt: string;
   versions: Array<{
@@ -1671,11 +1688,58 @@ export function ScriptWorkspace() {
   const [analysisPipelineVersion] = useState<'v2'>('v2');
   const [analysisControlBusy, setAnalysisControlBusy] = useState<'pause' | 'resume' | 'stop' | null>(null);
   const [debugOpen, setDebugOpen] = useState(false);
+  const [runtimeTraceOpen, setRuntimeTraceOpen] = useState(false);
+  const [runtimeTraceLoading, setRuntimeTraceLoading] = useState(false);
+  const [runtimeTraceError, setRuntimeTraceError] = useState<string | null>(null);
+  const [runtimeTrace, setRuntimeTrace] = useState<RuntimeTraceRow | null>(null);
   const [chunkStatuses, setChunkStatuses] = useState<ChunkStatus[]>([]);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastFailedAnalysisAlertRef = useRef<string | null>(null);
   const [decisionCan, setDecisionCan] = useState<{ canApprove: boolean; canReject: boolean; canSendForReview: boolean; reason?: string } | null>(null);
   const isImportModalOpen = uploadStatus !== 'idle';
+
+  const handleOpenRuntimeTrace = useCallback(async () => {
+    if (!analysisJob?.id) return;
+    setRuntimeTraceOpen(true);
+    setRuntimeTraceLoading(true);
+    setRuntimeTraceError(null);
+    try {
+      const { data, error } = await supabase
+        .from('analysis_runtime_traces')
+        .select('id, job_id, created_at, router_trace, provider_trace, runtime_adapter_trace, reviewer_scope_trace, finding_mapper_trace, persistence_trace, report_builder_trace, api_payload_trace, first_divergence, trace_json, trace_html')
+        .eq('job_id', analysisJob.id)
+        .maybeSingle();
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data) {
+        setRuntimeTrace(null);
+        setRuntimeTraceError(lang === 'ar' ? 'لم يتم العثور على تتبع التحليل بعد.' : 'No runtime trace has been stored for this job yet.');
+        return;
+      }
+
+      setRuntimeTrace(data as RuntimeTraceRow);
+    } catch (error) {
+      setRuntimeTrace(null);
+      setRuntimeTraceError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setRuntimeTraceLoading(false);
+    }
+  }, [analysisJob?.id, lang]);
+
+  const downloadRuntimeTrace = useCallback((filename: string, content: string, mimeType: string) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  }, []);
 
   useEffect(() => {
     if (!isImportModalOpen || uploadStartedAt == null) return;
@@ -7994,8 +8058,113 @@ export function ScriptWorkspace() {
                       <span dir="ltr">{progressDisplayDone}/{progressDisplayTotal}</span> done (chunk detail unavailable)
                     </div>
                   )}
+                  {IS_DEV && analysisJob?.id && (
+                    <div className="pt-2 border-t border-border/50 flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void handleOpenRuntimeTrace()}
+                        disabled={runtimeTraceLoading}
+                      >
+                        <Search className="w-4 h-4 mr-1" />
+                        {runtimeTraceLoading
+                          ? (lang === 'ar' ? 'جارٍ تحميل التتبع…' : 'Loading trace…')
+                          : (lang === 'ar' ? 'تتبع المطور' : 'Developer Trace')}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={runtimeTraceOpen}
+        onClose={() => {
+          setRuntimeTraceOpen(false);
+          setRuntimeTraceError(null);
+        }}
+        title={lang === 'ar' ? 'تتبع التحليل' : 'Analysis Trace'}
+        className="max-w-5xl"
+      >
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                if (!runtimeTrace) return;
+                downloadRuntimeTrace(
+                  `analysis-runtime-trace-${runtimeTrace.job_id}.json`,
+                  JSON.stringify(runtimeTrace.trace_json ?? runtimeTrace, null, 2),
+                  'application/json;charset=utf-8',
+                );
+              }}
+              disabled={!runtimeTrace}
+            >
+              <Download className="w-4 h-4 mr-1" />
+              {lang === 'ar' ? 'تنزيل JSON' : 'Download JSON'}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                if (!runtimeTrace) return;
+                const html = runtimeTrace.trace_html ?? `<!doctype html><html><body><pre>${JSON.stringify(runtimeTrace.trace_json ?? runtimeTrace, null, 2)}</pre></body></html>`;
+                downloadRuntimeTrace(
+                  `analysis-runtime-trace-${runtimeTrace.job_id}.html`,
+                  html,
+                  'text/html;charset=utf-8',
+                );
+              }}
+              disabled={!runtimeTrace}
+            >
+              <Download className="w-4 h-4 mr-1" />
+              {lang === 'ar' ? 'تنزيل HTML' : 'Download HTML'}
+            </Button>
+          </div>
+
+          {runtimeTraceLoading && (
+            <div className="text-sm text-text-muted">
+              {lang === 'ar' ? 'جارٍ تحميل التتبع…' : 'Loading trace…'}
+            </div>
+          )}
+
+          {runtimeTraceError && (
+            <div className="p-3 rounded-lg border border-warning/30 bg-warning/5 text-sm text-warning">
+              {runtimeTraceError}
+            </div>
+          )}
+
+          {runtimeTrace && (
+            <div className="space-y-3">
+              <div className="grid gap-3 md:grid-cols-3 text-sm">
+                <div className="rounded-xl border border-border bg-background p-3">
+                  <div className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'الوظيفة' : 'Job'}</div>
+                  <div className="font-mono text-xs break-all">{runtimeTrace.job_id}</div>
+                </div>
+                <div className="rounded-xl border border-border bg-background p-3">
+                  <div className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'الإنشاء' : 'Created'}</div>
+                  <div className="font-mono text-xs break-all">{runtimeTrace.created_at}</div>
+                </div>
+                <div className="rounded-xl border border-border bg-background p-3">
+                  <div className="text-xs text-text-muted mb-1">{lang === 'ar' ? 'أول انحراف' : 'First divergence'}</div>
+                  <div className="font-mono text-xs break-all">
+                    {runtimeTrace.first_divergence ? String(runtimeTrace.first_divergence.reason ?? 'Yes') : (lang === 'ar' ? 'لا يوجد' : 'None')}
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-background p-4 space-y-3">
+                <div className="text-sm font-semibold text-text-main">
+                  {lang === 'ar' ? 'ملخص JSON' : 'Trace JSON'}
+                </div>
+                <pre className="max-h-[55vh] overflow-auto rounded-xl bg-background/80 p-4 text-[11px] leading-5 text-text-main border border-border whitespace-pre-wrap break-all">
+                  {JSON.stringify(runtimeTrace.trace_json ?? runtimeTrace, null, 2)}
+                </pre>
+              </div>
             </div>
           )}
         </div>

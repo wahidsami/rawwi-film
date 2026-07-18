@@ -25,6 +25,8 @@ import {
   buildV3AggregationInspectionRecord,
   buildV3FinalReportInspectionRecord,
 } from "./analysisEngineV3/inspection/inspectionStageBuilders.js";
+import { buildV3AnalysisRuntimeTrace, persistV3AnalysisRuntimeTrace } from "./analysisEngineV3/runtime/analysisRuntimeTrace.js";
+import { loadV3InspectionTimelineByJobId } from "./analysisEngineV3/inspection/inspectionLoader.js";
 
 export type SummaryJson = {
   job_id: string;
@@ -2650,6 +2652,26 @@ export async function runAggregation(jobId: string): Promise<void> {
         reportHtml,
       }),
     ]);
+  }
+
+  if (config.V3_DIAGNOSTIC_MODE || config.V3_INSPECTION_MODE) {
+    try {
+      const inspectionTimeline = await loadV3InspectionTimelineByJobId(jobId);
+      const runtimeTrace = buildV3AnalysisRuntimeTrace({
+        jobId,
+        timeline: inspectionTimeline,
+        reportSummary: summary as unknown as Record<string, unknown>,
+        reportHtml,
+        reportId,
+      });
+      await persistV3AnalysisRuntimeTrace({ trace: runtimeTrace });
+    } catch (error) {
+      logger.warn("V3 analysis runtime trace persist failed", {
+        jobId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack ?? null : null,
+      });
+    }
   }
 
   const { logAuditEvent } = await import("./audit.js");

@@ -1678,6 +1678,8 @@ export async function runV3RuntimeAdapter(
         reason: validatedLegalDecision.reason,
         confidence: validatedLegalDecision.confidence,
         articleIds: [...validatedLegalDecision.articleIds],
+        groundingValidation: groundingValidation as unknown as Record<string, unknown>,
+        scopeValidation: scopeValidation as unknown as Record<string, unknown>,
         finding: validatedLegalDecision.finding as unknown as Record<string, unknown> | null,
         exceptions: [...validatedLegalDecision.exceptions] as readonly unknown[],
         trace: [...validatedLegalDecision.trace] as readonly unknown[],

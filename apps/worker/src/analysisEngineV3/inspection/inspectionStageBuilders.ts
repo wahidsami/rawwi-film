@@ -205,6 +205,8 @@ export function buildV3LegalReviewInspectionRecord(input: Readonly<{
   reason: string;
   confidence: number;
   articleIds: readonly number[];
+  groundingValidation?: Readonly<Record<string, unknown>> | null;
+  scopeValidation?: Readonly<Record<string, unknown>> | null;
   finding: Record<string, unknown> | null;
   exceptions: readonly unknown[];
   trace: readonly unknown[];
@@ -222,6 +224,8 @@ export function buildV3LegalReviewInspectionRecord(input: Readonly<{
     reason: input.reason,
     confidence: input.confidence,
     article_ids: [...input.articleIds],
+    grounding_validation: input.groundingValidation ?? null,
+    scope_validation: input.scopeValidation ?? null,
     finding: input.finding,
     exceptions: [...input.exceptions],
     trace: [...input.trace],
