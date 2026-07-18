@@ -144,13 +144,7 @@ function buildCacheKey(input: DecisionMemoryRetrievalInput, registry: DecisionMe
     conceptContext: input.conceptContext,
     subjectModule: input.subjectModule ?? null,
     queryTerms,
-    registry: registry.list().map((entry) => ({
-      id: entry.id,
-      status: entry.status,
-      articleIds: [...entry.articleIds],
-      concepts: [...entry.concepts],
-      confidence: entry.confidence,
-    })),
+    registryHash: registry.hash,
     topK: input.topK ?? DEFAULT_TOP_K,
   });
 }

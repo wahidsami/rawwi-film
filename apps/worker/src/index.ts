@@ -22,6 +22,7 @@ import { initializeLexiconCache, getLexiconCache } from "./lexiconCache.js";
 import { processChunkForJob } from "./pipelineRunner.js";
 import { processPdfExtraction } from "./pdfExtraction.js";
 import { ensureReviewerAcademyRegistry } from "./analysisEngineV3/reviewerCompiler/compilerLoader.js";
+import { createDefaultDecisionMemoryRegistry } from "./analysisEngineV3/reviewerKnowledge/decisionMemory/decisionMemory.js";
 
 type ChunkProcessResult = {
   ok: boolean;
@@ -349,6 +350,13 @@ async function processOneJob(): Promise<boolean> {
   });
 
   const results = await Promise.all(claimed.map((chunk) => processClaimedChunk(job, chunk, normalizedText)));
+  logger.info("V3 finalization trace: claimed chunk results collected", {
+    jobId: job.id,
+    claimedCount: claimed.length,
+    okCount: results.filter((result) => result.ok).length,
+    retryableCount: results.filter((result) => !result.ok && result.retryable).length,
+    failedCount: results.filter((result) => !result.ok && !result.retryable).length,
+  });
 
   if (results.some((result) => !result.ok)) {
     logger.warn("Job batch incomplete; aggregation deferred", {
@@ -359,6 +367,13 @@ async function processOneJob(): Promise<boolean> {
       retryableCount: results.filter((result) => !result.ok && result.retryable).length,
       failedCount: results.filter((result) => !result.ok && !result.retryable).length,
       batchDurationMs: Date.now() - jobStartedAt,
+    });
+    logger.warn("V3 finalization trace: skipping aggregation because at least one chunk did not complete successfully", {
+      jobId: job.id,
+      claimedCount: claimed.length,
+      succeededCount: results.filter((result) => result.ok).length,
+      retryableCount: results.filter((result) => !result.ok && result.retryable).length,
+      failedCount: results.filter((result) => !result.ok && !result.retryable).length,
     });
     return true;
   }
@@ -430,6 +445,7 @@ async function runOnce(jobId: string | undefined): Promise<void> {
 
   await initializeLexiconCache(supabase);
   ensureReviewerAcademyRegistry();
+  createDefaultDecisionMemoryRegistry();
   const staleSweep = startStaleJudgingSweep();
   logger.info("Worker runtime config loaded", {
     mode: jobId ? "once" : "single-run",
@@ -510,6 +526,7 @@ async function runDev(): Promise<never> {
 
   await initializeLexiconCache(supabase);
   ensureReviewerAcademyRegistry();
+  createDefaultDecisionMemoryRegistry();
   logger.info("Worker dev loop started", {
     pollIntervalMs: config.POLL_INTERVAL_MS,
     chunkConcurrency: config.WORKER_CHUNK_CONCURRENCY,

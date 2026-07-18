@@ -74,6 +74,9 @@ export function splitSentenceEvidenceCandidates(
     while (segmentStart < normalized.length && /\s/u.test(normalized[segmentStart]!)) {
       segmentStart++;
     }
+    if (segmentStart >= normalized.length) {
+      break;
+    }
     index = segmentStart - 1;
   }
 

@@ -6,6 +6,7 @@ import { loadReviewerKnowledgeDocumentsFromDirectory } from "./reviewerKnowledge
 import { loadReviewerAcademyPacks } from "./academy/reviewerAcademyLoader.js";
 import { createGcamMapperRegistry } from "./gcamMapper/registry/gcamMapperRegistry.js";
 import { getReviewerScopeDeclaration, listReviewerScopeDeclarations, type ReviewerScopeDeclaration } from "./reviewerScopeMatrix.js";
+import { hashKnowledgeRegistryValue } from "./knowledgeRegistry/knowledgeRegistryUtils.js";
 
 const READER_DIRECTORY = dirname(fileURLToPath(import.meta.url));
 const ACADEMY_DIRECTORY = join(READER_DIRECTORY, "academy");
@@ -31,21 +32,28 @@ type CanonicalOwnerCandidate = Readonly<{
 
 export class ReviewerKnowledgeRegistry {
   private readonly packs = new Map<string, ReviewerKnowledgePack>();
+  private hashState = "";
 
   constructor(entries: readonly ReviewerKnowledgePack[] = DEFAULT_PACKS) {
     for (const entry of entries) {
       this.register(entry);
     }
+    this.recomputeHash();
   }
 
   register(pack: ReviewerKnowledgePack): this {
     const normalized = normalizeReviewerKnowledgePack(pack);
     this.packs.set(normalized.id, normalized);
+    this.recomputeHash();
     return this;
   }
 
   unregister(packId: string): boolean {
-    return this.packs.delete(normalizeReviewerKnowledgePackId(packId));
+    const deleted = this.packs.delete(normalizeReviewerKnowledgePackId(packId));
+    if (deleted) {
+      this.recomputeHash();
+    }
+    return deleted;
   }
 
   load(packId: string): ReviewerKnowledgePack | null {
@@ -54,6 +62,24 @@ export class ReviewerKnowledgeRegistry {
 
   list(): readonly ReviewerKnowledgePack[] {
     return Object.freeze([...this.packs.values()].sort((left, right) => left.id.localeCompare(right.id)));
+  }
+
+  get hash(): string {
+    return this.hashState;
+  }
+
+  private recomputeHash(): void {
+    this.hashState = hashKnowledgeRegistryValue(this.list().map((pack) => ({
+      id: pack.id,
+      module_id: pack.module_id,
+      title: pack.title,
+      article_mapping: pack.article_mapping.map((mapping) => ({
+        article_id: mapping.article_id,
+        atom_ids: [...mapping.atom_ids],
+        role: mapping.role,
+      })),
+      trigger_concept_ids: [...pack.trigger_concept_ids],
+    })));
   }
 }
 

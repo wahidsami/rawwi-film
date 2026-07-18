@@ -53,6 +53,8 @@ export type EmergencyContextualReviewerKnowledgeSelection = Readonly<{
   canonicalArticleOwnershipByArticleId: ReviewerCanonicalArticleOwnershipMap;
 }>;
 
+let cachedCanonicalArticleOwnershipByArticleId: ReviewerCanonicalArticleOwnershipMap | null = null;
+
 const UNIVERSAL_PROFILE: ReviewerRoutingProfile = Object.freeze({
   reviewerId: "v3_00_universal",
   packId: "v3_00_universal",
@@ -532,7 +534,8 @@ export function createEmergencyContextualReviewerKnowledgeSelection(input: Reado
 }>): EmergencyContextualReviewerKnowledgeSelection {
   const routing = createEmergencyContextualReviewerRoutingReport(input);
   const reviewerKnowledgeRegistry = createDefaultReviewerKnowledgeRegistry(routing.selectedAcademyFolders);
-  const canonicalArticleOwnershipByArticleId = buildCanonicalArticleOwnershipMap(createDefaultReviewerKnowledgeRegistry());
+  const canonicalArticleOwnershipByArticleId = cachedCanonicalArticleOwnershipByArticleId
+    ?? (cachedCanonicalArticleOwnershipByArticleId = buildCanonicalArticleOwnershipMap(createDefaultReviewerKnowledgeRegistry()));
   const knowledgeRegistry = createKnowledgeRegistryWithOptions(undefined, {
     academyFolders: routing.selectedAcademyFolders,
   });

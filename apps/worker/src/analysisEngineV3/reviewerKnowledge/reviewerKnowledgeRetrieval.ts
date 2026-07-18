@@ -66,6 +66,26 @@ function uniqueNonEmpty(values: readonly string[]): readonly string[] {
   return Object.freeze([...new Set(values.map((value) => normalizeText(value)).filter((value) => value.length > 0))].sort((left, right) => left.localeCompare(right)));
 }
 
+function estimateTextFootprint(value: unknown): number {
+  if (typeof value === "string") {
+    return value.length;
+  }
+
+  if (typeof value === "number" || typeof value === "bigint" || typeof value === "boolean") {
+    return String(value).length;
+  }
+
+  if (Array.isArray(value)) {
+    return value.reduce<number>((total, item) => total + estimateTextFootprint(item), 0);
+  }
+
+  if (value !== null && typeof value === "object") {
+    return Object.values(value as Record<string, unknown>).reduce<number>((total, item) => total + estimateTextFootprint(item), 0);
+  }
+
+  return 0;
+}
+
 function collectAssessmentTerms(assessment: ReviewerAssessment): readonly string[] {
   return uniqueNonEmpty([
     assessment.methodologyId,
@@ -237,13 +257,7 @@ function hashCacheKey(
     subjectModule: input.subjectModule ?? null,
     queryTerms,
     decisionMemoryCacheKey,
-    registry: registry.list().map((pack) => ({
-      id: pack.id,
-      moduleId: pack.module_id,
-      title: pack.title,
-      triggerConceptIds: [...pack.trigger_concept_ids],
-      articleIds: pack.article_mapping.map((mapping) => mapping.article_id),
-    })),
+    registryHash: registry.hash,
     topK: input.topK ?? DEFAULT_TOP_K,
   }), "utf8").digest("hex");
 }
@@ -425,7 +439,7 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
     retrievedPackCount: retrievedPacks.length,
     rejectedPackCount: rejectedPacks.length,
     materializedPackCount: selectedPacks.length,
-    totalCharactersLoaded: selectedPacks.reduce((total, pack) => total + JSON.stringify(pack).length, 0),
+    totalCharactersLoaded: selectedPacks.reduce((total, pack) => total + estimateTextFootprint(pack), 0),
   });
 
   logger.info("V3 instrumentation ENTER: knowledge scoring", {
@@ -463,7 +477,7 @@ export function createReviewerKnowledgeRetrievalReport(input: ReviewerKnowledgeR
     selectedPackCount: report.selectedPacks.length,
     knowledgeConfidence: report.knowledgeConfidence,
     knowledgeScore: report.knowledgeScore,
-    outputSizeChars: JSON.stringify(report).length,
+    outputSizeChars: estimateTextFootprint(report),
   });
   logger.info("V3 instrumentation EXIT: createReviewerKnowledgeRetrievalReport", {
     subjectModuleId: input.subjectModule?.id ?? null,
