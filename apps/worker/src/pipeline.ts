@@ -47,6 +47,7 @@ import { canonicalStringify } from "./canonicalJson.js";
 import { runV3RuntimeAdapter } from "./analysisEngineV3/runtime/runtimeAdapter.js";
 import { runWithV3AutomaticFallback } from "./analysisEngineV3/runtime/automaticFallback.js";
 import { recordV3FallbackExecution } from "./analysisEngineV3/runtime/runtimeMetrics.js";
+import { attachV3DiagnosticReport } from "./analysisEngineV3/runtime/reportMapper.js";
 import { v3InspectionRecorder } from "./analysisEngineV3/inspection/index.js";
 import { buildV3InspectionChunkFindingKey } from "./analysisEngineV3/inspection/inspectionKeys.js";
 import { buildV3PersistenceInspectionRecord } from "./analysisEngineV3/inspection/inspectionStageBuilders.js";
@@ -2226,8 +2227,14 @@ export async function processChunkJudge(
             v3DiagnosticReport = buildV3ProviderFailureDiagnosticReport({
               providerError: failure.providerError,
             });
-            routerOutputJson.v3_diagnostic_report = v3DiagnosticReport;
-            (chunkTruthLayerMeta as Record<string, unknown>).v3_diagnostic_report = v3DiagnosticReport;
+            routerOutputJson = attachV3DiagnosticReport(
+              routerOutputJson as Record<string, unknown>,
+              v3DiagnosticReport,
+            );
+            chunkTruthLayerMeta = attachV3DiagnosticReport(
+              chunkTruthLayerMeta as Record<string, unknown>,
+              v3DiagnosticReport,
+            );
           }
 
           try {
@@ -3344,8 +3351,8 @@ export async function processChunkJudge(
       error: error ?? null,
     });
 
-    if (config.V3_DIAGNOSTIC_MODE && v3DiagnosticReport) {
-      const diagnosticReport = v3DiagnosticReport as V3DiagnosticReport;
+      if (config.V3_DIAGNOSTIC_MODE && v3DiagnosticReport) {
+        const diagnosticReport = v3DiagnosticReport as V3DiagnosticReport;
       diagnosticReport.persistenceFindingsCount = rows.length;
       diagnosticReport.persistenceInsertedCount = data?.length ?? 0;
       diagnosticReport.persistenceSkippedCount = rows.length - (data?.length ?? 0);
@@ -3428,10 +3435,16 @@ export async function processChunkJudge(
         });
       }
       if (routerOutputJson && typeof routerOutputJson === "object") {
-        routerOutputJson.v3_diagnostic_report = diagnosticReport;
+        routerOutputJson = attachV3DiagnosticReport(
+          routerOutputJson as Record<string, unknown>,
+          diagnosticReport,
+        );
       }
       if (chunkTruthLayerMeta && typeof chunkTruthLayerMeta === "object") {
-        (chunkTruthLayerMeta as Record<string, unknown>).v3_diagnostic_report = diagnosticReport;
+        chunkTruthLayerMeta = attachV3DiagnosticReport(
+          chunkTruthLayerMeta as Record<string, unknown>,
+          diagnosticReport,
+        );
       }
     }
 
