@@ -409,7 +409,6 @@ export class DrugsReviewerDecisionModule extends ReviewerDecisionModuleBase {
     const combinedText = buildCombinedText(input);
     const anchor = hasDrugsConcept(input) || isDrugAnchor(combinedText) || isLiteralDrugContent(primary.text) || containsAny(combinedText, DRUGS_RULES.rehabilitationSignals);
     if (!anchor) return null;
-    if (exceptions.some((exception) => exception.applies && exception.disposition === "block")) return null;
 
     const articleIds = inferArticleIds(combinedText);
     return createLegalFinding({
@@ -438,3 +437,4 @@ export function isDrugsEvidenceText(text: string): boolean {
 export function buildDrugsDecisionTree(): readonly DrugsDecisionStep[] {
   return DRUGS_DECISION_TREE;
 }
+

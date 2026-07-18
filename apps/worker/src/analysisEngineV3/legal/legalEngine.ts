@@ -75,16 +75,30 @@ export function evaluateWithModule(module: LegalModule, input: LegalEngineInput)
 
   const preliminaryDecision = module.evaluate(moduleInput);
   const exceptions = module.exceptions(moduleInput, preliminaryDecision);
-  const exceptionReason = exceptions.filter((exception) => exception.applies).map((exception) => exception.reason);
+  const appliedExceptions = exceptions.filter((exception) => exception.applies);
+  const exceptionReason = appliedExceptions.map((exception) => exception.reason);
 
-  const finalStatus =
-    exceptions.some((exception) => exception.applies && exception.disposition === "block")
-      ? "reject"
-      : exceptions.some((exception) => exception.applies && exception.disposition === "review")
-        ? "needs_review"
-        : preliminaryDecision.status;
+  const finalStatus = !preliminaryDecision.applies
+    ? preliminaryDecision.status
+    : appliedExceptions.length > 0 && preliminaryDecision.status === "reject"
+      ? "needs_review"
+      : preliminaryDecision.status;
 
-  const finding = finalStatus === "reject" ? null : module.buildFinding(moduleInput, preliminaryDecision, exceptions);
+  const mitigatedDecision = createLegalDecision({
+    ...preliminaryDecision,
+    applies: preliminaryDecision.applies,
+    status: finalStatus,
+    exceptions,
+    finding: preliminaryDecision.finding,
+    reason: [...new Set([preliminaryDecision.reason, ...exceptionReason].filter(Boolean))].join(" | "),
+    trace: [
+      ...preliminaryDecision.trace,
+      ...exceptions.map((exception) => `exception:${exception.code}:${exception.disposition}:${String(exception.applies)}`),
+      appliedExceptions.length > 0 ? "finding_built" : "finding_skipped",
+    ],
+  });
+
+  const finding = finalStatus === "reject" ? null : module.buildFinding(moduleInput, mitigatedDecision, exceptions);
 
   const decision = createLegalDecision({
     ...preliminaryDecision,
@@ -92,12 +106,8 @@ export function evaluateWithModule(module: LegalModule, input: LegalEngineInput)
     status: finalStatus,
     exceptions,
     finding,
-    reason: [...new Set([preliminaryDecision.reason, ...exceptionReason].filter(Boolean))].join(" | "),
-    trace: [
-      ...preliminaryDecision.trace,
-      ...exceptions.map((exception) => `exception:${exception.code}:${exception.disposition}:${String(exception.applies)}`),
-      finding ? "finding_built" : "finding_skipped",
-    ],
+    reason: mitigatedDecision.reason,
+    trace: mitigatedDecision.trace,
   });
 
   return finalizeLegalDecision(decision);

@@ -375,7 +375,6 @@ export class PoliticsReviewerDecisionModule extends ReviewerDecisionModuleBase {
     if (!primary) return null;
     if (!input.intelligence.evidence.admissible) return null;
     if (!(isPoliticsAnchor(buildCombinedText(input)) || hasPoliticsConcept(input) || isLiteralPoliticsMeaning(primary.text))) return null;
-    if (exceptions.some((exception) => exception.applies && exception.disposition === "block")) return null;
 
     return createLegalFinding({
       findingKey: buildFindingKey(this.id, primary.text, primary.startOffset, primary.endOffset, decision.articleIds, decision.status),
@@ -403,3 +402,4 @@ export function isPoliticsEvidenceText(text: string): boolean {
 export function buildPoliticsDecisionTree(): readonly import("./politicsDecisionTree.js").PoliticsDecisionStep[] {
   return POLITICS_DECISION_TREE;
 }
+

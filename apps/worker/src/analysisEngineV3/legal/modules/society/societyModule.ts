@@ -376,7 +376,6 @@ export class SocietyReviewerDecisionModule extends ReviewerDecisionModuleBase {
     const combinedText = buildCombinedText(input);
     const anchor = hasSocietyConcept(input) || isSocietyAnchor(combinedText) || isLiteralSocietyHarm(primary.text) || isSupportContext(combinedText);
     if (!anchor) return null;
-    if (exceptions.some((exception) => exception.applies && exception.disposition === "block")) return null;
 
     const articleIds = inferArticleIds(combinedText);
     return createLegalFinding({
@@ -405,3 +404,4 @@ export function isSocietyEvidenceText(text: string): boolean {
 export function buildSocietyDecisionTree(): readonly SocietyDecisionStep[] {
   return SOCIETY_DECISION_TREE;
 }
+

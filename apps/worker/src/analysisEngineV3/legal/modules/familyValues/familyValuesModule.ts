@@ -385,7 +385,6 @@ export class FamilyValuesReviewerDecisionModule extends ReviewerDecisionModuleBa
     const combinedText = buildCombinedText(input);
     const anchor = hasFamilyConcept(input) || isFamilyAnchor(combinedText) || isLiteralFamilyHarm(primary.text);
     if (!anchor) return null;
-    if (exceptions.some((exception) => exception.applies && exception.disposition === "block")) return null;
 
     const harmful = isFamilyAbuseContext(combinedText) || containsAny(combinedText, FAMILY_VALUES_RULES.humiliationTerms) || containsAny(combinedText, FAMILY_VALUES_RULES.neglectTerms) || isFamilyCorruptionContext(combinedText);
     if (!harmful) return null;
@@ -417,3 +416,4 @@ export function isFamilyValuesEvidenceText(text: string): boolean {
 export function buildFamilyValuesDecisionTree(): readonly FamilyValuesDecisionStep[] {
   return FAMILY_VALUES_DECISION_TREE;
 }
+

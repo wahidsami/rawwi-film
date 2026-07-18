@@ -134,8 +134,12 @@ export function validateReviewerScope(input: ReviewerScopeValidatorInput): Revie
 
   const acceptedDecision: LegalDecision = Object.freeze({
     ...input.decision,
-    status: acceptedFindings.length > 0 ? "accept" : input.decision.status,
-    finding: acceptedFindings[0] ?? input.decision.finding,
+    status: acceptedFindings.length > 0
+      ? "accept"
+      : rejectedFindingsByScope.length > 0
+        ? "reject"
+        : input.decision.status,
+    finding: acceptedFindings[0] ?? null,
     trace: Object.freeze([
       ...input.decision.trace,
       acceptedFindings.length > 0

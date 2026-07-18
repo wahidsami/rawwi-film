@@ -460,7 +460,6 @@ export class ChildrenReviewerDecisionModule extends ReviewerDecisionModuleBase {
     const combinedText = buildCombinedText(input);
     const anchor = isChildAnchor(combinedText) || hasChildrenConcept(input) || isLiteralChildHarm(primary.text);
     if (!anchor) return null;
-    if (exceptions.some((exception) => exception.applies && exception.disposition === "block")) return null;
 
     const articleIds = inferArticleIds(combinedText);
     return createLegalFinding({
@@ -489,3 +488,4 @@ export function isChildrenEvidenceText(text: string): boolean {
 export function buildChildrenDecisionTree(): readonly ChildrenDecisionStep[] {
   return CHILDREN_DECISION_TREE;
 }
+

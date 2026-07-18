@@ -387,7 +387,6 @@ export class CrimeReviewerDecisionModule extends ReviewerDecisionModuleBase {
     if (!primary) return null;
     if (!input.intelligence.evidence.admissible) return null;
     if (!(isCrimeAnchor(buildCombinedText(input)) || hasCrimeConcept(input) || isLiteralCrimeMeaning(primary.text))) return null;
-    if (exceptions.some((exception) => exception.applies && exception.disposition === "block")) return null;
 
     return createLegalFinding({
       findingKey: buildFindingKey(this.id, primary.text, primary.startOffset, primary.endOffset, decision.articleIds, decision.status),
@@ -415,3 +414,4 @@ export function isCrimeEvidenceText(text: string): boolean {
 export function buildCrimeDecisionTree(): readonly import("./crimeDecisionTree.js").CrimeDecisionStep[] {
   return CRIME_DECISION_TREE;
 }
+

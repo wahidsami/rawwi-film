@@ -11,6 +11,12 @@ export type V3RuntimeFinding = Omit<JudgeFinding, "source" | "evidence_hash" | "
   category?: string | null;
   start_offset_global: number;
   end_offset_global: number;
+  exists?: boolean;
+  exceptionApplied?: boolean;
+  exceptionType?: string | null;
+  exceptionReason?: string | null;
+  recommendedAction?: "Approve" | "Reject" | "Needs Review" | null;
+  legalRecommendation?: "Approve" | "Reject" | "Needs Review" | null;
   lineage_id?: string | null;
   parent_lineage_id?: string | null;
   canonical_hash?: string | null;

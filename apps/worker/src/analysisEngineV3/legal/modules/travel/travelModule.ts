@@ -369,7 +369,6 @@ export class TravelReviewerDecisionModule extends ReviewerDecisionModuleBase {
     if (!primary) return null;
     if (!input.intelligence.evidence.admissible) return null;
     if (!(isTravelAnchor(buildCombinedText(input)) || hasTravelConcept(input) || isLiteralTravelMeaning(primary.text))) return null;
-    if (exceptions.some((exception) => exception.applies && exception.disposition === "block")) return null;
 
     return createLegalFinding({
       findingKey: buildFindingKey(this.id, primary.text, primary.startOffset, primary.endOffset, decision.articleIds, decision.status),
@@ -397,3 +396,4 @@ export function isTravelEvidenceText(text: string): boolean {
 export function buildTravelDecisionTree(): readonly import("./travelDecisionTree.js").TravelDecisionStep[] {
   return TRAVEL_DECISION_TREE;
 }
+

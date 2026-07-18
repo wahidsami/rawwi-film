@@ -424,7 +424,6 @@ export class NationalSecurityReviewerDecisionModule extends ReviewerDecisionModu
     const combinedText = buildCombinedText(input);
     const anchor = hasNationalSecurityConcept(input) || isNationalSecurityAnchor(combinedText) || isLiteralNationalSecurityAttack(primary.text);
     if (!anchor) return null;
-    if (exceptions.some((exception) => exception.applies && exception.disposition === "block")) return null;
 
     const articleIds = inferArticleIds(input, combinedText);
     return createLegalFinding({
@@ -453,3 +452,4 @@ export function isNationalSecurityEvidenceText(text: string): boolean {
 export function buildNationalSecurityDecisionTree(): readonly NationalSecurityDecisionStep[] {
   return NATIONAL_SECURITY_DECISION_TREE;
 }
+

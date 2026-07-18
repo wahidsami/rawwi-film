@@ -157,8 +157,10 @@ function testQuotedProfanity(): void {
     }),
   });
   const decision = evaluate(input);
-  assert(decision.status === "reject", "quoted profanity should be rejected");
-  assert(decision.finding === null, "quoted profanity should not produce a finding");
+  assert(decision.status === "needs_review", "quoted profanity should be mitigated to needs_review");
+  assert(decision.finding !== null, "quoted profanity should still produce a finding");
+  assert(decision.finding?.exceptionApplied === true, "quoted profanity finding should be marked exception applied");
+  assert(decision.finding?.recommendedAction === "Needs Review", "quoted profanity finding should recommend review");
   console.log("✓ quoted profanity");
 }
 
@@ -195,8 +197,9 @@ function testEducationalDiscussion(): void {
     }),
   });
   const decision = evaluate(input);
-  assert(decision.status === "reject", "educational discussion should be rejected");
-  assert(decision.finding === null, "educational discussion should not produce a finding");
+  assert(decision.status === "needs_review", "educational discussion should be mitigated to needs_review");
+  assert(decision.finding !== null, "educational discussion should still produce a finding");
+  assert(decision.finding?.exceptionApplied === true, "educational discussion finding should be marked exception applied");
   console.log("✓ educational discussion");
 }
 
@@ -233,8 +236,9 @@ function testCondemnationOfProfanity(): void {
     }),
   });
   const decision = evaluate(input);
-  assert(decision.status === "reject", "condemnation should be rejected");
-  assert(decision.finding === null, "condemnation should not produce a finding");
+  assert(decision.status === "needs_review", "condemnation should be mitigated to needs_review");
+  assert(decision.finding !== null, "condemnation should still produce a finding");
+  assert(decision.finding?.exceptionApplied === true, "condemnation finding should be marked exception applied");
   console.log("✓ condemnation of profanity");
 }
 

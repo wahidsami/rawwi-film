@@ -27,6 +27,12 @@ export type LegalFinding = {
   readonly status: LegalEvaluationStatus;
   readonly reason: string;
   readonly confidence: number;
+  readonly exists?: boolean;
+  readonly exceptionApplied?: boolean;
+  readonly exceptionType?: string | null;
+  readonly exceptionReason?: string | null;
+  readonly recommendedAction?: "Approve" | "Reject" | "Needs Review" | null;
+  readonly legalRecommendation?: "Approve" | "Reject" | "Needs Review" | null;
   readonly semantic: LegalSemanticResult;
   readonly narrative: LegalNarrativeResult;
   readonly evidence: LegalEvidenceCandidate;
@@ -70,6 +76,9 @@ export function createLegalExceptionResult(input: LegalExceptionResult): LegalEx
 }
 
 export function createLegalFinding(input: LegalFinding): LegalFinding {
+  const exceptionApplied = input.exceptionApplied ?? input.exceptionCodes.length > 0;
+  const exceptionType = input.exceptionType ?? input.exceptionCodes[0] ?? null;
+  const legalRecommendation = input.legalRecommendation ?? (input.status === "reject" ? "Reject" : input.status === "needs_review" ? "Needs Review" : "Approve");
   return {
     findingKey: input.findingKey,
     moduleId: input.moduleId,
@@ -78,6 +87,12 @@ export function createLegalFinding(input: LegalFinding): LegalFinding {
     status: input.status,
     reason: input.reason,
     confidence: clampConfidence(input.confidence),
+    exists: input.exists ?? true,
+    exceptionApplied,
+    exceptionType,
+    exceptionReason: input.exceptionReason ?? (exceptionApplied ? input.reason : null),
+    recommendedAction: input.recommendedAction ?? legalRecommendation,
+    legalRecommendation,
     semantic: input.semantic,
     narrative: input.narrative,
     evidence: input.evidence,

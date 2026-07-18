@@ -212,7 +212,6 @@ export class ProfanityReviewerDecisionModule extends ReviewerDecisionModuleBase 
     if (!primary) return null;
     if (!input.intelligence.evidence.admissible) return null;
     if (!(isLiteralProfanity(primary.text) || hasProfanityConcept(input))) return null;
-    if (exceptions.some((exception) => exception.applies && exception.disposition === "block")) return null;
 
     return createLegalFinding({
       findingKey: buildFindingKey(this.id, primary.text, primary.startOffset, primary.endOffset, decision.status),
@@ -240,3 +239,4 @@ export function isProfanityEvidenceText(text: string): boolean {
 export function buildProfanityDecisionTree(): readonly ProfanityDecisionStep[] {
   return PROFANITY_DECISION_TREE;
 }
+

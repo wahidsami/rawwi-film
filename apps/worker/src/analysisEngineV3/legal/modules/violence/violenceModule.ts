@@ -426,7 +426,6 @@ export class ViolenceReviewerDecisionModule extends ReviewerDecisionModuleBase {
     const combinedText = buildCombinedText(input);
     const anchor = hasViolenceConcept(input) || isViolenceAnchor(combinedText) || isLiteralViolenceContext(primary.text);
     if (!anchor) return null;
-    if (exceptions.some((exception) => exception.applies && exception.disposition === "block")) return null;
 
     const articleIds = inferArticleIds(combinedText);
     return createLegalFinding({
@@ -455,3 +454,4 @@ export function isViolenceEvidenceText(text: string): boolean {
 export function buildViolenceDecisionTree(): readonly ViolenceDecisionStep[] {
   return VIOLENCE_DECISION_TREE;
 }
+

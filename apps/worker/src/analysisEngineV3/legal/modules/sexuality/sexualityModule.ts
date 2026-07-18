@@ -430,7 +430,6 @@ export class SexualityReviewerDecisionModule extends ReviewerDecisionModuleBase 
     const combinedText = buildCombinedText(input);
     const anchor = hasSexualityConcept(input) || isSexualAnchor(combinedText) || isLiteralSexualContent(primary.text) || isImpliedSexualContent(combinedText);
     if (!anchor) return null;
-    if (exceptions.some((exception) => exception.applies && exception.disposition === "block")) return null;
 
     const articleIds = inferArticleIds(combinedText);
     return createLegalFinding({
@@ -459,3 +458,4 @@ export function isSexualityEvidenceText(text: string): boolean {
 export function buildSexualityDecisionTree(): readonly SexualityDecisionStep[] {
   return SEXUALITY_DECISION_TREE;
 }
+

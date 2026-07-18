@@ -370,7 +370,6 @@ export class ReligionReviewerDecisionModule extends ReviewerDecisionModuleBase {
     const combinedText = buildCombinedText(input);
     const anchor = isReligionAnchor(combinedText) || isLiteralReligionAttack(primary.text);
     if (!anchor) return null;
-    if (exceptions.some((exception) => exception.applies && exception.disposition === "block")) return null;
 
     const articleIds = inferArticleIds(input, combinedText);
     return createLegalFinding({
@@ -399,3 +398,4 @@ export function isReligionEvidenceText(text: string): boolean {
 export function buildReligionDecisionTree(): readonly ReligionDecisionStep[] {
   return RELIGION_DECISION_TREE;
 }
+

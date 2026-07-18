@@ -478,6 +478,7 @@ export function mapLegalDecisionToFindings(args: {
 
     return [{
       source: "v3",
+      exists: true,
       article_id: articleId,
       atom_id: atomId,
       severity: inferSeverity(evaluation.status === "PASS" ? "accept" : "needs_review", evaluation.confidence),
@@ -486,6 +487,11 @@ export function mapLegalDecisionToFindings(args: {
       description_ar: gcamMapping?.reviewerExplanation ?? evaluation.reason ?? decision.reason,
       evidence_snippet: evidenceSnippet,
       rationale_ar: evaluation.reason ?? decision.reason,
+      exceptionApplied: policyAssessment.disposition === "exception_applied",
+      exceptionType: policyAssessment.exceptionCodes[0] ?? decision.finding?.exceptionType ?? null,
+      exceptionReason: policyAssessment.reasons.join(" | ") || decision.finding?.exceptionReason || null,
+      recommendedAction: decision.status === "needs_review" ? "Needs Review" : "Approve",
+      legalRecommendation: decision.finding?.legalRecommendation ?? (decision.status === "needs_review" ? "Needs Review" : "Approve"),
       final_ruling: "violation",
       detection_pass: `v3_runtime_${decision.moduleId}`,
       location,

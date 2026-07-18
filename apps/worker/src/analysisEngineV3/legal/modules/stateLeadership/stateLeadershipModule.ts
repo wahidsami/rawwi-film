@@ -392,7 +392,6 @@ export class StateLeadershipReviewerDecisionModule extends ReviewerDecisionModul
     const combinedText = buildCombinedText(input);
     const anchor = hasStateLeadershipConcept(input) || isStateLeadershipAnchor(combinedText) || isLiteralStateLeadershipAttack(primary.text);
     if (!anchor) return null;
-    if (exceptions.some((exception) => exception.applies && exception.disposition === "block")) return null;
     if (!(isDisrespectContext(combinedText) || isIncitementContext(combinedText) || isSatireContext(input, combinedText))) return null;
 
     const articleIds = inferArticleIds(input, combinedText);
@@ -422,3 +421,4 @@ export function isStateLeadershipEvidenceText(text: string): boolean {
 export function buildStateLeadershipDecisionTree(): readonly StateLeadershipDecisionStep[] {
   return STATE_LEADERSHIP_DECISION_TREE;
 }
+
