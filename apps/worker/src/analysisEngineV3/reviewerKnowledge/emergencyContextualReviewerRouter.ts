@@ -1,4 +1,5 @@
 import type { ConceptContext } from "../concepts/conceptTypes.js";
+import { resolveUniversalConceptsFromRouting, type UniversalConceptResolution } from "../concepts/universalConceptResolver.js";
 import type { V3PromptBuilderInput } from "../builder/builderTypes.js";
 import type { ReviewerAssessment } from "../reviewerMethodology/reviewerMethodologyTypes.js";
 import { createKnowledgeRegistryWithOptions, type KnowledgeRegistry } from "./knowledgeRegistry/index.js";
@@ -31,6 +32,12 @@ type ReviewerRoutingScore = Readonly<{
 }>;
 
 export type EmergencyContextualReviewerRoutingReport = Readonly<{
+  detectedConceptIds?: readonly string[];
+  detectedConceptLabels?: readonly string[];
+  knowledgeDomains?: readonly string[];
+  evidenceType?: string;
+  sceneDescriptionType?: string;
+  storyContextType?: string;
   selectedReviewerIds: readonly string[];
   selectedReviewerLabels: readonly string[];
   selectedReviewerPackIds: readonly string[];
@@ -370,10 +377,12 @@ function collectSignals(input: Readonly<{
   promptInput: V3PromptBuilderInput;
   conceptContext: ConceptContext;
   assessment: ReviewerAssessment;
+  resolution: UniversalConceptResolution;
 }>): readonly string[] {
   const promptInput = input.promptInput;
   const assessment = input.assessment;
   const conceptContext = input.conceptContext;
+  const resolution = input.resolution;
 
   const textSignals = [
     promptInput.chunkContext.localChunk,
@@ -399,6 +408,15 @@ function collectSignals(input: Readonly<{
         source.entityId ?? "",
       ]),
     ]),
+    ...(resolution.detectedConceptIds ?? []),
+    ...(resolution.detectedConceptLabels ?? []),
+    ...(resolution.knowledgeDomains ?? []),
+    ...(resolution.detectedEntities ?? []),
+    ...(resolution.detectedActions ?? []),
+    resolution.evidenceType,
+    resolution.sceneDescriptionType,
+    resolution.storyContextType,
+    resolution.reason,
   ];
 
   return Object.freeze(
@@ -450,27 +468,20 @@ function scoreProfile(profile: ReviewerRoutingProfile, signals: readonly string[
   });
 }
 
-function selectedCountFromScores(scores: readonly ReviewerRoutingScore[]): number {
-  const subjectScores = scores.filter((score) => score.reviewerId !== UNIVERSAL_PROFILE.reviewerId);
-  if (subjectScores.length === 0) return 0;
-  const first = subjectScores[0] ?? null;
-  const second = subjectScores[1] ?? null;
-  if (!first) return 0;
-  const lowConfidence = first.score < 0.55 || (second !== null && (first.score - second.score) < 0.15);
-  return lowConfidence ? Math.min(2, subjectScores.length) : 1;
-}
-
-function buildRoutingReason(selected: readonly ReviewerRoutingScore[], lowConfidence: boolean, signals: readonly string[]): string {
-  const top = selected[0] ?? null;
-  if (!top) {
-    return "No reviewer-specific signal was strong enough; defaulting to universal guidance and the highest-priority reviewers.";
+function buildRoutingReason(
+  resolution: UniversalConceptResolution,
+  selected: readonly ReviewerRoutingScore[],
+  universalOnly: boolean,
+  signals: readonly string[],
+): string {
+  const signalPreview = signals.slice(0, 6).join(" | ");
+  if (universalOnly) {
+    return `Universal-only routing. ${resolution.reason} Signals: ${signalPreview}`;
   }
 
-  const primaryReason = top.reasons.length > 0 ? top.reasons.join(" | ") : "priority fallback";
-  const signalPreview = signals.slice(0, 4).join(" | ");
-  return lowConfidence
-    ? `Low routing confidence (${top.score.toFixed(3)}); loading top 2 reviewers. Primary match: ${top.label} via ${primaryReason}. Signals: ${signalPreview}`
-    : `High routing confidence (${top.score.toFixed(3)}); loading ${top.label}. Primary match: ${primaryReason}. Signals: ${signalPreview}`;
+  const selectedLabels = selected.map((reviewer) => reviewer.label).join(", ");
+  const selectedReasons = selected.flatMap((reviewer) => reviewer.reasons.length > 0 ? [reviewer.reasons.join(" | ")] : []);
+  return `Concept-driven routing for knowledge domains ${resolution.knowledgeDomains.join(", ")}. Selected reviewers: ${selectedLabels}. ${selectedReasons.length > 0 ? `Reasons: ${selectedReasons.join(" || ")}.` : ""} Signals: ${signalPreview}`;
 }
 
 export function createEmergencyContextualReviewerRoutingReport(input: Readonly<{
@@ -478,27 +489,32 @@ export function createEmergencyContextualReviewerRoutingReport(input: Readonly<{
   conceptContext: ConceptContext;
   assessment: ReviewerAssessment;
 }>): EmergencyContextualReviewerRoutingReport {
-  const signals = collectSignals(input);
+  const resolution = resolveUniversalConceptsFromRouting(input);
+  const signals = collectSignals({ ...input, resolution });
   const scored = REVIEWER_ROUTING_PROFILES
     .filter((profile) => profile.reviewerId !== UNIVERSAL_PROFILE.reviewerId)
     .map((profile) => scoreProfile(profile, signals))
     .sort((left, right) => right.score - left.score || left.reviewerId.localeCompare(right.reviewerId) || left.packId.localeCompare(right.packId));
 
-  const selectedSubjectCount = selectedCountFromScores(scored);
-  const selectedSubjectReviewers = scored.slice(0, selectedSubjectCount);
-  const lowConfidence = selectedSubjectCount > 1;
-  const selectedReviewerIds = Object.freeze(selectedSubjectReviewers.map((reviewer) => reviewer.reviewerId));
-  const selectedReviewerLabels = Object.freeze(selectedSubjectReviewers.map((reviewer) => reviewer.label));
-  const selectedReviewerPackIds = Object.freeze([UNIVERSAL_PROFILE.packId, ...selectedSubjectReviewers.map((reviewer) => reviewer.packId)]);
-  const selectedAcademyFolders = Object.freeze([UNIVERSAL_PROFILE.folder, ...selectedSubjectReviewers.map((reviewer) => reviewer.folder)]);
-  const rejectedSubjectReviewers = scored.slice(selectedSubjectCount);
+  const selectedDomainFolders = Object.freeze(
+    [...new Set(resolution.knowledgeDomains.map((domain) => normalizeText(domain)).filter(Boolean))]
+      .sort((left, right) => left.localeCompare(right))
+      .map((domain) => {
+        const matching = scored.filter((profile) => normalizeText(profile.folder) === domain || normalizeText(profile.reviewerId) === domain || normalizeText(profile.label) === domain);
+        return matching[0] ?? null;
+      })
+      .filter((profile): profile is ReviewerRoutingScore => profile !== null),
+  ).slice().sort((left, right) => right.score - left.score || left.reviewerId.localeCompare(right.reviewerId));
+  const universalOnly = selectedDomainFolders.length === 0;
+  const selectedReviewerIds = Object.freeze([UNIVERSAL_PROFILE.reviewerId, ...(universalOnly ? [] : selectedDomainFolders.map((reviewer) => reviewer.reviewerId))]);
+  const selectedReviewerLabels = Object.freeze([UNIVERSAL_PROFILE.label, ...(universalOnly ? [] : selectedDomainFolders.map((reviewer) => reviewer.label))]);
+  const selectedReviewerPackIds = Object.freeze(universalOnly ? [UNIVERSAL_PROFILE.packId] : [UNIVERSAL_PROFILE.packId, ...selectedDomainFolders.map((reviewer) => reviewer.packId)]);
+  const selectedAcademyFolders = Object.freeze(universalOnly ? [UNIVERSAL_PROFILE.folder] : [UNIVERSAL_PROFILE.folder, ...selectedDomainFolders.map((reviewer) => reviewer.folder)]);
+  const rejectedSubjectReviewers = scored.filter((reviewer) => !selectedDomainFolders.some((selected) => selected.reviewerId === reviewer.reviewerId));
   const rejectedReviewerIds = Object.freeze(rejectedSubjectReviewers.map((reviewer) => reviewer.reviewerId));
   const rejectedReviewerLabels = Object.freeze(rejectedSubjectReviewers.map((reviewer) => reviewer.label));
-  const routingConfidence = selectedSubjectReviewers.length === 0
-    ? 0
-    : Number((lowConfidence
-      ? selectedSubjectReviewers.slice(0, 2).reduce((total, reviewer) => total + reviewer.score, 0) / Math.min(2, selectedSubjectReviewers.length)
-      : selectedSubjectReviewers[0]?.score ?? 0).toFixed(6));
+  const routingConfidence = Number(resolution.confidence.toFixed(6));
+  const lowConfidence = resolution.confidence < 0.55;
 
   const totalReviewerCount = REVIEWER_ROUTING_PROFILES.length;
   const loadedAcademyCount = selectedAcademyFolders.length;
@@ -506,9 +522,15 @@ export function createEmergencyContextualReviewerRoutingReport(input: Readonly<{
   const knowledgeReductionPercent = totalReviewerCount === 0
     ? 0
     : Number(((skippedAcademyCount / totalReviewerCount) * 100).toFixed(2));
-  const routingReason = buildRoutingReason(selectedSubjectReviewers, lowConfidence, signals);
+  const routingReason = buildRoutingReason(resolution, selectedDomainFolders, universalOnly, signals);
 
   return Object.freeze({
+    detectedConceptIds: resolution.detectedConceptIds,
+    detectedConceptLabels: resolution.detectedConceptLabels,
+    knowledgeDomains: resolution.knowledgeDomains,
+    evidenceType: resolution.evidenceType,
+    sceneDescriptionType: resolution.sceneDescriptionType,
+    storyContextType: resolution.storyContextType,
     selectedReviewerIds,
     selectedReviewerLabels,
     selectedReviewerPackIds,

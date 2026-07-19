@@ -5,7 +5,7 @@ import { normalizeIntelligenceContext } from "./intelligenceNormalizer.js";
 import { validateIntelligenceContext } from "./intelligenceValidator.js";
 import { createEmptyConceptContext } from "../concepts/conceptNormalizer.js";
 import { createDefaultConceptRegistry, ConceptRegistry } from "../concepts/conceptRegistry.js";
-import { createConceptRecognizer } from "../concepts/conceptRecognizer.js";
+import { resolveUniversalConceptsFromRecognitionInput } from "../concepts/universalConceptResolver.js";
 
 function normalizeText(value: string): string {
   return value.normalize("NFC").replace(/\s+/g, " ").trim();
@@ -210,7 +210,7 @@ export function buildIntelligenceContext(input: IntelligenceBuilderInput, concep
     glossary: input.glossary,
   });
 
-  const conceptContext = createConceptRecognizer(conceptRegistry).recognize(baseContext);
+  const conceptContext = resolveUniversalConceptsFromRecognitionInput(baseContext, conceptRegistry).conceptContext;
 
   const context: IntelligenceContext = normalizeIntelligenceContext({
     ...baseContext,

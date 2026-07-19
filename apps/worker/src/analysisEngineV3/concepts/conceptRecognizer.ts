@@ -95,6 +95,7 @@ function candidateSources(input: ConceptRecognitionInput): readonly SourcePool[]
   return [
     { type: "narrative", text: buildNarrativeSourceText(input), confidence: input.narrative.confidence },
     { type: "semantic", text: buildSemanticSourceText(input), confidence: input.semantic.confidence },
+    { type: "story_memory", text: buildStoryMemorySourceText(input), confidence: input.context.confidence },
     { type: "entity", text: buildEntitySourceText(input), confidence: 0.85 },
     { type: "glossary", text: buildGlossarySourceText(input), confidence: 0.9 },
     { type: "evidence", text: buildEvidenceSourceText(input), confidence: input.evidence.confidence },

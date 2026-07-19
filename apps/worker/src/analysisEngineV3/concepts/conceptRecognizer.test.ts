@@ -116,6 +116,40 @@ function testDuplicateMerging(): void {
   console.log("✓ duplicate concept merging");
 }
 
+function testStoryMemoryContributesRecognition(): void {
+  const input = makeInput("Hello there");
+  const storyMemoryText = "Earlier scene mentions gambling and alcohol.";
+  const recognizer = createConceptRecognizer(createDefaultConceptRegistry());
+  const context = recognizer.recognize(buildIntelligenceContext({
+    ...input,
+    storyMemory: storyMemoryText,
+    evidence: {
+      ...input.evidence,
+      candidates: [
+        {
+          ...input.evidence.candidates[0],
+          text: "Hello there",
+        },
+      ],
+    },
+    semantic: {
+      ...input.semantic,
+      semanticMeaning: "Hello there",
+    },
+    context: {
+      ...input.context,
+      storyMemory: storyMemoryText,
+      sceneMemory: storyMemoryText,
+      localContext: "Hello there",
+      narrativeContext: storyMemoryText,
+    },
+  }));
+
+  assert(context.conceptIds.includes("gambling"), "story memory should contribute gambling recognition");
+  assert(context.conceptIds.includes("alcohol"), "story memory should contribute alcohol recognition");
+  console.log("✓ story memory contributes concept recognition");
+}
+
 function testDeterministicOutput(): void {
   const recognizer = createConceptRecognizer(createDefaultConceptRegistry());
   const first = recognizer.recognize(buildIntelligenceContext(makeInput()));
@@ -127,6 +161,7 @@ function testDeterministicOutput(): void {
 async function main(): Promise<void> {
   testConceptRecognition();
   testDuplicateMerging();
+  testStoryMemoryContributesRecognition();
   testDeterministicOutput();
   console.log("\nAll concept recognizer tests passed.");
 }

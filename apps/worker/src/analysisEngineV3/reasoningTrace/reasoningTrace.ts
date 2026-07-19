@@ -392,6 +392,12 @@ function buildStages(input: V3ReasoningTraceInput, finding: V3RuntimeFinding): r
       inputCount: reviewerCandidates.length,
       outputCount: input.reviewerKnowledgeSelection.routing.selectedReviewerIds.length,
       payload: {
+        detected_concept_ids: [...(input.reviewerKnowledgeSelection.routing.detectedConceptIds ?? [])],
+        detected_concept_labels: [...(input.reviewerKnowledgeSelection.routing.detectedConceptLabels ?? [])],
+        knowledge_domains: [...(input.reviewerKnowledgeSelection.routing.knowledgeDomains ?? [])],
+        evidence_type: input.reviewerKnowledgeSelection.routing.evidenceType ?? null,
+        scene_description_type: input.reviewerKnowledgeSelection.routing.sceneDescriptionType ?? null,
+        story_context_type: input.reviewerKnowledgeSelection.routing.storyContextType ?? null,
         selected_reviewers: [...input.reviewerKnowledgeSelection.routing.selectedReviewerLabels],
         selected_reviewer_ids: [...input.reviewerKnowledgeSelection.routing.selectedReviewerIds],
         rejected_reviewers: [...input.reviewerKnowledgeSelection.routing.rejectedReviewerLabels],

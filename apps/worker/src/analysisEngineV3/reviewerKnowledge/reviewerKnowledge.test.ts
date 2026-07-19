@@ -49,6 +49,16 @@ function makeConceptContext(): ConceptContext {
   });
 }
 
+function makeEmptyConceptContext(): ConceptContext {
+  return Object.freeze({
+    concepts: Object.freeze([]),
+    conceptIds: Object.freeze([]),
+    primaryConceptId: null,
+    confidence: 0,
+    conceptCount: 0,
+  });
+}
+
 function makeSecurityConceptContext(): ConceptContext {
   const concepts: readonly Concept[] = Object.freeze([
     Object.freeze({
@@ -152,6 +162,24 @@ function makeProfanityPromptInput(): never {
     },
     glossary: { title: "x", entries: [] },
     outputSchema: { title: "x", fields: [] },
+  } as never;
+}
+
+function makeNeutralPromptInput(chunkText: string): never {
+  const base = makeProfanityPromptInput() as unknown as Record<string, unknown>;
+  return {
+    ...base,
+    chunkContext: {
+      localChunk: chunkText,
+      neighboringSentences: [],
+      sceneMemory: "",
+    },
+    subjectModule: {
+      id: "v3_00_universal",
+      titleAr: "الإرشاد العام",
+      scope: "Universal context analysis",
+      articleIds: [],
+    },
   } as never;
 }
 
@@ -382,6 +410,8 @@ function testEmergencyRouterDetectsExactProfanityPhrase(): void {
   assert.equal(selection.routing.selectedReviewerIds.includes("v4_11_profanity"), true);
   assert.equal(selection.routing.selectedReviewerIds.includes("v3_01_religion"), false);
   assert.equal(selection.routing.selectedReviewerIds.includes("v3_03_security"), false);
+  assert.equal(selection.routing.detectedConceptIds?.includes("profanity"), true);
+  assert.equal(selection.routing.knowledgeDomains?.includes("profanity"), true);
   console.log("✓ emergency router detects the exact profanity phrase");
 }
 
@@ -410,6 +440,51 @@ function testEmergencyRouterIgnoresStoryMemory(): void {
   assert.equal(selection.routing.selectedReviewerIds.includes("v3_01_religion"), false);
   assert.equal(selection.routing.selectedReviewerIds.includes("v4_11_profanity"), true);
   console.log("✓ emergency router ignores story memory");
+}
+
+function testEmergencyRouterUsesUniversalOnlyWhenNoConceptsDetected(): void {
+  const promptInput = makeNeutralPromptInput("A: مرحبا، كيف الحال؟");
+  const conceptContext = makeEmptyConceptContext();
+  const assessment = runReviewerMethodology({
+    promptInput,
+    conceptContext,
+  });
+
+  const selection = createEmergencyContextualReviewerKnowledgeSelection({
+    promptInput,
+    conceptContext,
+    assessment,
+  });
+
+  assert.deepEqual(selection.routing.selectedReviewerIds, ["v3_00_universal"]);
+  assert.equal(selection.routing.selectedReviewerIds.includes("v3_01_religion"), false);
+  assert.equal(selection.routing.selectedReviewerIds.includes("v3_03_security"), false);
+  assert.equal(selection.routing.selectedReviewerIds.includes("v4_11_profanity"), false);
+  console.log("✓ emergency router stays universal-only when no concepts are detected");
+}
+
+function testEmergencyRouterInfersHostileDialogueConcepts(): void {
+  const promptInput = makeNeutralPromptInput("يا... موتوا وخلصوني منكم");
+  const conceptContext = makeEmptyConceptContext();
+  const assessment = runReviewerMethodology({
+    promptInput,
+    conceptContext,
+  });
+
+  const selection = createEmergencyContextualReviewerKnowledgeSelection({
+    promptInput,
+    conceptContext,
+    assessment,
+  });
+
+  assert.equal(selection.routing.detectedConceptIds?.includes("profanity"), true);
+  assert.equal(selection.routing.detectedConceptIds?.includes("insult"), true);
+  assert.equal(selection.routing.detectedConceptIds?.includes("hostility"), true);
+  assert.equal(selection.routing.knowledgeDomains?.includes("profanity"), true);
+  assert.equal(selection.routing.selectedReviewerIds.includes("v4_11_profanity"), true);
+  assert.equal(selection.routing.selectedReviewerIds.includes("v3_01_religion"), false);
+  assert.equal(selection.routing.selectedReviewerIds.includes("v3_03_security"), false);
+  console.log("✓ emergency router infers hostile dialogue concepts");
 }
 
 function testSecurityRendererIsDeterministic(): void {
@@ -458,6 +533,8 @@ async function main(): Promise<void> {
   testEmergencyRouterIsDeterministicAndSelective();
   testEmergencyRouterDetectsExactProfanityPhrase();
   testEmergencyRouterIgnoresStoryMemory();
+  testEmergencyRouterUsesUniversalOnlyWhenNoConceptsDetected();
+  testEmergencyRouterInfersHostileDialogueConcepts();
   testSelectorFindsSecurityPack();
   testSelectorFindsSexualPack();
   testRendererIsDeterministic();

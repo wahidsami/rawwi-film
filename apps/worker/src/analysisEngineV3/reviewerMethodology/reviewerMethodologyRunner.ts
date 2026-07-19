@@ -2,8 +2,7 @@ import type { V3PromptBuilderInput } from "../builder/builderTypes.js";
 import { splitSentenceEvidenceCandidates } from "../evidence/evidenceCandidates.js";
 import { clampConceptConfidence } from "../concepts/conceptConfidence.js";
 import type { ConceptContext, ConceptRecognitionInput } from "../concepts/conceptTypes.js";
-import { createConceptRecognizer } from "../concepts/conceptRecognizer.js";
-import { createDefaultConceptRegistry } from "../concepts/conceptRegistry.js";
+import { resolveUniversalConceptsFromRecognitionInput } from "../concepts/universalConceptResolver.js";
 import { validateReviewerAssessment } from "./reviewerMethodologyValidator.js";
 import { getDefaultReviewerMethodology } from "./reviewerMethodologyRegistry.js";
 import type { ReviewerAssessment, ReviewerMethodologyRunnerInput, ReviewerMethodologyStageResult } from "./reviewerMethodologyTypes.js";
@@ -229,7 +228,7 @@ export function createPromptConceptContext(input: V3PromptBuilderInput): Concept
     glossary: input.glossary,
   });
 
-  return createConceptRecognizer(createDefaultConceptRegistry()).recognize(recognitionInput);
+  return resolveUniversalConceptsFromRecognitionInput(recognitionInput).conceptContext;
 }
 
 function extractSpeaker(text: string): string | null {

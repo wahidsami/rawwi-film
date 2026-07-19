@@ -72,6 +72,12 @@ export function buildV3KnowledgeMatchingInspectionRecord(input: Readonly<{
   analysisEngine: string;
   pipelineVersion: string;
   reviewerModule: Record<string, unknown>;
+  detectedConceptIds?: readonly string[];
+  detectedConceptLabels?: readonly string[];
+  knowledgeDomains?: readonly string[];
+  evidenceType?: string | null;
+  sceneDescriptionType?: string | null;
+  storyContextType?: string | null;
   reviewerDomainsLoaded: readonly string[];
   selectedReviewers?: readonly string[];
   selectedReviewerPackIds?: readonly string[];
@@ -106,6 +112,12 @@ export function buildV3KnowledgeMatchingInspectionRecord(input: Readonly<{
     analysis_engine: input.analysisEngine,
     pipeline_version: input.pipelineVersion,
     reviewer_module: input.reviewerModule,
+    detected_concept_ids: [...(input.detectedConceptIds ?? [])],
+    detected_concept_labels: [...(input.detectedConceptLabels ?? [])],
+    knowledge_domains: [...(input.knowledgeDomains ?? [])],
+    evidence_type: input.evidenceType ?? null,
+    scene_description_type: input.sceneDescriptionType ?? null,
+    story_context_type: input.storyContextType ?? null,
     reviewer_domains_loaded: [...input.reviewerDomainsLoaded],
     selected_reviewers: [...(input.selectedReviewers ?? [])],
     selected_reviewer_pack_ids: [...(input.selectedReviewerPackIds ?? [])],
