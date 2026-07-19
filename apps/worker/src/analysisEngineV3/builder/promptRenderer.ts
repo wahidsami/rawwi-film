@@ -14,6 +14,8 @@ import { getDefaultReviewerQuestionSet, renderReviewerQuestionSetSection } from 
 import { createReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
 import { renderReviewerKnowledgePacksSection } from "../reviewerKnowledge/reviewerKnowledgeRenderer.js";
 import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
+import { createDefaultReviewerKnowledgeRegistry } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
+import type { ReviewerKnowledgePack } from "../reviewerKnowledge/reviewerKnowledgeTypes.js";
 import { buildReviewerReasoningEnginePayload } from "./reviewerReasoningEngine.js";
 import { compileReviewerContext } from "../reviewerCompiler/compiler.js";
 import { renderCompiledReviewerContextSection } from "../reviewerCompiler/compilerRenderer.js";
@@ -127,30 +129,34 @@ export function renderV3Prompt(input: V3PromptBuilderInput): string {
           assessment: reviewerAssessment,
         }),
   );
-  const knowledgeRetrieval = measurePromptRenderStep(profile, "createReviewerKnowledgeRetrievalReport", () =>
-    useReviewerCompiler
-      ? null
-      : createReviewerKnowledgeRetrievalReport({
-          assessment: reviewerAssessment,
-          conceptContext,
-          subjectModule: context.subjectModule,
-          registry: reviewerKnowledgeSelection!.reviewerKnowledgeRegistry,
-          topK: Math.max(1, reviewerKnowledgeSelection!.routing.selectedReviewerPackIds.length),
-        }),
-  );
-  const reviewerKnowledgePacks = knowledgeRetrieval?.selectedPacks ?? [];
-  const reviewerReasoningEngine = measurePromptRenderStep(profile, "buildReviewerReasoningEnginePayload", () =>
-    useReviewerCompiler
-      ? null
-      : buildReviewerReasoningEnginePayload(
-          context,
-          conceptContext,
-          reviewerAssessment,
-          reviewerKnowledgePacks,
-          reviewerKnowledgeSelection!.knowledgeRegistry,
-          knowledgeRetrieval!,
-        ),
-  );
+  const reviewerKnowledgeRegistry = reviewerKnowledgeSelection?.reviewerKnowledgeRegistry
+    ?? createDefaultReviewerKnowledgeRegistry(compiledReviewerContext?.selection.selectedAcademyFolders);
+  let knowledgeRetrieval: ReturnType<typeof createReviewerKnowledgeRetrievalReport> | null = null;
+  let reviewerKnowledgePacks: readonly ReviewerKnowledgePack[] = [];
+  let reviewerReasoningEngine: ReturnType<typeof buildReviewerReasoningEnginePayload> | null = null;
+  if (!useReviewerCompiler && reviewerKnowledgeSelection) {
+    const localKnowledgeRetrieval = measurePromptRenderStep(profile, "createReviewerKnowledgeRetrievalReport", () =>
+      createReviewerKnowledgeRetrievalReport({
+        assessment: reviewerAssessment,
+        conceptContext,
+        subjectModule: context.subjectModule,
+        registry: reviewerKnowledgeSelection.reviewerKnowledgeRegistry,
+        topK: Math.max(1, reviewerKnowledgeSelection.routing.selectedReviewerPackIds.length),
+      }),
+    );
+    knowledgeRetrieval = localKnowledgeRetrieval;
+    reviewerKnowledgePacks = localKnowledgeRetrieval.selectedPacks;
+    reviewerReasoningEngine = measurePromptRenderStep(profile, "buildReviewerReasoningEnginePayload", () =>
+      buildReviewerReasoningEnginePayload(
+        context,
+        conceptContext,
+        reviewerAssessment,
+        reviewerKnowledgePacks,
+        reviewerKnowledgeSelection.knowledgeRegistry,
+        localKnowledgeRetrieval,
+      ),
+    );
+  }
   const reviewerMethodology = measurePromptRenderStep(profile, "getDefaultReviewerMethodology", () => getDefaultReviewerMethodology());
 
   const promptAssemblyStartedAt = performance.now();

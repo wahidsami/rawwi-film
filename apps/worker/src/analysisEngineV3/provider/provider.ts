@@ -13,7 +13,8 @@ import { getDefaultReviewerMethodology } from "../reviewerMethodology/reviewerMe
 import { getDefaultReviewerQuestionSet } from "../reviewerQuestions/index.js";
 import { createReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
 import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
-import { resolveKnowledgeDomainCandidateArticleIds } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
+import { createDefaultReviewerKnowledgeRegistry, resolveKnowledgeDomainCandidateArticleIds } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
+import type { ReviewerKnowledgePack } from "../reviewerKnowledge/reviewerKnowledgeTypes.js";
 import { buildReviewerReasoningEnginePayload } from "../builder/reviewerReasoningEngine.js";
 import { compileReviewerContext } from "../reviewerCompiler/compiler.js";
 import { validateReasonedDecisionAgainstEvidence } from "./reasonedDecisionValidation.js";
@@ -62,17 +63,21 @@ export function buildV3ProviderUserPrompt(input: V3PromptBuilderInput): string {
         conceptContext,
         assessment: reviewerAssessment,
       });
-  const reviewerKnowledgeRetrieval = useReviewerCompiler
-    ? null
-    : createReviewerKnowledgeRetrievalReport({
-        assessment: reviewerAssessment,
-        conceptContext,
-        subjectModule: input.subjectModule,
-        registry: reviewerKnowledgeSelection!.reviewerKnowledgeRegistry,
-        topK: Math.max(1, reviewerKnowledgeSelection!.routing.selectedReviewerPackIds.length),
-      });
-  const reviewerKnowledgePacks = reviewerKnowledgeRetrieval?.selectedPacks ?? [];
-  const canonicalOwnershipRegistry = reviewerKnowledgeSelection!.reviewerKnowledgeRegistry;
+  const reviewerKnowledgeRegistry = reviewerKnowledgeSelection?.reviewerKnowledgeRegistry
+    ?? createDefaultReviewerKnowledgeRegistry(compiledReviewerContext?.selection.selectedAcademyFolders);
+  let reviewerKnowledgeRetrieval: ReturnType<typeof createReviewerKnowledgeRetrievalReport> | null = null;
+  let reviewerKnowledgePacks: readonly ReviewerKnowledgePack[] = [];
+  if (!useReviewerCompiler && reviewerKnowledgeSelection) {
+    reviewerKnowledgeRetrieval = createReviewerKnowledgeRetrievalReport({
+      assessment: reviewerAssessment,
+      conceptContext,
+      subjectModule: input.subjectModule,
+      registry: reviewerKnowledgeSelection.reviewerKnowledgeRegistry,
+      topK: Math.max(1, reviewerKnowledgeSelection.routing.selectedReviewerPackIds.length),
+    });
+    reviewerKnowledgePacks = reviewerKnowledgeRetrieval.selectedPacks;
+  }
+  const canonicalOwnershipRegistry = reviewerKnowledgeRegistry;
   const selectedPolicyArticleIds = new Set(input.compiledReviewerContext?.selectedPolicyArticleIds ?? []);
   const resolveCanonicalArticleId = (articleId: number, knowledgeDomain: string | null): number => {
     if (!Number.isFinite(articleId) || articleId <= 0) return articleId;
@@ -85,15 +90,15 @@ export function buildV3ProviderUserPrompt(input: V3PromptBuilderInput): string {
     if (typeof selectedCandidate === "number") return selectedCandidate;
     return candidateArticleIds[0] ?? articleId;
   };
-  const reviewerReasoningEngine = useReviewerCompiler
+  const reviewerReasoningEngine = useReviewerCompiler || !reviewerKnowledgeSelection || !reviewerKnowledgeRetrieval
     ? null
     : buildReviewerReasoningEnginePayload(
         input,
         conceptContext,
         reviewerAssessment,
         reviewerKnowledgePacks,
-        reviewerKnowledgeSelection!.knowledgeRegistry,
-        reviewerKnowledgeRetrieval!,
+        reviewerKnowledgeSelection.knowledgeRegistry,
+        reviewerKnowledgeRetrieval,
       );
   logger.info("V3 instrumentation EXIT: buildV3ProviderUserPrompt", {
     subjectModuleId: input.subjectModule.id,
