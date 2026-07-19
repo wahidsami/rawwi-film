@@ -734,7 +734,9 @@ export function validateReasonedDecisionAgainstEvidence(
   );
 
   const candidateArticleIds = normalizeIdSet(
-    candidateDiagnostics?.articleRanking.selectedPolicyArticleIds.length
+    result.reasonedDecision.candidateArticles?.length
+      ? result.reasonedDecision.candidateArticles.map((articleId) => String(articleId))
+      : candidateDiagnostics?.articleRanking.selectedPolicyArticleIds.length
       ? candidateDiagnostics.articleRanking.selectedPolicyArticleIds.map((articleId) => String(articleId))
       : compiledReviewerContext?.selectedPolicyArticleIds?.length
         ? compiledReviewerContext.selectedPolicyArticleIds.map((articleId) => String(articleId))

@@ -65,6 +65,7 @@ import { buildExplanationPackage } from "../explanation/index.js";
 import { buildReviewerDecisionContext } from "../legal/reviewerDecisionPreparation.js";
 import type { LegalDecision } from "../legal/legalDecision.js";
 import { createLegalDecision } from "../legal/legalDecision.js";
+import { applyLegalArticleRanking, rankLegalArticles } from "../legalRanking/legalArticleRanker.js";
 import { buildExplanationSafeAnalysisResponse } from "./explanationSafeAnalysisResponse.js";
 import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
 import { resolveKnowledgeDomainCandidateArticleIds } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
@@ -1204,6 +1205,23 @@ export async function runV3RuntimeAdapter(
     },
     resolveCanonicalArticleId,
   });
+  const intelligence = buildIntelligenceContext({
+    moduleId: analysisRequest.subjectModule.id,
+    storyMemory: analysisRequest.storyMemory,
+    narrative: mapped.narrative,
+    evidence: mapped.evidence,
+    semantic: mapped.semantic,
+    context: mapped.context,
+    glossary: analysisRequest.glossary,
+  });
+  const legalArticleRanking = rankLegalArticles({
+    promptInput,
+    intelligence,
+    reasonedDecision: mapped.reasonedDecision,
+    selectedReviewerIds: canonicalizationSelection.routing.selectedReviewerIds,
+    canonicalArticleOwnershipByArticleId: canonicalizationSelection.canonicalArticleOwnershipByArticleId,
+  });
+  const rankedReasonedDecision = applyLegalArticleRanking(mapped.reasonedDecision, legalArticleRanking);
   const groundingValidation = validateReasonedDecisionAgainstEvidence(promptInput, {
     prompt: renderedPrompt.prompt,
     promptHash: renderedPrompt.promptHash,
@@ -1213,9 +1231,9 @@ export async function runV3RuntimeAdapter(
     evidence: mapped.evidence,
     semantic: mapped.semantic,
     context: mapped.context,
-    reasonedDecision: mapped.reasonedDecision,
+    reasonedDecision: rankedReasonedDecision,
   });
-  const validatedReasonedDecision = groundingValidation.valid ? mapped.reasonedDecision : groundingValidation.sanitizedDecision;
+  const validatedReasonedDecision = groundingValidation.valid ? rankedReasonedDecision : groundingValidation.sanitizedDecision;
   logger.info("V3 reviewer grounding validation", {
     jobId: input.jobId,
     chunkId: input.chunkId,
@@ -1240,15 +1258,6 @@ export async function runV3RuntimeAdapter(
     narrativeAnalysis: validatedReasonedDecision.narrativeAnalysis,
     humanLikeExplanation: validatedReasonedDecision.humanLikeExplanation,
     recommendation: validatedReasonedDecision.recommendation,
-  });
-  const intelligence = buildIntelligenceContext({
-    moduleId: analysisRequest.subjectModule.id,
-    storyMemory: analysisRequest.storyMemory,
-    narrative: mapped.narrative,
-    evidence: mapped.evidence,
-    semantic: mapped.semantic,
-    context: mapped.context,
-    glossary: analysisRequest.glossary,
   });
   const reviewerConceptContext = canonicalizationConceptContext;
   const reviewerAssessment = canonicalizationAssessment;
