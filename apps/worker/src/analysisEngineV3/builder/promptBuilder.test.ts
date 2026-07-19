@@ -142,19 +142,30 @@ function makeBaseInput(): V3PromptBuilderInput {
         { name: "context", description: "Scene context." },
         {
           name: "reasoned_decision",
-          description: "Why, evidence, counterargument, applicable articles, rejected articles, and confidence.",
+          description: "Legal concepts, knowledge domains, candidate articles, primary article, secondary articles, reasoning, article evaluations, applicable articles, rejected articles, and confidence.",
         },
       ],
-      notes: ["Render the JSON contract exactly once."],
+      notes: [
+        "Render the JSON contract exactly once.",
+        "The reasoned decision must identify the smallest legal concept first.",
+        "The reasoned decision must map each concept to knowledge domains before ranking candidate GCAM articles.",
+        "The reasoned decision must choose one primary article and optional secondary articles.",
+      ],
       example: {
         narrative: {},
         evidence: {},
         semantic: {},
         context: {},
         reasoned_decision: {
-          why: "Explain the reviewer conclusion.",
-          evidence: ["Support the decision with the chunk and precedent evidence."],
-          counterargument: "Explain the strongest rejected interpretation.",
+          legal_concepts: ["insult"],
+          knowledge_domains: ["profanity"],
+          candidate_articles: [11, 4],
+          primary_article: 11,
+          secondary_articles: [4],
+          reasoning: "Explain the concept and domain mapping before ranking articles.",
+          article_evaluations: [{ articleId: 11, status: "PASS", evidence: ["Support the decision with the chunk and precedent evidence."], reason: "Direct match.", confidence: 0.95 }],
+          supporting_evidence: ["Support the decision with the chunk and precedent evidence."],
+          contradicting_evidence: ["Explain the strongest rejected interpretation."],
           applicable_articles: [11],
           rejected_articles: [4],
           confidence: 0.95,
@@ -193,6 +204,11 @@ function testReviewerKnowledgePackRendered(): void {
   assert(rendered.prompt.includes("Profanity Reviewer Knowledge Pack"), "profanity pack should be selected for profanity input");
   assert(rendered.prompt.includes("reasoned_decision"), "output schema should request a reasoned decision");
   assert(rendered.prompt.includes("recommendation"), "output schema should request a recommendation");
+  assert(rendered.prompt.includes("legal concepts"), "prompt should request concept-first reasoning");
+  assert(rendered.prompt.includes("knowledge domains"), "prompt should request knowledge-domain mapping");
+  assert(rendered.prompt.includes("candidate articles"), "prompt should request candidate article ranking");
+  assert(rendered.prompt.includes("primary article"), "prompt should request a primary article");
+  assert(rendered.prompt.includes("secondary articles"), "prompt should request secondary articles");
   assert(rendered.prompt.includes("contradicting_evidence"), "prompt should request contradicting evidence using the parser's canonical field");
   assert(rendered.prompt.includes("evidence_candidates"), "prompt should render sentence-level evidence candidates");
   assert(rendered.prompt.includes("policy engine"), "prompt should hand exception handling to the policy engine");
@@ -203,7 +219,7 @@ function testReviewerKnowledgePackRendered(): void {
   assert(rendered.prompt.includes("Do not stop after finding one exception"), "prompt should forbid stopping after a single exception");
   assert(rendered.prompt.includes("Analyze every threatening, abusive, violent, sexual, political, religious, criminal, or profane statement independently"), "prompt should require per-statement analysis");
   assert(rendered.prompt.includes("independent violation evidence unit"), "prompt should treat evidence units as the atomic unit of work");
-  assert(rendered.prompt.includes("article ids may repeat"), "prompt should allow repeated article ids for separate evidence units");
+  assert(rendered.prompt.includes("Repeated article ids may appear in article_evaluations"), "prompt should allow repeated article ids for separate evidence units");
   assert(rendered.prompt.includes("facts, actors, objects, injuries, or events"), "prompt should prohibit unsupported facts");
   assert(!rendered.prompt.includes('"rules": ['), "subject rule bundles should no longer be rendered directly");
   console.log("✓ reviewer knowledge packs are rendered instead of subject rule bundles");

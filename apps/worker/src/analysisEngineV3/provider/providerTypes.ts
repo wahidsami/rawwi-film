@@ -38,6 +38,11 @@ export type V3ReasonedDecisionResult = Readonly<{
   reasoning: string;
   alternativeInterpretations: readonly string[];
   confidence: number;
+  legalConcepts?: readonly string[];
+  knowledgeDomains?: readonly string[];
+  candidateArticles?: readonly number[];
+  primaryArticle?: number | null;
+  secondaryArticles?: readonly number[];
   articleEvaluations: readonly V3ReasonedDecisionArticleEvaluation[];
   supportingEvidence: readonly string[];
   contradictingEvidence: readonly string[];
@@ -89,6 +94,16 @@ export type V3ProviderReasoningResult = Readonly<{
 }>;
 
 export type V3ReasoningResponsePayload = Readonly<{
+  legalConcepts?: V3PromptJsonValue | null;
+  legal_concepts?: V3PromptJsonValue | null;
+  knowledgeDomains?: V3PromptJsonValue | null;
+  knowledge_domains?: V3PromptJsonValue | null;
+  candidateArticles?: V3PromptJsonValue | null;
+  candidate_articles?: V3PromptJsonValue | null;
+  primaryArticle?: V3PromptJsonValue | null;
+  primary_article?: V3PromptJsonValue | null;
+  secondaryArticles?: V3PromptJsonValue | null;
+  secondary_articles?: V3PromptJsonValue | null;
   narrative?: V3PromptJsonObject | null;
   narrative_result?: V3PromptJsonObject | null;
   narrativeResult?: V3PromptJsonObject | null;

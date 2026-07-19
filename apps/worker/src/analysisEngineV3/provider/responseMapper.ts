@@ -41,6 +41,16 @@ const EXPECTED_SECTION_KEYS = Object.freeze([
 ] as const);
 
 const EXPECTED_REASONED_DECISION_KEYS = Object.freeze([
+  "legalConcepts",
+  "legal_concepts",
+  "knowledgeDomains",
+  "knowledge_domains",
+  "candidateArticles",
+  "candidate_articles",
+  "primaryArticle",
+  "primary_article",
+  "secondaryArticles",
+  "secondary_articles",
   "reasoning",
   "why",
   "alternativeInterpretations",
@@ -242,12 +252,64 @@ function normalizeList(value: unknown): string[] {
   return value.map((item) => String(item)).filter((item) => item.trim().length > 0);
 }
 
+function normalizeUniqueStringList(value: unknown): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const item of normalizeList(value)) {
+    const normalized = item.normalize("NFC").replace(/\s+/g, " ").trim();
+    const key = normalized.toLowerCase();
+    if (normalized.length === 0 || seen.has(key)) continue;
+    seen.add(key);
+    result.push(normalized);
+  }
+  return result;
+}
+
 function normalizeArticleList(value: unknown): number[] {
   if (!Array.isArray(value)) return [];
   return value
     .map((item) => Number(item))
     .filter((item) => Number.isFinite(item))
     .map((item) => Number(item));
+}
+
+function normalizeUniqueArticleList(value: unknown): number[] {
+  const seen = new Set<number>();
+  const result: number[] = [];
+  for (const articleId of normalizeArticleList(value)) {
+    if (seen.has(articleId)) continue;
+    seen.add(articleId);
+    result.push(articleId);
+  }
+  return result;
+}
+
+function normalizeOptionalArticleId(value: unknown): number | null {
+  if (Array.isArray(value)) {
+    return normalizeOptionalArticleId(value[0]);
+  }
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) return null;
+  return Math.trunc(numeric);
+}
+
+function normalizeArticleIdForCandidate(value: unknown, options?: V3ProviderResponseNormalizationOptions): number | null {
+  const articleId = normalizeOptionalArticleId(value);
+  if (articleId === null) return null;
+  const knowledgeDocument = findKnowledgeDocumentByArticleReference(articleId);
+  const canonicalArticleId = options?.resolveCanonicalArticleId?.(articleId, knowledgeDocument?.metadata.knowledgeDomain ?? null);
+  const resolvedArticleId = Number.isFinite(Number(canonicalArticleId)) ? Number(canonicalArticleId) : articleId;
+  return resolvedArticleId > 0 ? resolvedArticleId : articleId;
+}
+
+function normalizePrimaryArticleId(value: unknown, options?: V3ProviderResponseNormalizationOptions): number | null {
+  return normalizeArticleIdForCandidate(value, options);
+}
+
+function normalizeSecondaryArticleIds(value: unknown, options?: V3ProviderResponseNormalizationOptions): number[] {
+  return normalizeUniqueArticleList(value)
+    .map((articleId) => normalizeArticleIdForCandidate(articleId, options))
+    .filter((articleId): articleId is number => typeof articleId === "number" && Number.isFinite(articleId) && articleId > 0);
 }
 
 function normalizeArticleEvaluation(value: unknown, options?: V3ProviderResponseNormalizationOptions): V3ReasonedDecisionArticleEvaluation {
@@ -264,39 +326,27 @@ function normalizeArticleEvaluation(value: unknown, options?: V3ProviderResponse
   });
 }
 
-function synthesizeArticleEvaluations(input: V3ReasoningResponsePayload, options?: V3ProviderResponseNormalizationOptions): readonly V3ReasonedDecisionArticleEvaluation[] {
+function synthesizePrimaryArticleEvaluation(input: V3ReasoningResponsePayload, primaryArticle: number | null, options?: V3ProviderResponseNormalizationOptions): readonly V3ReasonedDecisionArticleEvaluation[] {
   const supportingEvidence = normalizeList(input.supportingEvidence ?? input.supporting_evidence);
   const confidence = clampConfidence(input.confidence);
   const recommendation = String(input.recommendation ?? input.recommendation_result ?? input.recommendationResult ?? "");
-  const applicableArticles = normalizeArticleList(input.applicableArticles ?? input.applicable_articles);
-  const rejectedArticles = normalizeArticleList(input.rejectedArticles ?? input.rejected_articles);
-  const synthesized: V3ReasonedDecisionArticleEvaluation[] = [];
+  if (primaryArticle === null) {
+    return Object.freeze([]);
+  }
 
-  for (const articleId of applicableArticles) {
-    const knowledgeDocument = findKnowledgeDocumentByArticleReference(articleId);
-    const canonicalArticleId = options?.resolveCanonicalArticleId?.(articleId, knowledgeDocument?.metadata.knowledgeDomain ?? null);
-    synthesized.push(Object.freeze({
-      articleId: Number.isFinite(Number(canonicalArticleId)) && Number(canonicalArticleId) > 0 ? Number(canonicalArticleId) : articleId,
+  const knowledgeDocument = findKnowledgeDocumentByArticleReference(primaryArticle);
+  const canonicalArticleId = options?.resolveCanonicalArticleId?.(primaryArticle, knowledgeDocument?.metadata.knowledgeDomain ?? null);
+  const resolvedArticleId = Number.isFinite(Number(canonicalArticleId)) && Number(canonicalArticleId) > 0 ? Number(canonicalArticleId) : primaryArticle;
+
+  return Object.freeze([
+    Object.freeze({
+      articleId: resolvedArticleId,
       status: "PASS" as const,
       evidence: Object.freeze([...supportingEvidence]),
       reason: recommendation || "The model marked this article as applicable.",
       confidence,
-    }));
-  }
-
-  for (const articleId of rejectedArticles) {
-    const knowledgeDocument = findKnowledgeDocumentByArticleReference(articleId);
-    const canonicalArticleId = options?.resolveCanonicalArticleId?.(articleId, knowledgeDocument?.metadata.knowledgeDomain ?? null);
-    synthesized.push(Object.freeze({
-      articleId: Number.isFinite(Number(canonicalArticleId)) && Number(canonicalArticleId) > 0 ? Number(canonicalArticleId) : articleId,
-      status: "FAIL" as const,
-      evidence: Object.freeze([...supportingEvidence]),
-      reason: recommendation || "The model marked this article as rejected.",
-      confidence,
-    }));
-  }
-
-  return Object.freeze(synthesized);
+    }),
+  ]);
 }
 
 function normalizeNarrativeResult(value: unknown): LegalNarrativeResult {
@@ -394,23 +444,62 @@ function normalizeContextResult(value: unknown): LegalContextResult {
 function normalizeReasonedDecisionResult(value: unknown, options?: V3ProviderResponseNormalizationOptions): V3ReasonedDecisionResult {
   const input = isObject(value) ? value : {};
   const rawArticleEvaluations = input.articleEvaluations ?? input.article_evaluations;
-  const synthesizedArticleEvaluations = Array.isArray(rawArticleEvaluations) && rawArticleEvaluations.length > 0
-    ? null
-    : synthesizeArticleEvaluations(input as V3ReasoningResponsePayload, options);
-  const articleEvaluations = Object.freeze(
-    Array.isArray(rawArticleEvaluations) && rawArticleEvaluations.length > 0
-      ? rawArticleEvaluations.map((evaluation) => normalizeArticleEvaluation(evaluation, options))
-      : synthesizedArticleEvaluations ?? [],
-  );
+  const legalConcepts = normalizeUniqueStringList(input.legalConcepts ?? input.legal_concepts);
+  const knowledgeDomains = normalizeUniqueStringList(input.knowledgeDomains ?? input.knowledge_domains);
+  const candidateArticles = normalizeUniqueArticleList(input.candidateArticles ?? input.candidate_articles);
+  const explicitApplicableArticles = normalizeUniqueArticleList(input.applicableArticles ?? input.applicable_articles);
+  const explicitRejectedArticles = normalizeUniqueArticleList(input.rejectedArticles ?? input.rejected_articles);
+  const primaryArticle = normalizePrimaryArticleId(input.primaryArticle ?? input.primary_article, options);
+  const secondaryArticlesFromPayload = normalizeSecondaryArticleIds(input.secondaryArticles ?? input.secondary_articles, options);
+  const explicitArticleEvaluations = Array.isArray(rawArticleEvaluations) && rawArticleEvaluations.length > 0
+    ? rawArticleEvaluations.map((evaluation) => normalizeArticleEvaluation(evaluation, options))
+    : [];
+  const passArticleIds = [...new Set(explicitArticleEvaluations.filter((evaluation) => evaluation.status === "PASS").map((evaluation) => evaluation.articleId))];
+  const resolvedPrimaryArticle = primaryArticle ?? passArticleIds[0] ?? explicitApplicableArticles[0] ?? candidateArticles[0] ?? null;
+  const resolvedSecondaryArticles = secondaryArticlesFromPayload.length > 0
+    ? secondaryArticlesFromPayload
+    : normalizeUniqueArticleList([
+        ...explicitApplicableArticles.filter((articleId) => articleId !== resolvedPrimaryArticle),
+        ...passArticleIds.slice(1),
+        ...candidateArticles.filter((articleId) => articleId !== resolvedPrimaryArticle),
+      ]);
+  const synthesizedArticleEvaluations = !Array.isArray(rawArticleEvaluations) || rawArticleEvaluations.length === 0
+    ? synthesizePrimaryArticleEvaluation(
+        {
+          ...input,
+          legalConcepts,
+          knowledgeDomains,
+          candidateArticles,
+          primaryArticle: resolvedPrimaryArticle,
+          secondaryArticles: resolvedSecondaryArticles,
+          applicableArticles: explicitApplicableArticles,
+          rejectedArticles: explicitRejectedArticles,
+        } as V3ReasoningResponsePayload,
+        resolvedPrimaryArticle,
+        options,
+      )
+    : [];
+  const articleEvaluations = Object.freeze(explicitArticleEvaluations.length > 0 ? explicitArticleEvaluations : synthesizedArticleEvaluations);
+  const applicableArticles = explicitApplicableArticles.length > 0
+    ? explicitApplicableArticles
+    : resolvedPrimaryArticle !== null
+      ? [resolvedPrimaryArticle]
+      : passArticleIds;
+  const rejectedArticles = explicitRejectedArticles;
   return Object.freeze({
     reasoning: String(input.reasoning ?? input.why ?? ""),
     alternativeInterpretations: Object.freeze(normalizeList(input.alternativeInterpretations ?? input.alternative_interpretations)),
     confidence: clampConfidence(input.confidence),
+    legalConcepts: Object.freeze(legalConcepts),
+    knowledgeDomains: Object.freeze(knowledgeDomains),
+    candidateArticles: Object.freeze(candidateArticles.length > 0 ? candidateArticles : [...new Set([...applicableArticles, ...rejectedArticles, ...resolvedSecondaryArticles])]),
+    primaryArticle: resolvedPrimaryArticle,
+    secondaryArticles: Object.freeze(resolvedSecondaryArticles),
     articleEvaluations,
     supportingEvidence: Object.freeze(normalizeList(input.supportingEvidence ?? input.supporting_evidence)),
     contradictingEvidence: Object.freeze(normalizeList(input.contradictingEvidence ?? input.contradicting_evidence)),
-    applicableArticles: Object.freeze(normalizeArticleList(input.applicableArticles ?? input.applicable_articles)),
-    rejectedArticles: Object.freeze(normalizeArticleList(input.rejectedArticles ?? input.rejected_articles)),
+    applicableArticles: Object.freeze(applicableArticles),
+    rejectedArticles: Object.freeze(rejectedArticles),
     riskAnalysis: String(input.riskAnalysis ?? input.risk_analysis ?? ""),
     narrativeAnalysis: String(input.narrativeAnalysis ?? input.narrative_analysis ?? ""),
     humanLikeExplanation: String(input.humanLikeExplanation ?? input.human_like_explanation ?? ""),

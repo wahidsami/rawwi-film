@@ -434,6 +434,18 @@ function buildPromptReviewerDecisionPipeline(
         confidence: conceptContext.confidence,
       }),
       Object.freeze({
+        key: "legal_concept_identification",
+        title: "Legal Concept Identification",
+        summary: "Identify the smallest legal concept(s) present in the evidence before naming any GCAM article.",
+        confidence: assessment.confidence,
+      }),
+      Object.freeze({
+        key: "knowledge_domain_mapping",
+        title: "Knowledge Domain Mapping",
+        summary: "Map each legal concept to one or more Academy knowledge domains.",
+        confidence: assessment.confidence,
+      }),
+      Object.freeze({
         key: "precedent_retrieval",
         title: "Precedent Retrieval",
         summary: precedentIds.length > 0 ? precedentIds.join(" | ") : "No precedents matched.",
@@ -443,8 +455,16 @@ function buildPromptReviewerDecisionPipeline(
         key: "gcam_applicability",
         title: "GCAM Applicability",
         summary: primaryArticleIds.length > 0
-          ? `${articleEvaluationSummary} | Evidence candidates are the primary unit of work; article ids may repeat across independent violations.`
-          : "No GCAM articles were preselected.",
+          ? `${articleEvaluationSummary} | Resolve the legal concepts first, then map them to knowledge domains, then resolve the candidate GCAM article set before choosing the primary article.`
+          : "No GCAM articles were preselected; resolve the candidate article set from the mapped knowledge domains.",
+        confidence: conceptContext.confidence,
+      }),
+      Object.freeze({
+        key: "article_ranking",
+        title: "Candidate Article Ranking",
+        summary: primaryArticleIds.length > 0
+          ? `Primary article first, then optional secondary articles: ${primaryArticleIds.join(" | ")}. Rank by evidence, context, story, dialogue, scene description, and deterministic ownership rules.`
+          : "Rank the candidate article set into a primary article and optional secondary articles.",
         confidence: conceptContext.confidence,
       }),
       Object.freeze({
@@ -572,6 +592,13 @@ function buildGptReviewerAssistant(
       exception_signals: [...assessment.exceptionSignals],
       evidence_strength: assessment.evidenceStrength,
     }),
+    ownership_bridge: Object.freeze({
+      legal_concepts: "Identify the smallest legal concept(s) present in the evidence.",
+      knowledge_domains: "Map each legal concept to one or more Academy knowledge domains.",
+      candidate_articles: "Resolve the candidate GCAM article set for every mapped knowledge domain.",
+      primary_article: "Rank the candidate articles and choose one primary GCAM article.",
+      secondary_articles: "Return optional secondary GCAM articles when the legal concepts intersect multiple articles.",
+    }),
     evidence: Object.freeze({
       literal_meaning: assessment.reasoningTrace[0] ?? reasoningPipeline.literalMeaning ?? null,
       supporting_evidence: [...assessment.reasoningTrace, ...promptEvidenceCandidates.map((candidate) => candidate.text)],
@@ -659,12 +686,17 @@ function buildGptReviewerAssistant(
     }),
     }),
     decision_template: Object.freeze({
-      answer_with: Object.freeze(["reasoning", "article_evaluations", "supporting_evidence", "contradicting_evidence", "applicable_articles", "rejected_articles", "confidence", "recommendation"]),
-      reasoning: "Explain why each supplied article passes or fails based only on quote-based evidence candidates. Keep it evidence-first and quote-grounded. Analyze every suspicious sentence independently and do not stop after the first exception. One evidence candidate may support multiple articles.",
-      article_evaluations: "For each independent violation evidence unit return articleId, PASS or FAIL, evidence, reason, and confidence. Do not choose the closest category. Evaluate all suspicious evidence candidates before merging findings. One evidence unit may produce multiple PASS article entries, and articleId values may repeat when different grounded violations map to the same GCAM article.",
+      answer_with: Object.freeze(["legal_concepts", "knowledge_domains", "candidate_articles", "primary_article", "secondary_articles", "reasoning", "article_evaluations", "supporting_evidence", "contradicting_evidence", "applicable_articles", "rejected_articles", "confidence", "recommendation"]),
+      legal_concepts: "List the smallest legal concept(s) present in the evidence before naming any GCAM article.",
+      knowledge_domains: "Map each concept to one or more Academy knowledge domains. Do not guess the final article yet.",
+      candidate_articles: "List the deterministic candidate GCAM article set for the mapped domains.",
+      primary_article: "Choose one primary GCAM article for the current evidence unit. The primary article is the legal consequence of the concept analysis.",
+      secondary_articles: "List optional secondary GCAM articles only when the evidence intersects multiple articles.",
+      reasoning: "Explain the concept analysis first, then the knowledge-domain mapping, then the ranked candidate articles. Keep it evidence-first and quote-grounded. Analyze every suspicious sentence independently and do not stop after the first exception. One evidence candidate may support multiple articles.",
+      article_evaluations: "For each independent violation evidence unit return articleId, PASS or FAIL, evidence, reason, and confidence. Use the ranked primary article as the main PASS result and preserve any secondary article metadata separately. Evaluate all suspicious evidence candidates before merging findings. One evidence unit may produce multiple article entries only when separate evidence units require them.",
       supporting_evidence: "Cite the exact quote and current-scene context that support the reasoning. Preserve one quote per independent evidence unit when possible.",
       contradicting_evidence: "State the strongest counter-reading and why it loses.",
-      applicable_articles: "List only the unique article ids whose evaluations are PASS. Do not suppress a PASS because of quotation, condemnation, education, historical context, satire, or dialogue; those exceptions are handled after generation.",
+      applicable_articles: "List only the unique article ids that are actually supported by the ranked result. Do not suppress a detection because of quotation, condemnation, education, historical context, satire, or dialogue; those exceptions are handled after generation.",
       rejected_articles: "List the articles that were considered but rejected.",
       confidence: "Provide a calibrated confidence value between 0 and 1.",
       recommendation: "State the reviewer recommendation only as reasoning support for the legal engine. Do not use recommendation to apply exceptions.",
@@ -1009,10 +1041,10 @@ export function buildReviewerReasoningEnginePayload(
     reasoning_pipeline: reasoningPipeline,
     decision_guidance: Object.freeze({
       answer_with: Object.freeze(["reasoning", "supporting_evidence", "contradicting_evidence", "applicable_articles", "rejected_articles", "confidence", "recommendation"]),
-      reasoning: "Explain the reviewer conclusion in plain language.",
+      reasoning: "Explain the legal concept analysis first, then the knowledge-domain mapping, then the ranked candidate GCAM articles in plain language.",
       supporting_evidence: "Cite the exact supporting chunk, context, and precedent evidence.",
       contradicting_evidence: "State the strongest alternative interpretation and why it loses.",
-      applicable_articles: "List the unique article ids that support the final decision. Repeated article ids may appear in article_evaluations when multiple evidence units map to the same article.",
+      applicable_articles: "List the unique article ids that support the final decision after ranking the candidate set. Repeated article ids may appear in article_evaluations when multiple evidence units map to the same article.",
       rejected_articles: "List the article ids that were considered and rejected, if any.",
       confidence: "Provide a calibrated confidence value between 0 and 1.",
       recommendation: "State the reviewer recommendation only as reasoning support for the legal engine.",
