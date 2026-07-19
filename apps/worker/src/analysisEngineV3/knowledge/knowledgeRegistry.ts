@@ -15,9 +15,8 @@ type FrontMatter = Readonly<Record<string, string>>;
 
 const MODULE_DIRECTORY = dirname(fileURLToPath(import.meta.url));
 const KNOWLEDGE_ROOT_CANDIDATES = Object.freeze([
+  join(MODULE_DIRECTORY, "..", "..", "..", "knowledge"),
   join(MODULE_DIRECTORY, "..", "..", "..", "..", "..", "knowledge"),
-  join(process.cwd(), "knowledge"),
-  join(process.cwd(), "..", "knowledge"),
 ]);
 
 let cachedRegistry: KnowledgeRegistry | null = null;
