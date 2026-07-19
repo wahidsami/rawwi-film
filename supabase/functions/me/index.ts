@@ -22,12 +22,7 @@ Deno.serve(async (req: Request) => {
 
   const auth = await requireAuth(req);
   if (auth instanceof Response) return auth;
-  const { userId, supabase } = auth;
-
-  const { data: { user: sbUser }, error: userErr } = await supabase.auth.admin.getUserById(userId);
-  if (userErr || !sbUser) {
-    return json({ error: "User not found" }, 404);
-  }
+  const { userId, user: sbUser, supabase } = auth;
 
   const meta = sbUser.user_metadata ?? {};
 

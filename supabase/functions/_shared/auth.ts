@@ -5,7 +5,14 @@ import { createSupabaseAdmin } from "./supabaseAdmin.ts";
 import { jsonResponse } from "./cors.ts";
 import { traceEdgeStep } from "./trace.ts";
 
-export async function requireAuth(req: Request): Promise<{ userId: string; supabase: ReturnType<typeof createSupabaseAdmin> } | Response> {
+type RequireAuthUser = Readonly<{
+  id: string;
+  email: string | null;
+  user_metadata: Record<string, unknown>;
+  app_metadata: Record<string, unknown>;
+}>;
+
+export async function requireAuth(req: Request): Promise<{ userId: string; user: RequireAuthUser; supabase: ReturnType<typeof createSupabaseAdmin> } | Response> {
   console.log("[auth] ENTER requireAuth", {
     method: req.method,
     path: new URL(req.url).pathname,
@@ -62,5 +69,14 @@ export async function requireAuth(req: Request): Promise<{ userId: string; supab
     userId: user.id,
     path: new URL(req.url).pathname,
   });
-  return { userId: user.id, supabase };
+  return {
+    userId: user.id,
+    user: Object.freeze({
+      id: user.id,
+      email: user.email ?? null,
+      user_metadata: Object.freeze({ ...(user.user_metadata ?? {}) }),
+      app_metadata: Object.freeze({ ...(user.app_metadata ?? {}) }),
+    }),
+    supabase,
+  };
 }
