@@ -1,53 +1,61 @@
+# Article Template
+
 ---
-academy:
-version:
-reviewer:
-domain:
-article:
-inherits:
-priority:
-runtime:
-retrieval:
-status:
+article: 0
+title: ""
+reviewer: ""
+version: 1
+status: draft
 ---
 
-# Purpose
+# Metadata
 
-# Protected Interest
-
-# Legal Intent
+# Mission
+Apply Universal Review Protocol before reading article-specific law.
 
 # Scope
+Use the shared protocol first. Then read the article law.
 
-# Definitions
+# Core Concepts
 
-# Required Evidence
+# Violation Patterns
 
-# Insufficient Evidence
+# Decision Rules
 
-# Context Rules
+# Verification Rules
 
-# Context That Strengthens Applicability
+# Trigger Phrases
 
-# Context That Weakens Applicability
+# Positive Examples
+
+# Negative Examples
+
+# Counter Examples
+
+# Borderline Examples
 
 # False Positives
 
 # False Negatives
 
-# Neighboring Articles
+# Saudi Dialect Examples
 
-# Distinguishing Characteristics
+# Gulf Dialect Examples
 
-# Decision Threshold
+# Egyptian Dialect Examples
 
-# Decision Tree
+# Levant Dialect Examples
 
-# Examples
+# Screenplay Examples
 
-# Counter Examples
+# Common AI Mistakes
+
+# Common Confused Articles
+
+# Ownership Rules
 
 # Reviewer Notes
+Shared reasoning belongs in `Universal/11_Universal_Review_Protocol.md`.
+Do not duplicate the universal protocol steps inside article manuals.
 
-# Output Requirements
-
+# Version History
