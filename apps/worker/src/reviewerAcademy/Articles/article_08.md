@@ -6,52 +6,133 @@ version: 1
 status: draft
 ---
 
-# Metadata
+# Article
 
-# Mission
-Apply Universal Review Protocol before article-specific law.
+## Purpose
+PLACEHOLDER: article purpose will be supplied later.
 
-# Scope
-Religion-related hate, discrimination, and protected-belief harm.
+## Scope
+PLACEHOLDER: article scope will be supplied later.
 
-# Violation Definition
-Define the religion-specific harm patterns that are violations.
+## Universal Review Protocol reference
+Apply `../Universal/11_Universal_Review_Protocol.md` before article-specific analysis.
 
-# Vocabulary
-PLACEHOLDER: canonical religion / hate / discrimination concepts will be filled in later.
+## Atom Sections
 
-# Context Examples
-PLACEHOLDER: canonical religion context examples will be filled in later.
+### Atom 8.1 — التحريض ضد فئة اجتماعية أو ثقافية أو دينية
 
-# False Positives
-- Speculation without explicit evidence.
-- Treating mere discussion as an active violation.
-- Classifying a quote without checking the surrounding context.
+#### Atom definition
+PLACEHOLDER: atom definition will be supplied later.
 
-# False Negatives
-PLACEHOLDER: article 08 false-negative patterns will be filled in later.
+#### Reviewer objective
+PLACEHOLDER: reviewer objective will be supplied later.
 
-# Reviewer Advice
-- Read the Universal Review Protocol first.
-- Then apply Article 08 law.
-- Keep the evidence grounded and quote-based.
+#### Knowledge
+PLACEHOLDER: atom knowledge will be supplied later.
 
-# Golden Rule
-Separate discussion, quotation, and condemnation from active violations.
+#### Examples
+PLACEHOLDER: atom examples will be supplied later.
 
-# Atom Knowledge
-PLACEHOLDER: canonical religion atoms will be filled in later.
+#### Vocabulary
+PLACEHOLDER: atom vocabulary will be supplied later.
 
-# Evidence Requirements
-Accept only explicit screenplay evidence. Quote dialogue, narration, actions, or scene descriptions. Reject speculation.
+#### Context patterns
+PLACEHOLDER: atom context patterns will be supplied later.
 
-# Output Requirements
-Return grounded religion-specific reasoning only.
+#### False positives
+PLACEHOLDER: atom false-positive guidance will be supplied later.
 
-# Reviewer Notes
-- The religion reviewer should apply the universal protocol first.
-- Article-specific policy lives here, not in shared protocol files.
+#### Reviewer notes
+PLACEHOLDER: atom reviewer notes will be supplied later.
 
-# Version History
-v1: migrated shared review brain out of article 08 into the universal protocol layer.
+#### Golden rule
+PLACEHOLDER: atom golden rule will be supplied later.
+
+### Atom 8.2 — التعميمات المهينة أو الدعوة إلى الإقصاء
+
+#### Atom definition
+PLACEHOLDER: atom definition will be supplied later.
+
+#### Reviewer objective
+PLACEHOLDER: reviewer objective will be supplied later.
+
+#### Knowledge
+PLACEHOLDER: atom knowledge will be supplied later.
+
+#### Examples
+PLACEHOLDER: atom examples will be supplied later.
+
+#### Vocabulary
+PLACEHOLDER: atom vocabulary will be supplied later.
+
+#### Context patterns
+PLACEHOLDER: atom context patterns will be supplied later.
+
+#### False positives
+PLACEHOLDER: atom false-positive guidance will be supplied later.
+
+#### Reviewer notes
+PLACEHOLDER: atom reviewer notes will be supplied later.
+
+#### Golden rule
+PLACEHOLDER: atom golden rule will be supplied later.
+
+### Atom 8.3 — تبرير العنف أو الكراهية ضد جماعات
+
+#### Atom definition
+PLACEHOLDER: atom definition will be supplied later.
+
+#### Reviewer objective
+PLACEHOLDER: reviewer objective will be supplied later.
+
+#### Knowledge
+PLACEHOLDER: atom knowledge will be supplied later.
+
+#### Examples
+PLACEHOLDER: atom examples will be supplied later.
+
+#### Vocabulary
+PLACEHOLDER: atom vocabulary will be supplied later.
+
+#### Context patterns
+PLACEHOLDER: atom context patterns will be supplied later.
+
+#### False positives
+PLACEHOLDER: atom false-positive guidance will be supplied later.
+
+#### Reviewer notes
+PLACEHOLDER: atom reviewer notes will be supplied later.
+
+#### Golden rule
+PLACEHOLDER: atom golden rule will be supplied later.
+
+### Atom 8.4 — التنميط السلبي الممنهج للفئات
+
+#### Atom definition
+PLACEHOLDER: atom definition will be supplied later.
+
+#### Reviewer objective
+PLACEHOLDER: reviewer objective will be supplied later.
+
+#### Knowledge
+PLACEHOLDER: atom knowledge will be supplied later.
+
+#### Examples
+PLACEHOLDER: atom examples will be supplied later.
+
+#### Vocabulary
+PLACEHOLDER: atom vocabulary will be supplied later.
+
+#### Context patterns
+PLACEHOLDER: atom context patterns will be supplied later.
+
+#### False positives
+PLACEHOLDER: atom false-positive guidance will be supplied later.
+
+#### Reviewer notes
+PLACEHOLDER: atom reviewer notes will be supplied later.
+
+#### Golden rule
+PLACEHOLDER: atom golden rule will be supplied later.
+
 

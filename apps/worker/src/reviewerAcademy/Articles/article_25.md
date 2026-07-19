@@ -6,50 +6,19 @@ version: 1
 status: draft
 ---
 
-# Metadata
+# Article
 
-# Mission
+## Purpose
+PLACEHOLDER: article purpose will be supplied later.
 
-# Scope
+## Scope
+PLACEHOLDER: article scope will be supplied later.
 
-# Core Concepts
+## Universal Review Protocol reference
+Apply `../Universal/11_Universal_Review_Protocol.md` before article-specific analysis.
 
-# Violation Patterns
+## Atom Sections
 
-# Decision Rules
+No atoms are currently assigned to this article.
 
-# Verification Rules
 
-# Trigger Phrases
-
-# Positive Examples
-
-# Negative Examples
-
-# Counter Examples
-
-# Borderline Examples
-
-# False Positives
-
-# False Negatives
-
-# Saudi Dialect Examples
-
-# Gulf Dialect Examples
-
-# Egyptian Dialect Examples
-
-# Levant Dialect Examples
-
-# Screenplay Examples
-
-# Common AI Mistakes
-
-# Common Confused Articles
-
-# Ownership Rules
-
-# Reviewer Notes
-
-# Version History

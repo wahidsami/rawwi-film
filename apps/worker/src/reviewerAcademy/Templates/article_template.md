@@ -1,5 +1,3 @@
-# Article Template
-
 ---
 article: 0
 title: ""
@@ -8,45 +6,44 @@ version: 1
 status: draft
 ---
 
-# Metadata
+# Article
 
-# Mission
-Apply Universal Review Protocol before article-specific law.
+## Purpose
+PLACEHOLDER: article purpose will be supplied later.
 
-# Scope
-State the protected interest and the article boundaries.
+## Scope
+PLACEHOLDER: article scope will be supplied later.
 
-# Violation Definition
-Define what counts as a violation for this article.
+## Universal Review Protocol reference
+Apply `../Universal/11_Universal_Review_Protocol.md` before article-specific analysis.
 
-# Vocabulary
-List article-specific terms, phrases, and canonical concepts.
+## Atom Sections
 
-# Context Examples
-Show how context changes applicability.
+### Atom <article>.<atom> — <atom title>
 
-# False Positives
-List situations that should not be classified as violations.
+#### Atom definition
+PLACEHOLDER: atom definition will be supplied later.
 
-# False Negatives
-List situations that are easy to miss but should be classified.
+#### Reviewer objective
+PLACEHOLDER: reviewer objective will be supplied later.
 
-# Reviewer Advice
-Explain the decision posture and common pitfalls.
+#### Knowledge
+PLACEHOLDER: atom knowledge will be supplied later.
 
-# Golden Rule
-State the one rule the reviewer must never violate.
+#### Examples
+PLACEHOLDER: atom examples will be supplied later.
 
-# Atom Knowledge
-List atoms, sub-rules, or sub-patterns for this article.
+#### Vocabulary
+PLACEHOLDER: atom vocabulary will be supplied later.
 
-# Evidence Requirements
-Describe what evidence is required to support a finding.
+#### Context patterns
+PLACEHOLDER: atom context patterns will be supplied later.
 
-# Output Requirements
-Describe the expected article-level output format.
+#### False positives
+PLACEHOLDER: atom false-positive guidance will be supplied later.
 
-# Reviewer Notes
-Shared reasoning belongs in `../Universal/11_Universal_Review_Protocol.md`.
-Article manuals should carry only article-specific law.
+#### Reviewer notes
+PLACEHOLDER: atom reviewer notes will be supplied later.
 
+#### Golden rule
+PLACEHOLDER: atom golden rule will be supplied later.

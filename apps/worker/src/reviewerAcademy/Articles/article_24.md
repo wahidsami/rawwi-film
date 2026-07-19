@@ -6,50 +6,162 @@ version: 1
 status: draft
 ---
 
-# Metadata
+# Article
 
-# Mission
+## Purpose
+PLACEHOLDER: article purpose will be supplied later.
 
-# Scope
+## Scope
+PLACEHOLDER: article scope will be supplied later.
 
-# Core Concepts
+## Universal Review Protocol reference
+Apply `../Universal/11_Universal_Review_Protocol.md` before article-specific analysis.
 
-# Violation Patterns
+## Atom Sections
 
-# Decision Rules
+### Atom 24.1 — الزي غير المحتشم
 
-# Verification Rules
+#### Atom definition
+PLACEHOLDER: atom definition will be supplied later.
 
-# Trigger Phrases
+#### Reviewer objective
+PLACEHOLDER: reviewer objective will be supplied later.
 
-# Positive Examples
+#### Knowledge
+PLACEHOLDER: atom knowledge will be supplied later.
 
-# Negative Examples
+#### Examples
+PLACEHOLDER: atom examples will be supplied later.
 
-# Counter Examples
+#### Vocabulary
+PLACEHOLDER: atom vocabulary will be supplied later.
 
-# Borderline Examples
+#### Context patterns
+PLACEHOLDER: atom context patterns will be supplied later.
 
-# False Positives
+#### False positives
+PLACEHOLDER: atom false-positive guidance will be supplied later.
 
-# False Negatives
+#### Reviewer notes
+PLACEHOLDER: atom reviewer notes will be supplied later.
 
-# Saudi Dialect Examples
+#### Golden rule
+PLACEHOLDER: atom golden rule will be supplied later.
 
-# Gulf Dialect Examples
+### Atom 24.2 — الزي غير الملائم للفئة العمرية أو الجمهور العام
 
-# Egyptian Dialect Examples
+#### Atom definition
+PLACEHOLDER: atom definition will be supplied later.
 
-# Levant Dialect Examples
+#### Reviewer objective
+PLACEHOLDER: reviewer objective will be supplied later.
 
-# Screenplay Examples
+#### Knowledge
+PLACEHOLDER: atom knowledge will be supplied later.
 
-# Common AI Mistakes
+#### Examples
+PLACEHOLDER: atom examples will be supplied later.
 
-# Common Confused Articles
+#### Vocabulary
+PLACEHOLDER: atom vocabulary will be supplied later.
 
-# Ownership Rules
+#### Context patterns
+PLACEHOLDER: atom context patterns will be supplied later.
 
-# Reviewer Notes
+#### False positives
+PLACEHOLDER: atom false-positive guidance will be supplied later.
 
-# Version History
+#### Reviewer notes
+PLACEHOLDER: atom reviewer notes will be supplied later.
+
+#### Golden rule
+PLACEHOLDER: atom golden rule will be supplied later.
+
+### Atom 24.3 — تطبيع الزي المخالف للقيم الإسلامية أو الاجتماعية
+
+#### Atom definition
+PLACEHOLDER: atom definition will be supplied later.
+
+#### Reviewer objective
+PLACEHOLDER: reviewer objective will be supplied later.
+
+#### Knowledge
+PLACEHOLDER: atom knowledge will be supplied later.
+
+#### Examples
+PLACEHOLDER: atom examples will be supplied later.
+
+#### Vocabulary
+PLACEHOLDER: atom vocabulary will be supplied later.
+
+#### Context patterns
+PLACEHOLDER: atom context patterns will be supplied later.
+
+#### False positives
+PLACEHOLDER: atom false-positive guidance will be supplied later.
+
+#### Reviewer notes
+PLACEHOLDER: atom reviewer notes will be supplied later.
+
+#### Golden rule
+PLACEHOLDER: atom golden rule will be supplied later.
+
+### Atom 24.4 — استخدام الزي كوسيلة إثارة أو جذب
+
+#### Atom definition
+PLACEHOLDER: atom definition will be supplied later.
+
+#### Reviewer objective
+PLACEHOLDER: reviewer objective will be supplied later.
+
+#### Knowledge
+PLACEHOLDER: atom knowledge will be supplied later.
+
+#### Examples
+PLACEHOLDER: atom examples will be supplied later.
+
+#### Vocabulary
+PLACEHOLDER: atom vocabulary will be supplied later.
+
+#### Context patterns
+PLACEHOLDER: atom context patterns will be supplied later.
+
+#### False positives
+PLACEHOLDER: atom false-positive guidance will be supplied later.
+
+#### Reviewer notes
+PLACEHOLDER: atom reviewer notes will be supplied later.
+
+#### Golden rule
+PLACEHOLDER: atom golden rule will be supplied later.
+
+### Atom 24.5 — عدم التمييز بين الزي التخييلي والزي الواقعي
+
+#### Atom definition
+PLACEHOLDER: atom definition will be supplied later.
+
+#### Reviewer objective
+PLACEHOLDER: reviewer objective will be supplied later.
+
+#### Knowledge
+PLACEHOLDER: atom knowledge will be supplied later.
+
+#### Examples
+PLACEHOLDER: atom examples will be supplied later.
+
+#### Vocabulary
+PLACEHOLDER: atom vocabulary will be supplied later.
+
+#### Context patterns
+PLACEHOLDER: atom context patterns will be supplied later.
+
+#### False positives
+PLACEHOLDER: atom false-positive guidance will be supplied later.
+
+#### Reviewer notes
+PLACEHOLDER: atom reviewer notes will be supplied later.
+
+#### Golden rule
+PLACEHOLDER: atom golden rule will be supplied later.
+
+
