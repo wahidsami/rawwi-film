@@ -384,6 +384,24 @@ function testSubjectModuleChangesHash(): void {
   console.log("✓ Subject Module changes alter the prompt hash");
 }
 
+function testSubjectModuleKnowledgeMetadataRenders(): void {
+  const input: V3PromptBuilderInput = {
+    ...makeBaseInput(),
+    subjectModule: {
+      ...makeBaseInput().subjectModule,
+      knowledgeDomain: "religion",
+      reviewType: "Reasoning",
+      primaryEvidence: "Dialogue",
+    },
+  };
+
+  const rendered = buildV3RenderedPrompt(input);
+  assert(rendered.prompt.includes("\"knowledgeDomain\": \"religion\""), "subject module knowledge domain should render");
+  assert(rendered.prompt.includes("\"reviewType\": \"Reasoning\""), "subject module review type should render");
+  assert(rendered.prompt.includes("\"primaryEvidence\": \"Dialogue\""), "subject module primary evidence should render");
+  console.log("✓ Subject Module knowledge metadata renders in the prompt");
+}
+
 function testGlossaryChangesHash(): void {
   const base = makeBaseInput();
   const changed: V3PromptBuilderInput = {
@@ -410,6 +428,7 @@ async function main(): Promise<void> {
   testDeterministicCandidateContractUsesPolicyArticleIds();
   testStoryMemoryChangesHash();
   testSubjectModuleChangesHash();
+  testSubjectModuleKnowledgeMetadataRenders();
   testGlossaryChangesHash();
   console.log("\nAll V3 prompt builder tests passed.");
 }

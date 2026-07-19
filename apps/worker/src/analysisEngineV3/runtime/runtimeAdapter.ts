@@ -11,6 +11,7 @@ import type { V3ProviderRawResponse } from "../provider/providerTypes.js";
 import { createPromptConceptContext, runReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRunner.js";
 import { getDefaultReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRegistry.js";
 import { getDefaultReviewerQuestionSet } from "../reviewerQuestions/index.js";
+import { findKnowledgeDocumentByArticleReference } from "../knowledge/knowledgeRegistry.js";
 import { buildIntelligenceContext } from "../intelligence/intelligenceBuilder.js";
 import { PROFANITY_MODULE } from "../legal/modules/profanity/profanityModule.js";
 import { RELIGION_MODULE } from "../legal/modules/religion/religionModule.js";
@@ -108,68 +109,70 @@ function defaultSubjectModule(): V3PromptSubjectModule {
 
 function normalizeSubjectModule(subjectModule?: V3PromptSubjectModule): V3PromptSubjectModule {
   const module = subjectModule ?? defaultSubjectModule();
-  if (module.id === PROFANITY_MODULE.id) return module;
-  if (module.id === "v3_11_profanity") {
-    return {
-      ...module,
-      id: PROFANITY_MODULE.id,
-    };
-  }
-  if (module.id === "v3_09_sexual" || module.id === "v3_10_explicit" || module.id === SEXUALITY_MODULE.id) {
-    return {
-      ...module,
-      id: SEXUALITY_MODULE.id,
-    };
-  }
-  if (module.id === "v3_07_drugs" || module.id === DRUGS_MODULE.id) {
-    return {
-      ...module,
-      id: DRUGS_MODULE.id,
-    };
-  }
-  if (module.id === "v3_05_society" || module.id === SOCIETY_MODULE.id) {
-    return {
-      ...module,
-      id: SOCIETY_MODULE.id,
-    };
-  }
-  if (module.id === "v3_04_family_values" || module.id === FAMILY_VALUES_MODULE.id) {
-    return {
-      ...module,
-      id: FAMILY_VALUES_MODULE.id,
-    };
-  }
-  if (module.id === "v3_04_history" || module.id === HISTORY_MODULE.id) {
-    return {
-      ...module,
-      id: HISTORY_MODULE.id,
-    };
-  }
-  if (module.id === "v3_04_politics" || module.id === POLITICS_MODULE.id) {
-    return {
-      ...module,
-      id: POLITICS_MODULE.id,
-    };
-  }
-  if (module.id === "v3_09_crime" || module.id === CRIME_MODULE.id) {
-    return {
-      ...module,
-      id: CRIME_MODULE.id,
-    };
-  }
-  if (module.id === "v3_13_travel" || module.id === TRAVEL_MODULE.id) {
-    return {
-      ...module,
-      id: TRAVEL_MODULE.id,
-    };
-  }
-  if (module.id === "v3_06_children") {
-    return {
-      ...module,
-      id: CHILDREN_MODULE.id,
-    };
-  }
-  return module;
+  const normalizedModule =
+    module.id === PROFANITY_MODULE.id
+      ? module
+      : module.id === "v3_11_profanity"
+        ? {
+            ...module,
+            id: PROFANITY_MODULE.id,
+          }
+        : module.id === "v3_09_sexual" || module.id === "v3_10_explicit" || module.id === SEXUALITY_MODULE.id
+          ? {
+              ...module,
+              id: SEXUALITY_MODULE.id,
+            }
+          : module.id === "v3_07_drugs" || module.id === DRUGS_MODULE.id
+            ? {
+                ...module,
+                id: DRUGS_MODULE.id,
+              }
+            : module.id === "v3_05_society" || module.id === SOCIETY_MODULE.id
+              ? {
+                  ...module,
+                  id: SOCIETY_MODULE.id,
+                }
+              : module.id === "v3_04_family_values" || module.id === FAMILY_VALUES_MODULE.id
+                ? {
+                    ...module,
+                    id: FAMILY_VALUES_MODULE.id,
+                  }
+                : module.id === "v3_04_history" || module.id === HISTORY_MODULE.id
+                  ? {
+                      ...module,
+                      id: HISTORY_MODULE.id,
+                    }
+                  : module.id === "v3_04_politics" || module.id === POLITICS_MODULE.id
+                    ? {
+                        ...module,
+                        id: POLITICS_MODULE.id,
+                      }
+                    : module.id === "v3_09_crime" || module.id === CRIME_MODULE.id
+                      ? {
+                          ...module,
+                          id: CRIME_MODULE.id,
+                        }
+                      : module.id === "v3_13_travel" || module.id === TRAVEL_MODULE.id
+                        ? {
+                            ...module,
+                            id: TRAVEL_MODULE.id,
+                          }
+                        : module.id === "v3_06_children"
+                          ? {
+                              ...module,
+                              id: CHILDREN_MODULE.id,
+                            }
+                          : module;
+
+  const articleId = normalizedModule.articleIds?.[0] ?? null;
+  const knowledgeDocument = articleId === null ? null : findKnowledgeDocumentByArticleReference(articleId);
+
+  return {
+    ...normalizedModule,
+    knowledgeDomain: normalizedModule.knowledgeDomain ?? knowledgeDocument?.metadata.knowledgeDomain ?? null,
+    reviewType: normalizedModule.reviewType ?? knowledgeDocument?.metadata.reviewType ?? null,
+    primaryEvidence: normalizedModule.primaryEvidence ?? knowledgeDocument?.metadata.primaryEvidence ?? null,
+  };
 }
 
 function buildTraceRemovedItem(label: string, reason: string, score?: number | null, metadata?: Readonly<Record<string, unknown>> | null): V3DiagnosticTraceRemovedItem {
@@ -1128,6 +1131,16 @@ export async function runV3RuntimeAdapter(
   const renderedPrompt = buildV3RenderedPrompt(promptInput);
   const userPrompt = buildV3ProviderUserPrompt(promptInput);
   let promptReplayFilePath: string | null = null;
+  const canonicalizationConceptContext = createPromptConceptContext(promptInput);
+  const canonicalizationAssessment = runReviewerMethodology({
+    promptInput,
+    conceptContext: canonicalizationConceptContext,
+  });
+  const canonicalizationSelection = createEmergencyContextualReviewerKnowledgeSelection({
+    promptInput,
+    conceptContext: canonicalizationConceptContext,
+    assessment: canonicalizationAssessment,
+  });
 
   const signatureContext = input.analysisSignatureContext ?? null;
   let executionSignatureHash: string | null = null;
@@ -1177,6 +1190,10 @@ export async function runV3RuntimeAdapter(
     onAudit: (audit) => {
       providerParseAudit = audit;
     },
+    resolveCanonicalArticleId: (articleId) => {
+      const canonicalOwners = canonicalizationSelection.canonicalArticleOwnershipByArticleId[String(articleId)] ?? [];
+      return canonicalOwners[0]?.articleId ?? articleId;
+    },
   });
   const groundingValidation = validateReasonedDecisionAgainstEvidence(promptInput, {
     prompt: renderedPrompt.prompt,
@@ -1224,16 +1241,9 @@ export async function runV3RuntimeAdapter(
     context: mapped.context,
     glossary: analysisRequest.glossary,
   });
-  const reviewerConceptContext = createPromptConceptContext(promptInput);
-  const reviewerAssessment = runReviewerMethodology({
-    promptInput,
-    conceptContext: reviewerConceptContext,
-  });
-  const reviewerKnowledgeSelection = createEmergencyContextualReviewerKnowledgeSelection({
-    promptInput,
-    conceptContext: reviewerConceptContext,
-    assessment: reviewerAssessment,
-  });
+  const reviewerConceptContext = canonicalizationConceptContext;
+  const reviewerAssessment = canonicalizationAssessment;
+  const reviewerKnowledgeSelection = canonicalizationSelection;
   const reviewerKnowledgeRetrieval = createReviewerKnowledgeRetrievalReport({
     assessment: reviewerAssessment,
     conceptContext: reviewerConceptContext,

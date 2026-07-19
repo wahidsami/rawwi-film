@@ -109,6 +109,9 @@ export type V3PromptSubjectModule = {
   readonly id: string;
   readonly titleAr: string;
   readonly scope?: string;
+  readonly knowledgeDomain?: string | null;
+  readonly reviewType?: string | null;
+  readonly primaryEvidence?: string | null;
   readonly rules?: readonly string[];
   readonly exclusions?: readonly string[];
   readonly requiredEvidence?: readonly string[];

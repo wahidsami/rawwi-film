@@ -152,6 +152,16 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
   });
   const renderedPrompt = buildV3RenderedPrompt(input.promptInput);
   const userPrompt = buildV3ProviderUserPrompt(input.promptInput);
+  const canonicalizationConceptContext = createPromptConceptContext(input.promptInput);
+  const canonicalizationAssessment = runReviewerMethodology({
+    promptInput: input.promptInput,
+    conceptContext: canonicalizationConceptContext,
+  });
+  const canonicalizationSelection = createEmergencyContextualReviewerKnowledgeSelection({
+    promptInput: input.promptInput,
+    conceptContext: canonicalizationConceptContext,
+    assessment: canonicalizationAssessment,
+  });
   logger.info("V3 instrumentation ENTER: provider.callJudgeRaw", {
     modelName: input.modelName,
   });
@@ -175,7 +185,12 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
   logger.info("V3 instrumentation ENTER: mapV3ProviderResponse", {
     modelName: input.modelName,
   });
-  const mapped = mapV3ProviderResponse(rawResponse.rawResponse);
+  const mapped = mapV3ProviderResponse(rawResponse.rawResponse, {
+    resolveCanonicalArticleId: (articleId) => {
+      const canonicalOwners = canonicalizationSelection.canonicalArticleOwnershipByArticleId[String(articleId)] ?? [];
+      return canonicalOwners[0]?.articleId ?? articleId;
+    },
+  });
   logger.info("V3 instrumentation EXIT: mapV3ProviderResponse", {
     modelName: input.modelName,
     durationMs: Date.now() - startedAt,
@@ -217,7 +232,12 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
     logger.info("V3 instrumentation ENTER: mapV3ProviderResponse (validation retry)", {
       modelName: input.modelName,
     });
-    const retryMapped = mapV3ProviderResponse(retryRawResponse.rawResponse);
+    const retryMapped = mapV3ProviderResponse(retryRawResponse.rawResponse, {
+      resolveCanonicalArticleId: (articleId) => {
+        const canonicalOwners = canonicalizationSelection.canonicalArticleOwnershipByArticleId[String(articleId)] ?? [];
+        return canonicalOwners[0]?.articleId ?? articleId;
+      },
+    });
     logger.info("V3 instrumentation EXIT: mapV3ProviderResponse (validation retry)", {
       modelName: input.modelName,
       durationMs: Date.now() - startedAt,

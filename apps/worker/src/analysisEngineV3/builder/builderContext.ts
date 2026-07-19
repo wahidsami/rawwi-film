@@ -65,6 +65,9 @@ export function normalizePromptBuilderInput(input: V3PromptBuilderInput): V3Prom
     },
     subjectModule: {
       ...input.subjectModule,
+      knowledgeDomain: input.subjectModule.knowledgeDomain ?? null,
+      reviewType: input.subjectModule.reviewType ?? null,
+      primaryEvidence: input.subjectModule.primaryEvidence ?? null,
       articleIds: input.subjectModule.articleIds ? [...input.subjectModule.articleIds] : undefined,
       rules: input.subjectModule.rules ? [...input.subjectModule.rules] : undefined,
       exclusions: input.subjectModule.exclusions ? [...input.subjectModule.exclusions] : undefined,

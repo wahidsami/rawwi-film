@@ -1,6 +1,7 @@
 import type { LegalContextResult, LegalEvidenceCandidate, LegalEvidenceResult, LegalNarrativeResult, LegalSemanticResult } from "../legal/legalTypes.js";
 import type { V3PromptJsonObject, V3PromptJsonValue } from "../builder/builderTypes.js";
 import type { V3ReasonedDecisionArticleEvaluation, V3ReasonedDecisionResult, V3ReasoningResponsePayload } from "./providerTypes.js";
+import { findKnowledgeDocumentByArticleReference } from "../knowledge/knowledgeRegistry.js";
 import { logger } from "../../logger.js";
 
 const EXPECTED_TOP_LEVEL_KEYS = Object.freeze([
@@ -106,6 +107,10 @@ export type V3ProviderResponseParseAudit = Readonly<{
   finalReasonedDecision: V3ReasonedDecisionResult;
   parsedFindingCount: number;
   zeroFindingsReason: string | null;
+}>;
+
+export type V3ProviderResponseNormalizationOptions = Readonly<{
+  resolveCanonicalArticleId?: (articleId: number, knowledgeDomain: string | null) => number | null;
 }>;
 
 function isObject(value: unknown): value is V3PromptJsonObject {
@@ -245,10 +250,13 @@ function normalizeArticleList(value: unknown): number[] {
     .map((item) => Number(item));
 }
 
-function normalizeArticleEvaluation(value: unknown): V3ReasonedDecisionArticleEvaluation {
+function normalizeArticleEvaluation(value: unknown, options?: V3ProviderResponseNormalizationOptions): V3ReasonedDecisionArticleEvaluation {
   const input = isObject(value) ? value : {};
+  const parsedArticleId = Number.isFinite(Number(input.articleId ?? input.article_id)) ? Number(input.articleId ?? input.article_id) : 0;
+  const knowledgeDocument = findKnowledgeDocumentByArticleReference(parsedArticleId);
+  const canonicalArticleId = options?.resolveCanonicalArticleId?.(parsedArticleId, knowledgeDocument?.metadata.knowledgeDomain ?? null);
   return Object.freeze({
-    articleId: Number.isFinite(Number(input.articleId ?? input.article_id)) ? Number(input.articleId ?? input.article_id) : 0,
+    articleId: Number.isFinite(Number(canonicalArticleId)) && Number(canonicalArticleId) > 0 ? Number(canonicalArticleId) : parsedArticleId,
     status: String(input.status ?? input.result ?? input.decision ?? "FAIL").toUpperCase() === "PASS" ? "PASS" : "FAIL",
     evidence: Object.freeze(normalizeList(input.evidence ?? input.supportingEvidence ?? input.supporting_evidence)),
     reason: String(input.reason ?? input.explanation ?? input.description ?? ""),
@@ -256,7 +264,7 @@ function normalizeArticleEvaluation(value: unknown): V3ReasonedDecisionArticleEv
   });
 }
 
-function synthesizeArticleEvaluations(input: V3ReasoningResponsePayload): readonly V3ReasonedDecisionArticleEvaluation[] {
+function synthesizeArticleEvaluations(input: V3ReasoningResponsePayload, options?: V3ProviderResponseNormalizationOptions): readonly V3ReasonedDecisionArticleEvaluation[] {
   const supportingEvidence = normalizeList(input.supportingEvidence ?? input.supporting_evidence);
   const confidence = clampConfidence(input.confidence);
   const recommendation = String(input.recommendation ?? input.recommendation_result ?? input.recommendationResult ?? "");
@@ -265,8 +273,10 @@ function synthesizeArticleEvaluations(input: V3ReasoningResponsePayload): readon
   const synthesized: V3ReasonedDecisionArticleEvaluation[] = [];
 
   for (const articleId of applicableArticles) {
+    const knowledgeDocument = findKnowledgeDocumentByArticleReference(articleId);
+    const canonicalArticleId = options?.resolveCanonicalArticleId?.(articleId, knowledgeDocument?.metadata.knowledgeDomain ?? null);
     synthesized.push(Object.freeze({
-      articleId,
+      articleId: Number.isFinite(Number(canonicalArticleId)) && Number(canonicalArticleId) > 0 ? Number(canonicalArticleId) : articleId,
       status: "PASS" as const,
       evidence: Object.freeze([...supportingEvidence]),
       reason: recommendation || "The model marked this article as applicable.",
@@ -275,8 +285,10 @@ function synthesizeArticleEvaluations(input: V3ReasoningResponsePayload): readon
   }
 
   for (const articleId of rejectedArticles) {
+    const knowledgeDocument = findKnowledgeDocumentByArticleReference(articleId);
+    const canonicalArticleId = options?.resolveCanonicalArticleId?.(articleId, knowledgeDocument?.metadata.knowledgeDomain ?? null);
     synthesized.push(Object.freeze({
-      articleId,
+      articleId: Number.isFinite(Number(canonicalArticleId)) && Number(canonicalArticleId) > 0 ? Number(canonicalArticleId) : articleId,
       status: "FAIL" as const,
       evidence: Object.freeze([...supportingEvidence]),
       reason: recommendation || "The model marked this article as rejected.",
@@ -379,15 +391,15 @@ function normalizeContextResult(value: unknown): LegalContextResult {
   });
 }
 
-function normalizeReasonedDecisionResult(value: unknown): V3ReasonedDecisionResult {
+function normalizeReasonedDecisionResult(value: unknown, options?: V3ProviderResponseNormalizationOptions): V3ReasonedDecisionResult {
   const input = isObject(value) ? value : {};
   const rawArticleEvaluations = input.articleEvaluations ?? input.article_evaluations;
   const synthesizedArticleEvaluations = Array.isArray(rawArticleEvaluations) && rawArticleEvaluations.length > 0
     ? null
-    : synthesizeArticleEvaluations(input as V3ReasoningResponsePayload);
+    : synthesizeArticleEvaluations(input as V3ReasoningResponsePayload, options);
   const articleEvaluations = Object.freeze(
     Array.isArray(rawArticleEvaluations) && rawArticleEvaluations.length > 0
-      ? rawArticleEvaluations.map(normalizeArticleEvaluation)
+      ? rawArticleEvaluations.map((evaluation) => normalizeArticleEvaluation(evaluation, options))
       : synthesizedArticleEvaluations ?? [],
   );
   return Object.freeze({
@@ -410,6 +422,7 @@ export function mapV3ProviderResponse(
   rawResponse: string,
   options?: Readonly<{
     onAudit?: (audit: V3ProviderResponseParseAudit) => void;
+    resolveCanonicalArticleId?: V3ProviderResponseNormalizationOptions["resolveCanonicalArticleId"];
   }>,
 ): Readonly<{
   narrative: LegalNarrativeResult;
@@ -439,7 +452,8 @@ export function mapV3ProviderResponse(
       source.reasoned_decision ??
       source.reasonedDecision ??
       source.reasoned_decision_result ??
-      source.reasonedDecisionResult
+      source.reasonedDecisionResult,
+      options?.resolveCanonicalArticleId ? { resolveCanonicalArticleId: options.resolveCanonicalArticleId } : undefined,
     ),
   });
   const discardedFields = collectDiscardedFields(parsed, payloadSource, payload);

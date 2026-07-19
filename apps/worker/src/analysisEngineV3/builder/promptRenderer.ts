@@ -246,6 +246,9 @@ function renderSubjectModuleSection(context: ReturnType<typeof normalizePromptBu
       renderStableJsonSection("Subject Definition", {
         id: context.subjectModule.id,
         scope: context.subjectModule.scope ?? null,
+        knowledgeDomain: context.subjectModule.knowledgeDomain ?? null,
+        reviewType: context.subjectModule.reviewType ?? null,
+        primaryEvidence: context.subjectModule.primaryEvidence ?? null,
         titleAr: context.subjectModule.titleAr,
       }),
     ]),
