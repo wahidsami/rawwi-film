@@ -215,9 +215,79 @@ function testSingleArticleFallbackPreserved(): void {
   assert.deepEqual(enriched.candidateArticles, [4]);
 }
 
+function testExistingMultiArticleEvaluationsArePreserved(): void {
+  const registry = createDefaultReviewerKnowledgeRegistry();
+  const ranking = rankLegalArticles({
+    promptInput: {
+      subjectModule: {
+        id: "v4_11_profanity",
+        titleAr: "الألفاظ النابية",
+        articleIds: [4, 8, 11],
+      },
+    } as never,
+    intelligence: makeIntelligence(),
+    reasonedDecision: makeReasonedDecision({
+      knowledgeDomains: ["profanity"],
+      candidateArticles: [4, 8, 11],
+      applicableArticles: [4, 8, 11],
+      articleEvaluations: [
+        {
+          articleId: 4,
+          status: "PASS",
+          evidence: ["يا كلب"],
+          reason: "Article 4 is supported.",
+          confidence: 0.9,
+        },
+        {
+          articleId: 8,
+          status: "PASS",
+          evidence: ["يا كلب"],
+          reason: "Article 8 is also supported.",
+          confidence: 0.88,
+        },
+      ],
+      primaryArticle: 4,
+      secondaryArticles: [8],
+    }),
+    selectedReviewerIds: ["v4_11_profanity"],
+    canonicalArticleOwnershipByArticleId: buildCanonicalArticleOwnershipMap(registry),
+  });
+
+  const enriched = applyLegalArticleRanking(makeReasonedDecision({
+    knowledgeDomains: ["profanity"],
+    candidateArticles: [4, 8, 11],
+    applicableArticles: [4, 8, 11],
+    articleEvaluations: [
+      {
+        articleId: 4,
+        status: "PASS",
+        evidence: ["يا كلب"],
+        reason: "Article 4 is supported.",
+        confidence: 0.9,
+      },
+      {
+        articleId: 8,
+        status: "PASS",
+        evidence: ["يا كلب"],
+        reason: "Article 8 is also supported.",
+        confidence: 0.88,
+      },
+    ],
+    primaryArticle: 4,
+    secondaryArticles: [8],
+  }), ranking);
+
+  assert.equal(ranking.primaryArticle, 4);
+  assert.equal(ranking.articleEvaluations.length, 1);
+  assert.equal(enriched.articleEvaluations.length, 2);
+  assert.equal(enriched.articleEvaluations[0]?.articleId, 4);
+  assert.equal(enriched.articleEvaluations[1]?.articleId, 8);
+}
+
 function main(): void {
   testKnowledgeDomainOverlapRanking();
   testSingleArticleFallbackPreserved();
+  testExistingMultiArticleEvaluationsArePreserved();
   console.log("✓ deterministic legal article ranker preserves overlap and single-article fallback");
 }
 

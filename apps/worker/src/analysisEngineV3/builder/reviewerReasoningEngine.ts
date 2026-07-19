@@ -347,7 +347,9 @@ function buildPromptReviewerDecisionPipeline(
   decisionRecords: readonly ReasoningEngineEntry[],
   knowledgeRetrieval: ReviewerKnowledgeRetrievalReport,
 ): V3PromptJsonObject {
-  const primaryArticleIds = [...new Set(input.subjectModule.articleIds ?? [])].sort((left, right) => left - right);
+  const selectedKnowledgeArticleIds = [...new Set(selectedReviewerKnowledge.flatMap((pack) => pack.article_mapping.map((mapping) => mapping.article_id)))].sort((left, right) => left - right);
+  const subjectArticleIds = [...new Set(input.subjectModule.articleIds ?? [])].sort((left, right) => left - right);
+  const primaryArticleIds = [...new Set([...selectedKnowledgeArticleIds, ...subjectArticleIds])].sort((left, right) => left - right);
   const precedentIds = uniqueStringsWithNormalization(precedents.map((precedent) => precedent.decisionId));
   const evidenceCandidates = splitSentenceEvidenceCandidates(input.chunkContext.localChunk, 0, assessment.evidenceStrength);
   const evidenceSummary = uniqueStringsWithNormalization([

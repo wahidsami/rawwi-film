@@ -5,7 +5,7 @@ const DEFAULT_CONCEPTS: readonly ConceptRegistryEntry[] = [
   { id: "terrorism", label: "Terrorism", aliases: ["terrorism", "إرهاب", "إرهابي", "terrorist", "bombing", "extremism"] },
   { id: "violence", label: "Violence", aliases: ["violence", "violent", "threat", "attack", "ضرب", "قتل", "تهديد", "assault", "weapon", "knife", "gun"] },
   { id: "child_harm", label: "Child Harm", aliases: ["child harm", "child abuse", "طفل", "طفلة", "قاصر", "minor", "children", "kid", "baby"] },
-  { id: "profanity", label: "Profanity", aliases: ["profanity", "يا كلب", "يا حمار", "يا خرا", "كس امة", "كس أمة", "يا نصاب", "يا حرامي", "شتيمة", "سباب", "قذف"] },
+  { id: "profanity", label: "Profanity", aliases: ["profanity", "يا كلب", "يا حمار", "يا خرا", "كس امة", "كس أمة", "يا نصاب", "يا حرامي", "شتيمة", "شتائم", "سباب", "سب", "شتم", "قذف", "بشتائم", "بشتم"] },
   { id: "drug_use", label: "Drug Use", aliases: ["drug use", "drugs", "مخدر", "حشيش", "narcotic", "cocaine", "heroin", "weed"] },
   { id: "bribery", label: "Bribery", aliases: ["bribery", "رشوة", "bribe", "bribed"] },
   { id: "corruption", label: "Corruption", aliases: ["corruption", "فساد", "فاسد", "corrupt"] },

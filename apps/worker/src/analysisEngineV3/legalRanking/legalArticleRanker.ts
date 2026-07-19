@@ -270,9 +270,9 @@ export function applyLegalArticleRanking(
   const secondaryArticles = ranking.secondaryArticles.length > 0
     ? ranking.secondaryArticles
     : reasonedDecision.secondaryArticles ?? [];
-  const articleEvaluations = ranking.articleEvaluations.length > 0
-    ? ranking.articleEvaluations
-    : reasonedDecision.articleEvaluations;
+  const articleEvaluations = reasonedDecision.articleEvaluations.length > 0
+    ? reasonedDecision.articleEvaluations
+    : ranking.articleEvaluations;
 
   const applicableArticles = articleEvaluations
     .filter((evaluation) => evaluation.status === "PASS")

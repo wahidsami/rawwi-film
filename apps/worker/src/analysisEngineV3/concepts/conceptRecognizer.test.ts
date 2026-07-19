@@ -103,6 +103,14 @@ function testConceptRecognition(): void {
   console.log("✓ concept recognition");
 }
 
+function testArabicProfanityFallbackRecognition(): void {
+  const recognizer = createConceptRecognizer(createDefaultConceptRegistry());
+  const context = recognizer.recognize(buildIntelligenceContext(makeInput("حاضر. فهد يتمتم بشتائم: يا… موتو وخلصوني منكم")));
+
+  assert(context.conceptIds.includes("profanity"), "Arabic profanity fallback should recognize profanity");
+  console.log("✓ arabic profanity fallback recognition");
+}
+
 function testDuplicateMerging(): void {
   const registry = new ConceptRegistry([
     { id: "violence", label: "Violence", aliases: ["سأضرب", "ضرب", "threat"] },
@@ -160,6 +168,7 @@ function testDeterministicOutput(): void {
 
 async function main(): Promise<void> {
   testConceptRecognition();
+  testArabicProfanityFallbackRecognition();
   testDuplicateMerging();
   testStoryMemoryContributesRecognition();
   testDeterministicOutput();
