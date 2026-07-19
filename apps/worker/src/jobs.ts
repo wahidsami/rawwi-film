@@ -125,6 +125,9 @@ async function fetchJobControlState(jobId: string): Promise<{
  */
 export async function fetchNextJob(): Promise<AnalysisJob | null> {
   const queued = await fetchCandidateJobsBase();
+  logger.info("Worker claim query returned candidate jobs", {
+    candidateCount: queued?.length ?? 0,
+  });
 
   if (!queued?.length) return null;
 
@@ -135,7 +138,14 @@ export async function fetchNextJob(): Promise<AnalysisJob | null> {
       .select("id", { count: "exact", head: true })
       .eq("job_id", job.id)
       .eq("status", "pending");
-    if (count && count > 0) return job as AnalysisJob;
+    if (count && count > 0) {
+      logger.info("Worker selected claimable job", {
+        jobId: job.id,
+        pendingChunkCount: count,
+        status: job.status,
+      });
+      return job as AnalysisJob;
+    }
   }
   return null;
 }
@@ -182,11 +192,17 @@ export async function fetchNextPendingExtractionVersion(): Promise<ExtractionVer
   }
 
   const rows = (data ?? []) as ExtractionVersion[];
-  return rows.find((row) => {
+  const selected = rows.find((row) => {
     const fileName = (row.source_file_name ?? "").toLowerCase();
     const fileType = (row.source_file_type ?? "").toLowerCase();
     return fileName.endsWith(".pdf") || fileType === "application/pdf";
   }) ?? null;
+  logger.info("Worker extraction queue scan completed", {
+    candidateCount: rows.length,
+    selectedExtractionVersionId: selected?.id ?? null,
+    selectedScriptId: selected?.script_id ?? null,
+  });
+  return selected;
 }
 
 export async function setExtractionFailed(versionId: string, errorMessage: string): Promise<void> {
@@ -250,6 +266,12 @@ export async function claimChunk(chunkId: string): Promise<AnalysisChunk | null>
     .single();
 
   if (!updated) return null;
+
+  logger.info("Chunk marked processing", {
+    chunkId,
+    jobId: (updated as AnalysisChunk).job_id,
+    status: (updated as AnalysisChunk).status,
+  });
 
   const jobId = (updated as AnalysisChunk).job_id;
   const job = await fetchJobControlState(jobId);

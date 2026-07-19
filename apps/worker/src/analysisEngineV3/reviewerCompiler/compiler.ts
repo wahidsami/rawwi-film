@@ -4,6 +4,7 @@ import type { V3PromptBuilderInput } from "../builder/builderTypes.js";
 import { config } from "../../config.js";
 import { logger } from "../../logger.js";
 import { createDeterministicCandidateCompiledContext } from "../ranking/candidateEngine.js";
+import { ensureKnowledgeRegistry } from "../knowledge/knowledgeRegistry.js";
 import { ensureReviewerAcademyRegistry } from "./compilerLoader.js";
 import { resolveReviewerCompilerSelection } from "./compilerResolver.js";
 import { createCompiledReviewerContextPromptSection, summarizeCompilerOutput } from "./compilerRenderer.js";
@@ -12,6 +13,7 @@ import type {
   ReviewerAcademyAtom,
   ReviewerAcademyManual,
   ReviewerCompiledContext,
+  ReviewerCompiledKnowledgeRegistrySummary,
   ReviewerCompiledReviewerPackage,
   ReviewerCompilerOutput,
 } from "./compilerTypes.js";
@@ -41,6 +43,21 @@ function uniqueBy<T>(values: readonly T[], keyOf: (value: T) => string): readonl
 function parsePolicyArticleId(articleId: string): number {
   const numeric = Number.parseInt(articleId.replace(/[^\d]/g, ""), 10);
   return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function buildKnowledgeRegistrySummary(): ReviewerCompiledKnowledgeRegistrySummary {
+  const registry = ensureKnowledgeRegistry();
+  return Object.freeze({
+    rootDir: registry.rootDir,
+    fingerprint: registry.fingerprint,
+    loadedAt: registry.loadedAt,
+    fileCount: registry.fileCount,
+    markdownCount: registry.markdownCount,
+    knowledgeDomainCount: registry.knowledgeDomainCount,
+    characterCount: registry.characterCount,
+    estimatedTokenCount: registry.estimatedTokenCount,
+    knowledgeDomains: Object.freeze([...new Set(registry.documents.map((document) => document.metadata.knowledgeDomain))].sort((left, right) => left.localeCompare(right))),
+  });
 }
 
 function selectManualsByFolder(manualsByFolder: Readonly<Record<string, readonly ReviewerAcademyManual[]>>, folders: readonly string[]): readonly ReviewerAcademyManual[] {
@@ -175,6 +192,7 @@ function buildCompiledReviewerContext(input: ReviewerCompilerInput, registry: Re
     + selectedArticles.reduce((total, article) => total + estimateArticleFootprint(article), 0)
     + selectedAtoms.reduce((total, atom) => total + estimateAtomFootprint(atom), 0);
   const promptSectionTokenEstimate = Math.max(1, Math.ceil(promptSectionCharacterCount / 4));
+  const knowledgeRegistrySummary = buildKnowledgeRegistrySummary();
 
   const selection = Object.freeze({
     selectedReviewerIds: resolution.routing.selectedReviewerIds,
@@ -213,6 +231,7 @@ function buildCompiledReviewerContext(input: ReviewerCompilerInput, registry: Re
     promptCharacterCount: promptSectionCharacterCount,
     promptTokenEstimate: promptSectionTokenEstimate,
     promptPreview: "",
+    knowledgeRegistrySummary,
   } satisfies ReviewerCompiledContext;
 
   const promptPreview = createCompiledReviewerContextPromptSection(Object.freeze(baseCompiledReviewerContext)).body;
@@ -223,6 +242,7 @@ function buildCompiledReviewerContext(input: ReviewerCompilerInput, registry: Re
     promptCharacterCount,
     promptTokenEstimate,
     promptPreview,
+    knowledgeRegistrySummary,
   });
 
   return Object.freeze({

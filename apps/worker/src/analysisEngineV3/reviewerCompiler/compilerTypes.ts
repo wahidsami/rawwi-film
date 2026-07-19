@@ -39,6 +39,19 @@ export type ReviewerAcademyArticle = Readonly<{
   sourcePath: string;
 }>;
 
+export type ReviewerAcademyArticleDocument = Readonly<{
+  articleId: string;
+  reviewer: string;
+  title: string;
+  version: string;
+  status: string;
+  sections: readonly ReviewerAcademyManualSection[];
+  content: string;
+  characterCount: number;
+  estimatedTokenCount: number;
+  sourcePath: string;
+}>;
+
 export type ReviewerAcademyAtom = Readonly<{
   atomId: string;
   articleId: string;
@@ -109,6 +122,7 @@ export type ReviewerCompiledContext = Readonly<{
   fingerprint: string;
   generatedAt: string;
   selection: ReviewerCompilerSelection;
+  knowledgeRegistrySummary?: ReviewerCompiledKnowledgeRegistrySummary | null;
   universalManuals: readonly ReviewerAcademyManual[];
   selectedReviewerManuals: readonly ReviewerAcademyManual[];
   rejectedReviewerManuals: readonly ReviewerAcademyManual[];
@@ -127,6 +141,18 @@ export type ReviewerCompiledContext = Readonly<{
   promptTokenEstimate: number;
   promptPreview: string;
   candidateDiagnostics?: ReviewerCandidateSelectionDiagnostics | null;
+}>;
+
+export type ReviewerCompiledKnowledgeRegistrySummary = Readonly<{
+  rootDir: string;
+  fingerprint: string;
+  loadedAt: string;
+  fileCount: number;
+  markdownCount: number;
+  knowledgeDomainCount: number;
+  characterCount: number;
+  estimatedTokenCount: number;
+  knowledgeDomains: readonly string[];
 }>;
 
 export type ReviewerCompiledReviewerPackage = Readonly<{

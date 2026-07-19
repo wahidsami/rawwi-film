@@ -3,8 +3,14 @@
  * Run: node --import tsx apps/worker/src/analysisEngineV3/reviewerCompiler/compilerLoader.test.ts
  */
 import { strict as assert } from "node:assert";
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
 
-import { ensureReviewerAcademyRegistry, reloadReviewerAcademyRegistry } from "./compilerLoader.js";
+import {
+  ensureReviewerAcademyRegistry,
+  loadReviewerAcademyArticleDocuments,
+  reloadReviewerAcademyRegistry,
+} from "./compilerLoader.js";
 
 function assertCondition(condition: boolean, message: string): void {
   if (!condition) throw new Error(message);
@@ -53,9 +59,29 @@ function testArticleAtomConsistency(): void {
   console.log("✓ reviewer academy article/atom relationships are internally consistent");
 }
 
+function testArticleKnowledgeDocumentsLoadWithoutChangingRegistry(): void {
+  const registry = ensureReviewerAcademyRegistry();
+  const articleDocuments = loadReviewerAcademyArticleDocuments(registry.rootDir);
+  const articleDirectoryEntries = readdirSync(join(registry.rootDir, "Articles"), { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => entry.name);
+
+  assertCondition(articleDocuments.length === 26, "all article knowledge documents should load");
+  assertCondition(articleDocuments.some((document) => document.articleId === "article_08"), "article_08 should load from markdown");
+  assertCondition(articleDocuments.some((document) => document.reviewer === "religion"), "religion article document should preserve reviewer metadata");
+  assertCondition(articleDocuments.every((document) => document.status === "draft"), "article documents should remain draft scaffolding");
+  assertCondition(registry.articleCount === 26, "legacy article registry should remain unchanged");
+  assertCondition(Object.keys(registry.articlesById).includes("article_08"), "legacy article metadata index should still load article_08");
+  assertCondition(articleDirectoryEntries.filter((name) => /^article_\d+\.md$/i.test(name)).length === 26, "exactly 26 canonical article markdown files should exist");
+  assertCondition(articleDirectoryEntries.every((name) => !/^article_\d+_[a-z0-9-]+\.md$/i.test(name)), "no reviewer-suffixed article filenames should remain");
+
+  console.log("✓ article knowledge documents load separately without changing the legacy registry");
+}
+
 function main(): void {
   testRegistryLoadsOnceAndCaches();
   testArticleAtomConsistency();
+  testArticleKnowledgeDocumentsLoadWithoutChangingRegistry();
   console.log("\nAll reviewer compiler loader tests passed.");
 }
 

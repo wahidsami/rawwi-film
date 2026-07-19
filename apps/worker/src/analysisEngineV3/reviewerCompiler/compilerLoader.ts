@@ -7,6 +7,7 @@ import { logger } from "../../logger.js";
 import type { V3PromptJsonValue } from "../builder/builderTypes.js";
 import type {
   ReviewerAcademyArticle,
+  ReviewerAcademyArticleDocument,
   ReviewerAcademyAtom,
   ReviewerAcademyFrontMatterValue,
   ReviewerAcademyManual,
@@ -40,6 +41,7 @@ const ACADEMY_DIRECTORY_CANDIDATES = Object.freeze([
 
 const MARKDOWN_EXTENSIONS = new Set([".md"]);
 const METADATA_EXTENSIONS = new Set([".yaml", ".yml", ".json"]);
+const ARTICLE_KNOWLEDGE_FILE_PATTERN = /^article_\d+\.md$/i;
 let cachedRegistry: ReviewerAcademyRegistry | null = null;
 
 function isDirectory(path: string): boolean {
@@ -83,6 +85,14 @@ function collectFiles(directoryPath: string): readonly string[] {
   }
 
   return Object.freeze(files.sort((left, right) => left.localeCompare(right)));
+}
+
+function isArticleKnowledgeFile(filePath: string, rootDir: string): boolean {
+  const normalizedRelativePath = normalizePathSeparators(relative(rootDir, filePath));
+  const segments = normalizedRelativePath.split("/");
+  if (segments.length !== 2 || segments[0] !== "Articles") return false;
+  const fileName = segments[1] ?? "";
+  return ARTICLE_KNOWLEDGE_FILE_PATTERN.test(fileName);
 }
 
 function parseScalarValue(value: string): ParsedYamlValue {
@@ -382,6 +392,36 @@ function loadMarkdownDocument(filePath: string, rootDir: string): LoadedMarkdown
   });
 }
 
+function loadArticleKnowledgeDocument(filePath: string, rootDir: string): ReviewerAcademyArticleDocument {
+  const rawContent = readFileSync(filePath, "utf8").replace(/^\uFEFF/, "");
+  const { frontMatter, body } = parseFrontMatter(rawContent);
+  const content = normalizeTextBlock(body.trim());
+  const fileName = filePath.split(/[\\/]/).pop() ?? filePath;
+  const relativePath = relativeFromRoot(rootDir, filePath);
+  const articleNumber = Number(frontMatter.article_id ?? frontMatter.article ?? Number.NaN);
+  const articleId = Number.isFinite(articleNumber)
+    ? `article_${String(articleNumber).padStart(2, "0")}`
+    : fileName.replace(/\.md$/i, "").trim();
+  const reviewer = String(frontMatter.reviewer ?? "");
+  const title = String(frontMatter.title ?? "");
+  const version = String(frontMatter.version ?? "1");
+  const status = String(frontMatter.status ?? "draft");
+  const sections = dedupeSections(extractSections(body));
+
+  return Object.freeze({
+    articleId,
+    reviewer,
+    title,
+    version,
+    status,
+    sections,
+    content,
+    characterCount: content.length,
+    estimatedTokenCount: Math.max(1, Math.ceil(content.length / 4)),
+    sourcePath: relativePath,
+  });
+}
+
 function loadYamlDocument(filePath: string): ParsedYamlValue {
   return parseYamlDocument(readFileSync(filePath, "utf8"));
 }
@@ -454,6 +494,17 @@ function parseArticlesIndex(rootDir: string): Readonly<Record<string, ReviewerAc
   }
 
   return Object.freeze(articles);
+}
+
+export function loadReviewerAcademyArticleDocuments(rootDir: string): readonly ReviewerAcademyArticleDocument[] {
+  const articlesDirectory = join(rootDir, "Articles");
+  if (!existsSync(articlesDirectory)) {
+    return Object.freeze([]);
+  }
+
+  const articleFiles = collectFiles(articlesDirectory).filter((filePath) => isArticleKnowledgeFile(filePath, rootDir));
+  const documents = articleFiles.map((filePath) => loadArticleKnowledgeDocument(filePath, rootDir));
+  return Object.freeze(documents.sort((left, right) => left.articleId.localeCompare(right.articleId)));
 }
 
 function parseAtomsIndex(rootDir: string): Readonly<Record<string, ReviewerAcademyAtom>> {
@@ -686,11 +737,13 @@ function loadReviewerAcademyRegistryFromRoot(rootDir: string): ReviewerAcademyRe
     throw new Error(`Reviewer Academy contains no files under ${rootDir}`);
   }
 
-  const markdownFiles = allFiles.filter((filePath) => {
+  const registryFiles = allFiles.filter((filePath) => !isArticleKnowledgeFile(filePath, rootDir));
+
+  const markdownFiles = registryFiles.filter((filePath) => {
     const lower = filePath.toLowerCase();
     return MARKDOWN_EXTENSIONS.has(lower.slice(lower.lastIndexOf(".")));
   });
-  const metadataFiles = allFiles.filter((filePath) => {
+  const metadataFiles = registryFiles.filter((filePath) => {
     const lower = filePath.toLowerCase();
     const extension = lower.slice(lower.lastIndexOf("."));
     return METADATA_EXTENSIONS.has(extension);
@@ -735,7 +788,7 @@ function loadReviewerAcademyRegistryFromRoot(rootDir: string): ReviewerAcademyRe
 
   const registry = Object.freeze({
     rootDir,
-    fingerprint: computeFingerprint(allFiles),
+    fingerprint: computeFingerprint(registryFiles),
     loadedAt: new Date().toISOString(),
     manuals: Object.freeze([...manualDocuments].sort((left, right) => left.relativePath.localeCompare(right.relativePath))),
     manualsByFolder: Object.freeze(manualsByFolder),
@@ -748,7 +801,7 @@ function loadReviewerAcademyRegistryFromRoot(rootDir: string): ReviewerAcademyRe
     relationshipMap,
     documents: Object.freeze([...markdownDocuments.map((entry) => entry.document)].sort((left, right) => left.relativePath.localeCompare(right.relativePath))),
     referenceDocuments: Object.freeze([...referenceDocuments].sort((left, right) => left.relativePath.localeCompare(right.relativePath))),
-    fileCount: allFiles.length,
+    fileCount: registryFiles.length,
     markdownCount: markdownDocuments.length,
     metadataCount: metadataFiles.length,
     articleCount: Object.keys(articlesById).length,

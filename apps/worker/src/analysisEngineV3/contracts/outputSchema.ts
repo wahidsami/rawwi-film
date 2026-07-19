@@ -35,6 +35,7 @@ export function renderV3OutputSchemaContract(): string {
     "Output Schema Contract (placeholder):",
     "- narrative: { speaker, listener, target, narrativeVoice, sceneType, narrativeIntent, storyPosition, relationship, emotionalTone, condemnation, approval, neutrality, historicalContext, dream, flashback, comedy, satire, threat, instruction, news, documentary, dialogue, narration, sceneDescription, confidence, notes }",
     "- evidence: { candidates: [{ text, startOffset, endOffset, confidence, source, notes }], primaryCandidateIndex, admissible, confidence, notes }",
+    "- evidence candidates are sentence-level and each candidate must be evaluated independently before findings are merged.",
     "- semantic: { semanticMeaning, narrativeIntent, conversationRole, sceneRole, speaker, listener, target, victim, emotion, riskContext, confidence, notes }",
     "- context: { storyMemory, sceneMemory, localContext, chunkContext, neighboringSentences, narrativeContext, confidence, notes }",
     "- reasoned_decision: { reasoning, alternativeInterpretations, confidence, articleEvaluations: [{ articleId, status, evidence, reason, confidence }], supportingEvidence, contradictingEvidence, applicableArticles, rejectedArticles, riskAnalysis, narrativeAnalysis, humanLikeExplanation, recommendation }",

@@ -11,6 +11,7 @@ import type { V3PromptBuilderInput } from "../builder/builderTypes.js";
 import type { ConceptContext } from "../concepts/conceptTypes.js";
 import type { ReviewerAssessment } from "../reviewerMethodology/reviewerMethodologyTypes.js";
 import type { EmergencyContextualReviewerRoutingReport } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
+import { ensureKnowledgeRegistry } from "../knowledge/knowledgeRegistry.js";
 import { getReviewerScopeDeclarationsByIds } from "../reviewerKnowledge/reviewerScopeMatrix.js";
 import { buildCandidateRankingSignalTerms, buildCandidateSelectionDiagnostics } from "./candidateDiagnostics.js";
 import { rankCandidateArticles } from "./articleRanker.js";
@@ -45,6 +46,21 @@ function uniqueBy<T>(values: readonly T[], keyOf: (value: T) => string): readonl
 function parsePolicyArticleId(articleId: string): number {
   const numeric = Number.parseInt(articleId.replace(/[^\d]/g, ""), 10);
   return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function buildKnowledgeRegistrySummary(): ReviewerCompiledContext["knowledgeRegistrySummary"] {
+  const registry = ensureKnowledgeRegistry();
+  return Object.freeze({
+    rootDir: registry.rootDir,
+    fingerprint: registry.fingerprint,
+    loadedAt: registry.loadedAt,
+    fileCount: registry.fileCount,
+    markdownCount: registry.markdownCount,
+    knowledgeDomainCount: registry.knowledgeDomainCount,
+    characterCount: registry.characterCount,
+    estimatedTokenCount: registry.estimatedTokenCount,
+    knowledgeDomains: Object.freeze([...new Set(registry.documents.map((document) => document.metadata.knowledgeDomain))].sort((left, right) => left.localeCompare(right))),
+  });
 }
 
 function estimateArticleFootprint(article: ReviewerAcademyArticle): number {
@@ -291,6 +307,7 @@ function buildCompiledContext(
     + legacySelectedArticles.reduce((total, article) => total + estimateArticleFootprint(article), 0)
     + legacySelectedAtoms.reduce((total, atom) => total + estimateAtomFootprint(atom), 0);
   const legacyEstimatedTokenCount = Math.max(1, Math.ceil(legacyLoadedCharacterCount / 4));
+  const knowledgeRegistrySummary = buildKnowledgeRegistrySummary();
 
   const candidateSelection = Object.freeze({
     selectedReviewerIds: Object.freeze([...selectedReviewerIds]),
@@ -333,6 +350,7 @@ function buildCompiledContext(
     promptCharacterCount: 0,
     promptTokenEstimate: 0,
     promptPreview: "",
+    knowledgeRegistrySummary,
   } satisfies ReviewerCompiledContext;
 
   const candidateContextBase = {
