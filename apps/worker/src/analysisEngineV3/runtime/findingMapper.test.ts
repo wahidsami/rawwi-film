@@ -207,6 +207,10 @@ function testLegalArticleWinsOverGcamMapping(): void {
   assert.equal(findings[0].article_id, 8);
   assert.equal(findings[0].title_ar, "الكراهية والتمييز");
   assert.equal(findings[0].description_ar, "التحريض ضد فئة اجتماعية أو ثقافية أو دينية");
+  const locationV3 = (findings[0].location as unknown as { v3?: Record<string, unknown> } | null)?.v3;
+  const knowledgeRegistry = locationV3?.knowledge_registry as Record<string, unknown> | null | undefined;
+  assert.equal(knowledgeRegistry?.article_reference, 8);
+  assert.equal(String(knowledgeRegistry?.source_path ?? "").includes("article_08"), true);
   console.log("✓ legal article 8 resolves through the official GCAM catalog");
 }
 

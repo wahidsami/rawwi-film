@@ -2,6 +2,7 @@ import { getPrimaryCanonicalAtomForGcam } from "../../canonicalAtomMapping.js";
 import { derivePolicyConceptCode, getPolicyAtomIdsForArticle, normalizeAtomId } from "../../policyMap.js";
 import { getPolicyArticle, getPolicyAtomTitle } from "../../policyMap.js";
 import type { JudgeFinding } from "../../schemas.js";
+import { findKnowledgeDocumentByArticleReference } from "../knowledge/knowledgeRegistry.js";
 import type { LegalDecision } from "../legal/legalDecision.js";
 import type { LegalEvidenceCandidate, LegalContextResult } from "../legal/legalTypes.js";
 import type { IntelligenceContext } from "../intelligence/intelligenceContext.js";
@@ -402,9 +403,11 @@ function buildLocation(
   endLine: number | null,
   diagnostics: V3RuntimeDiagnostics,
   moduleId: string,
+  articleId: number,
 ): JudgeFinding["location"] & { v3: Record<string, unknown> } {
   const startOffset = clampOffset(evidence.startOffset, chunkStart);
   const endOffset = clampOffset(evidence.endOffset, Math.max(startOffset, chunkStart));
+  const knowledgeDocument = findKnowledgeDocumentByArticleReference(articleId);
   return {
     start_offset: startOffset,
     end_offset: endOffset,
@@ -430,6 +433,18 @@ function buildLocation(
         edited_by: null,
         edited_at: null,
       },
+      knowledge_registry: knowledgeDocument
+        ? {
+            article_reference: knowledgeDocument.metadata.articleReference,
+            knowledge_domain: knowledgeDocument.metadata.knowledgeDomain,
+            review_type: knowledgeDocument.metadata.reviewType,
+            primary_evidence: knowledgeDocument.metadata.primaryEvidence,
+            title: knowledgeDocument.metadata.title,
+            file_name: knowledgeDocument.metadata.fileName,
+            source_path: knowledgeDocument.metadata.sourcePath,
+            metadata_source: knowledgeDocument.metadata.metadataSource,
+          }
+        : null,
     },
   };
 }
@@ -499,7 +514,7 @@ export function mapLegalDecisionToFindings(args: {
         source: "chunk" as const,
         notes: [],
       };
-      const location = buildLocation(locationEvidence, chunkStart, startLine, endLine, diagnostics, decision.moduleId);
+      const location = buildLocation(locationEvidence, chunkStart, startLine, endLine, diagnostics, decision.moduleId, articleId);
 
       return {
         source: "v3",
