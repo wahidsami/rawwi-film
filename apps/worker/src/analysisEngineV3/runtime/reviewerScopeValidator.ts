@@ -6,6 +6,8 @@ import type { V3ReasonedDecisionResult } from "../provider/providerTypes.js";
 import type { ReviewerScopeDeclaration } from "../reviewerKnowledge/reviewerScopeMatrix.js";
 import { getReviewerScopeDeclaration, getReviewerScopeDeclarationsByIds } from "../reviewerKnowledge/reviewerScopeMatrix.js";
 import type { ReviewerCanonicalArticleOwner, ReviewerCanonicalArticleOwnershipMap } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
+import { createDefaultReviewerKnowledgeRegistry, resolveKnowledgeDomainCandidateArticleIds } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
+import { findKnowledgeDocumentByArticleReference } from "../knowledge/knowledgeRegistry.js";
 import { logger } from "../../logger.js";
 
 export type ReviewerScopeValidatorInput = Readonly<{
@@ -57,6 +59,32 @@ function pickEvidenceText(input: ReviewerScopeValidatorInput, articleId: number)
   return input.decision.evidence.candidates[0]?.text ?? `article:${articleId}`;
 }
 
+function resolveSupportingArticleIds(articleId: number): readonly number[] {
+  const knowledgeDocument = findKnowledgeDocumentByArticleReference(articleId);
+  const knowledgeDomain = knowledgeDocument?.metadata.knowledgeDomain ?? null;
+  if (!knowledgeDomain) return Object.freeze([]);
+  const candidateArticleIds = resolveKnowledgeDomainCandidateArticleIds(createDefaultReviewerKnowledgeRegistry(), knowledgeDomain);
+  return Object.freeze(candidateArticleIds.filter((candidateArticleId) => candidateArticleId !== articleId));
+}
+
+function selectCanonicalOwner(
+  canonicalOwners: readonly ReviewerCanonicalArticleOwner[],
+  selectedReviewerIds: readonly string[],
+  gptReviewerId: string,
+): ReviewerCanonicalArticleOwner | null {
+  if (canonicalOwners.length === 0) return null;
+  if (canonicalOwners.length === 1) return canonicalOwners[0] ?? null;
+
+  const selectedReviewerSet = new Set(selectedReviewerIds.map((reviewerId) => reviewerId.trim().toLowerCase()));
+  const selectedOwner = canonicalOwners.find((owner) => selectedReviewerSet.has(owner.reviewerId.trim().toLowerCase()));
+  if (selectedOwner) return selectedOwner;
+
+  const gptOwner = canonicalOwners.find((owner) => owner.reviewerId.trim().toLowerCase() === gptReviewerId.trim().toLowerCase());
+  if (gptOwner) return gptOwner;
+
+  return canonicalOwners[0] ?? null;
+}
+
 function buildFindingFromEvaluation(
   input: ReviewerScopeValidatorInput,
   evaluation: V3ReasonedDecisionResult["articleEvaluations"][number],
@@ -77,7 +105,7 @@ function buildFindingFromEvaluation(
     findingKey: `${canonicalOwner.reviewerId}:${evaluation.articleId}:${index}:${normalizeText(evaluation.reason)}:${normalizeText(evaluation.status)}`,
     moduleId: canonicalOwner.reviewerId,
     moduleTitle: canonicalOwner.reviewerLabel,
-    articleIds: [evaluation.articleId],
+    articleIds: [evaluation.articleId, ...resolveSupportingArticleIds(evaluation.articleId)],
     status: "accept",
     reason: evaluation.reason,
     confidence: evaluation.confidence,
@@ -135,7 +163,7 @@ export function validateReviewerScope(input: ReviewerScopeValidatorInput): Revie
   for (const [index, evaluation] of evaluations.entries()) {
     const articleId = evaluation.articleId ?? null;
     const canonicalOwners = articleId === null ? [] : (ownershipByArticleId[String(articleId)] ?? []);
-    const canonicalOwner = canonicalOwners.length === 1 ? canonicalOwners[0] : null;
+    const canonicalOwner = articleId === null ? null : selectCanonicalOwner(canonicalOwners, selectedReviewerIds, input.decision.moduleId);
     const routerReviewerLabel = selectedReviewerLabels[0] ?? null;
     const gptReviewerLabel = input.decision.moduleTitle;
     const gptReviewerId = input.decision.moduleId;
@@ -192,10 +220,11 @@ export function validateReviewerScope(input: ReviewerScopeValidatorInput): Revie
     logger.info("V3 reviewer scope validation ownership resolution", {
       validator_name: "reviewerScopeValidator",
       router_reviewer: routerReviewerLabel,
-      canonical_owner: finalReviewerLabel,
-      gpt_reviewer: gptReviewerLabel,
-      final_reviewer: finalReviewerLabel,
-      reassignment_reason: reassignmentReason,
+        canonical_owner: finalReviewerLabel,
+        canonical_owner_candidates: canonicalOwners.map((owner) => owner.reviewerLabel),
+        gpt_reviewer: gptReviewerLabel,
+        final_reviewer: finalReviewerLabel,
+        reassignment_reason: reassignmentReason,
       rejection_occurred: false,
       article_id: articleId,
       evaluation_index: index,

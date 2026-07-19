@@ -13,6 +13,8 @@ const ACADEMY_DIRECTORY = join(READER_DIRECTORY, "academy");
 const DEFAULT_PACKS: readonly ReviewerKnowledgePack[] = Object.freeze([]);
 let cachedDefaultReviewerKnowledgeRegistry: ReviewerKnowledgeRegistry | null = null;
 let cachedDefaultGcamMapperRegistry: ReturnType<typeof createGcamMapperRegistry> | null = null;
+let cachedDefaultReviewerArticleIdsByFolder: Readonly<Record<string, readonly number[]>> | null = null;
+let cachedDefaultKnowledgeDomainCandidateArticleSetMap: ReviewerKnowledgeDomainCandidateArticleSetMap | null = null;
 
 export type ReviewerCanonicalArticleOwner = Readonly<{
   reviewerId: string;
@@ -24,6 +26,8 @@ export type ReviewerCanonicalArticleOwner = Readonly<{
 }>;
 
 export type ReviewerCanonicalArticleOwnershipMap = Readonly<Record<string, readonly ReviewerCanonicalArticleOwner[]>>;
+
+export type ReviewerKnowledgeDomainCandidateArticleSetMap = Readonly<Record<string, readonly number[]>>;
 
 type CanonicalOwnerCandidate = Readonly<{
   owner: ReviewerCanonicalArticleOwner;
@@ -123,6 +127,97 @@ function buildReviewerScopeFolderMap(): ReadonlyMap<string, ReviewerScopeDeclara
   return new Map(listReviewerScopeDeclarations().map((declaration) => [normalizeKey(declaration.folder), declaration] as const));
 }
 
+function buildReviewerScopeCategoryMap(): ReadonlyMap<string, ReviewerScopeDeclaration> {
+  const entries: Array<readonly [string, ReviewerScopeDeclaration]> = [];
+  for (const declaration of listReviewerScopeDeclarations()) {
+    entries.push([normalizeKey(declaration.folder), declaration] as const);
+    for (const category of declaration.ownedCategories) {
+      entries.push([normalizeKey(category), declaration] as const);
+    }
+  }
+  return new Map(entries);
+}
+
+function buildReviewerArticleIdsByFolder(registry: ReviewerKnowledgeRegistry): Readonly<Record<string, readonly number[]>> {
+  if (registry === cachedDefaultReviewerKnowledgeRegistry && cachedDefaultReviewerArticleIdsByFolder) {
+    return cachedDefaultReviewerArticleIdsByFolder;
+  }
+
+  const scopeByFolder = buildReviewerScopeFolderMap();
+  const articleIdsByFolder: Record<string, Set<number>> = {};
+  const gcamArticleMappings = getDefaultGcamMapperRegistry().listArticleMappings();
+
+  for (const articleMapping of gcamArticleMappings) {
+    for (const domain of articleMapping.domains) {
+      const reviewerScope = scopeByFolder.get(normalizeKey(domain));
+      if (!reviewerScope) continue;
+      const pack = registry.load(reviewerScope.packId);
+      if (!pack) continue;
+      const packHasArticle = pack.article_mapping.some((mapping) => mapping.article_id === articleMapping.articleId);
+      if (!packHasArticle) continue;
+      articleIdsByFolder[reviewerScope.folder] ??= new Set<number>();
+      articleIdsByFolder[reviewerScope.folder].add(articleMapping.articleId);
+    }
+  }
+
+  const result: Record<string, readonly number[]> = {};
+  for (const [folder, articleIds] of Object.entries(articleIdsByFolder)) {
+    result[folder] = Object.freeze([...articleIds].sort((left, right) => left - right));
+  }
+
+  if (registry === cachedDefaultReviewerKnowledgeRegistry) {
+    cachedDefaultReviewerArticleIdsByFolder = Object.freeze(result);
+    return cachedDefaultReviewerArticleIdsByFolder;
+  }
+
+  return Object.freeze(result);
+}
+
+export function buildKnowledgeDomainCandidateArticleSetMap(registry: ReviewerKnowledgeRegistry): ReviewerKnowledgeDomainCandidateArticleSetMap {
+  if (registry === cachedDefaultReviewerKnowledgeRegistry && cachedDefaultKnowledgeDomainCandidateArticleSetMap) {
+    return cachedDefaultKnowledgeDomainCandidateArticleSetMap;
+  }
+
+  const articleIdsByFolder = buildReviewerArticleIdsByFolder(registry);
+  const candidateByDomain: Record<string, Set<number>> = {};
+
+  for (const declaration of listReviewerScopeDeclarations()) {
+    const articleIds = articleIdsByFolder[declaration.folder] ?? [];
+    const candidateSet = new Set(articleIds);
+    candidateByDomain[normalizeKey(declaration.folder)] ??= new Set<number>();
+    for (const articleId of candidateSet) {
+      candidateByDomain[normalizeKey(declaration.folder)].add(articleId);
+    }
+
+    for (const category of declaration.ownedCategories) {
+      const normalizedCategory = normalizeKey(category);
+      candidateByDomain[normalizedCategory] ??= new Set<number>();
+      for (const articleId of candidateSet) {
+        candidateByDomain[normalizedCategory].add(articleId);
+      }
+    }
+  }
+
+  const result: Record<string, readonly number[]> = {};
+  for (const [domain, articleIds] of Object.entries(candidateByDomain)) {
+    result[domain] = Object.freeze([...articleIds].sort((left, right) => left - right));
+  }
+
+  if (registry === cachedDefaultReviewerKnowledgeRegistry) {
+    cachedDefaultKnowledgeDomainCandidateArticleSetMap = Object.freeze(result);
+    return cachedDefaultKnowledgeDomainCandidateArticleSetMap;
+  }
+
+  return Object.freeze(result);
+}
+
+export function resolveKnowledgeDomainCandidateArticleIds(registry: ReviewerKnowledgeRegistry, knowledgeDomain: string): readonly number[] {
+  const normalizedDomain = normalizeKey(knowledgeDomain);
+  if (normalizedDomain.length === 0) return Object.freeze([]);
+  const map = buildKnowledgeDomainCandidateArticleSetMap(registry);
+  return map[normalizedDomain] ?? Object.freeze([]);
+}
+
 function computePackMappingPriority(role: string, note: string): number {
   const normalizedRole = normalizeKey(role);
   const normalizedNote = normalizeKey(note);
@@ -195,17 +290,23 @@ function resolveCanonicalOwnerFromPackMappings(
 }
 
 export function buildCanonicalArticleOwnershipMap(registry: ReviewerKnowledgeRegistry): ReviewerCanonicalArticleOwnershipMap {
-  const chosenByArticleId = new Map<string, CanonicalOwnerCandidate>();
+  const chosenByArticleId = new Map<string, Map<string, CanonicalOwnerCandidate>>();
   const scopeByFolder = buildReviewerScopeFolderMap();
-  const gcamArticleMappings = getDefaultGcamMapperRegistry().listArticleMappings();
+  const articleIdsByFolder = buildReviewerArticleIdsByFolder(registry);
 
-  for (const articleMapping of gcamArticleMappings) {
-    const candidate = resolveCanonicalOwnerFromGcamMapping(registry, articleMapping, scopeByFolder);
-    if (!candidate) continue;
-    const articleKey = String(articleMapping.articleId);
-    const existing = chosenByArticleId.get(articleKey);
-    if (!existing || candidate.priority > existing.priority || (candidate.priority === existing.priority && candidate.owner.reviewerId.localeCompare(existing.owner.reviewerId) < 0)) {
-      chosenByArticleId.set(articleKey, candidate);
+  for (const declaration of listReviewerScopeDeclarations()) {
+    const articleIds = articleIdsByFolder[declaration.folder] ?? [];
+    const pack = registry.load(declaration.packId);
+    for (const articleId of articleIds) {
+      const mappedAtoms = pack?.article_mapping.find((mapping) => mapping.article_id === articleId)?.atom_ids ?? [];
+      const candidate = buildCanonicalOwnerCandidate(declaration, articleId, mappedAtoms, 1000);
+      const articleKey = String(articleId);
+      const bucket = chosenByArticleId.get(articleKey) ?? new Map<string, CanonicalOwnerCandidate>();
+      const existing = bucket.get(candidate.owner.reviewerId);
+      if (!existing || candidate.priority > existing.priority || (candidate.priority === existing.priority && candidate.owner.reviewerId.localeCompare(existing.owner.reviewerId) < 0)) {
+        bucket.set(candidate.owner.reviewerId, candidate);
+      }
+      chosenByArticleId.set(articleKey, bucket);
     }
   }
 
@@ -214,16 +315,19 @@ export function buildCanonicalArticleOwnershipMap(registry: ReviewerKnowledgeReg
       const candidate = resolveCanonicalOwnerFromPackMappings(pack, mapping.article_id);
       if (!candidate) continue;
       const articleKey = String(mapping.article_id);
-      const existing = chosenByArticleId.get(articleKey);
+      const bucket = chosenByArticleId.get(articleKey) ?? new Map<string, CanonicalOwnerCandidate>();
+      const existing = bucket.get(candidate.owner.reviewerId);
       if (!existing || candidate.priority > existing.priority || (candidate.priority === existing.priority && candidate.owner.reviewerId.localeCompare(existing.owner.reviewerId) < 0)) {
-        chosenByArticleId.set(articleKey, candidate);
+        bucket.set(candidate.owner.reviewerId, candidate);
       }
+      chosenByArticleId.set(articleKey, bucket);
     }
   }
 
   const result: Record<string, readonly ReviewerCanonicalArticleOwner[]> = {};
-  for (const [articleId, candidate] of chosenByArticleId.entries()) {
-    result[articleId] = Object.freeze([candidate.owner]);
+  for (const [articleId, candidates] of chosenByArticleId.entries()) {
+    const ordered = [...candidates.values()].sort((left, right) => right.priority - left.priority || left.owner.reviewerId.localeCompare(right.owner.reviewerId));
+    result[articleId] = Object.freeze(ordered.map((candidate) => candidate.owner));
   }
   return Object.freeze(result);
 }

@@ -67,6 +67,7 @@ import type { LegalDecision } from "../legal/legalDecision.js";
 import { createLegalDecision } from "../legal/legalDecision.js";
 import { buildExplanationSafeAnalysisResponse } from "./explanationSafeAnalysisResponse.js";
 import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
+import { resolveKnowledgeDomainCandidateArticleIds } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
 import { validateReasonedDecisionAgainstEvidence } from "../provider/reasonedDecisionValidation.js";
 import { validateReviewerScope } from "./reviewerScopeValidator.js";
 import { buildV3LegalReasoningTrace, buildV3ReasoningMetrics } from "../reasoningTrace/index.js";
@@ -1186,14 +1187,22 @@ export async function runV3RuntimeAdapter(
   const reasoningLatencyMs = Date.now() - reasoningStartedAt;
 
   let providerParseAudit: V3ProviderResponseParseAudit | null = null;
+  const selectedPolicyArticleIds = new Set(promptInput.compiledReviewerContext?.selectedPolicyArticleIds ?? []);
+  const resolveCanonicalArticleId = (articleId: number, knowledgeDomain: string | null): number => {
+    if (!Number.isFinite(articleId) || articleId <= 0) return articleId;
+    const candidateArticleIds = typeof knowledgeDomain === "string"
+      ? resolveKnowledgeDomainCandidateArticleIds(canonicalizationSelection.reviewerKnowledgeRegistry, knowledgeDomain)
+      : Object.freeze([]);
+    if (candidateArticleIds.includes(articleId)) return articleId;
+    const selectedCandidate = candidateArticleIds.find((candidateArticleId) => selectedPolicyArticleIds.has(candidateArticleId));
+    if (typeof selectedCandidate === "number") return selectedCandidate;
+    return candidateArticleIds[0] ?? articleId;
+  };
   const mapped = mapV3ProviderResponse(rawResponse.rawResponse, {
     onAudit: (audit) => {
       providerParseAudit = audit;
     },
-    resolveCanonicalArticleId: (articleId) => {
-      const canonicalOwners = canonicalizationSelection.canonicalArticleOwnershipByArticleId[String(articleId)] ?? [];
-      return canonicalOwners[0]?.articleId ?? articleId;
-    },
+    resolveCanonicalArticleId,
   });
   const groundingValidation = validateReasonedDecisionAgainstEvidence(promptInput, {
     prompt: renderedPrompt.prompt,

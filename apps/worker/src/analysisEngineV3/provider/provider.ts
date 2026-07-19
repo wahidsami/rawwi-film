@@ -13,6 +13,7 @@ import { getDefaultReviewerMethodology } from "../reviewerMethodology/reviewerMe
 import { getDefaultReviewerQuestionSet } from "../reviewerQuestions/index.js";
 import { createReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
 import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
+import { resolveKnowledgeDomainCandidateArticleIds } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
 import { buildReviewerReasoningEnginePayload } from "../builder/reviewerReasoningEngine.js";
 import { compileReviewerContext } from "../reviewerCompiler/compiler.js";
 import { validateReasonedDecisionAgainstEvidence } from "./reasonedDecisionValidation.js";
@@ -71,6 +72,19 @@ export function buildV3ProviderUserPrompt(input: V3PromptBuilderInput): string {
         topK: Math.max(1, reviewerKnowledgeSelection!.routing.selectedReviewerPackIds.length),
       });
   const reviewerKnowledgePacks = reviewerKnowledgeRetrieval?.selectedPacks ?? [];
+  const canonicalOwnershipRegistry = reviewerKnowledgeSelection!.reviewerKnowledgeRegistry;
+  const selectedPolicyArticleIds = new Set(input.compiledReviewerContext?.selectedPolicyArticleIds ?? []);
+  const resolveCanonicalArticleId = (articleId: number, knowledgeDomain: string | null): number => {
+    if (!Number.isFinite(articleId) || articleId <= 0) return articleId;
+    const normalizedKnowledgeDomain = typeof knowledgeDomain === "string" ? knowledgeDomain : null;
+    const candidateArticleIds = normalizedKnowledgeDomain
+      ? resolveKnowledgeDomainCandidateArticleIds(canonicalOwnershipRegistry, normalizedKnowledgeDomain)
+      : Object.freeze([]);
+    if (candidateArticleIds.includes(articleId)) return articleId;
+    const selectedCandidate = candidateArticleIds.find((candidateArticleId) => selectedPolicyArticleIds.has(candidateArticleId));
+    if (typeof selectedCandidate === "number") return selectedCandidate;
+    return candidateArticleIds[0] ?? articleId;
+  };
   const reviewerReasoningEngine = useReviewerCompiler
     ? null
     : buildReviewerReasoningEnginePayload(
@@ -162,6 +176,17 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
     conceptContext: canonicalizationConceptContext,
     assessment: canonicalizationAssessment,
   });
+  const selectedPolicyArticleIds = new Set(input.promptInput.compiledReviewerContext?.selectedPolicyArticleIds ?? []);
+  const resolveCanonicalArticleId = (articleId: number, knowledgeDomain: string | null): number => {
+    if (!Number.isFinite(articleId) || articleId <= 0) return articleId;
+    const candidateArticleIds = typeof knowledgeDomain === "string"
+      ? resolveKnowledgeDomainCandidateArticleIds(canonicalizationSelection.reviewerKnowledgeRegistry, knowledgeDomain)
+      : Object.freeze([]);
+    if (candidateArticleIds.includes(articleId)) return articleId;
+    const selectedCandidate = candidateArticleIds.find((candidateArticleId) => selectedPolicyArticleIds.has(candidateArticleId));
+    if (typeof selectedCandidate === "number") return selectedCandidate;
+    return candidateArticleIds[0] ?? articleId;
+  };
   logger.info("V3 instrumentation ENTER: provider.callJudgeRaw", {
     modelName: input.modelName,
   });
@@ -186,10 +211,7 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
     modelName: input.modelName,
   });
   const mapped = mapV3ProviderResponse(rawResponse.rawResponse, {
-    resolveCanonicalArticleId: (articleId) => {
-      const canonicalOwners = canonicalizationSelection.canonicalArticleOwnershipByArticleId[String(articleId)] ?? [];
-      return canonicalOwners[0]?.articleId ?? articleId;
-    },
+    resolveCanonicalArticleId,
   });
   logger.info("V3 instrumentation EXIT: mapV3ProviderResponse", {
     modelName: input.modelName,
@@ -233,10 +255,7 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
       modelName: input.modelName,
     });
     const retryMapped = mapV3ProviderResponse(retryRawResponse.rawResponse, {
-      resolveCanonicalArticleId: (articleId) => {
-        const canonicalOwners = canonicalizationSelection.canonicalArticleOwnershipByArticleId[String(articleId)] ?? [];
-        return canonicalOwners[0]?.articleId ?? articleId;
-      },
+      resolveCanonicalArticleId,
     });
     logger.info("V3 instrumentation EXIT: mapV3ProviderResponse (validation retry)", {
       modelName: input.modelName,

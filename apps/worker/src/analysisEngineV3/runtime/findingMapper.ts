@@ -30,11 +30,29 @@ function pickPrimaryEvidence(decision: LegalDecision): LegalEvidenceCandidate | 
   return decision.evidence.candidates[decision.evidence.primaryCandidateIndex] ?? null;
 }
 
+function evidenceCandidateLength(candidate: LegalEvidenceCandidate): number {
+  const start = clampOffset(candidate.startOffset, 0);
+  const end = clampOffset(candidate.endOffset, start);
+  return Math.max(0, end - start);
+}
+
+function isEvidenceCandidateMatch(candidateText: string, evidenceText: string): boolean {
+  const normalizedCandidate = normalizeText(candidateText);
+  const normalizedEvidence = normalizeText(evidenceText);
+  if (normalizedCandidate.length === 0 || normalizedEvidence.length === 0) return false;
+  return normalizedCandidate === normalizedEvidence
+    || normalizedCandidate.includes(normalizedEvidence)
+    || normalizedEvidence.includes(normalizedCandidate);
+}
+
 function pickEvaluationEvidence(decision: LegalDecision, evaluationEvidence: readonly string[]): LegalEvidenceCandidate | null {
   if (decision.evidence.candidates.length === 0) return null;
-  const normalizedEvaluationEvidence = new Set(evaluationEvidence.map((value) => normalizeText(value)));
-  const matchingCandidate = decision.evidence.candidates.find((candidate) => normalizedEvaluationEvidence.has(normalizeText(candidate.text)));
-  return matchingCandidate ?? pickPrimaryEvidence(decision) ?? decision.evidence.candidates[0] ?? null;
+  const normalizedEvaluationEvidence = [...new Set(evaluationEvidence.map((value) => normalizeText(value)).filter((value) => value.length > 0))];
+  const matchingCandidates = decision.evidence.candidates.filter((candidate) =>
+    normalizedEvaluationEvidence.some((evidenceText) => isEvidenceCandidateMatch(candidate.text, evidenceText)),
+  );
+  const candidates = matchingCandidates.length > 0 ? matchingCandidates : decision.evidence.candidates;
+  return [...candidates].sort((left, right) => evidenceCandidateLength(left) - evidenceCandidateLength(right) || clampOffset(left.startOffset, 0) - clampOffset(right.startOffset, 0))[0] ?? pickPrimaryEvidence(decision) ?? decision.evidence.candidates[0] ?? null;
 }
 
 function pickEvidenceCandidate(decision: LegalDecision, evidenceText: string): LegalEvidenceCandidate | null {
@@ -558,7 +576,11 @@ export function mapLegalDecisionToFindings(args: {
           },
         ],
         primary_article_id: articleId,
-        related_article_ids: [...new Set([articleId, ...(gcamMapping?.status === "MAPPED" && gcamMapping.articleId !== null ? [gcamMapping.articleId] : [])])].sort((left, right) => left - right),
+        related_article_ids: [...new Set([
+          articleId,
+          ...(decision.finding?.articleIds ?? []),
+          ...(gcamMapping?.status === "MAPPED" && gcamMapping.articleId !== null ? [gcamMapping.articleId] : []),
+        ])].sort((left, right) => left - right),
       } satisfies V3RuntimeFinding;
     });
   });
