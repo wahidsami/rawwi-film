@@ -1,0 +1,1 @@
+Historical discussion is not distortion by itself. Character error is not author endorsement.

@@ -1,0 +1,1 @@
+Document situations that resemble violations but should not be classified as such.

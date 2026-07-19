@@ -1,0 +1,1 @@
+Central glossary shared by all history-related articles.

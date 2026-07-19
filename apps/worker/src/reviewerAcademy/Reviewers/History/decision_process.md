@@ -1,0 +1,1 @@
+Read → Understand Context → Extract Evidence → Identify Protected Interest → Select Article → Select Atom → Ground Finding.

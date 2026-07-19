@@ -1,4 +1,9 @@
 # Morality Reviewer
 
-Domain-specific reviewer knowledge for morality and ethics reasoning belongs here.
+Legacy morality reviewer pack.
 
+No canonical GCAM article is currently assigned.
+Keep this folder as an archival reference only.
+
+Shared brain:
+- `../../Universal/11_Universal_Review_Protocol.md`

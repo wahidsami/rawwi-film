@@ -1,0 +1,1 @@
+Accept dialogue, narration, captions, scene descriptions and explicit visual directions. Reject speculation.

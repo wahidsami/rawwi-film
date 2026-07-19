@@ -1,0 +1,1 @@
+Evaluate speaker, scene, narrative purpose, chronology, tone, and surrounding context.

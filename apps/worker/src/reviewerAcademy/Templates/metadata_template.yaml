@@ -1,14 +1,11 @@
-academy:
-version:
-inherits:
-reviewer:
-domain:
-article:
-atom:
-priority:
-runtime:
-retrieval:
-status:
-author:
-last_updated:
-
+academy: reviewer-academy-v1
+version: 1.0
+inherits: []
+reviewer: ''
+domain: ''
+article: ''
+atom: ''
+priority: permanent
+runtime: false
+retrieval: never
+status: draft

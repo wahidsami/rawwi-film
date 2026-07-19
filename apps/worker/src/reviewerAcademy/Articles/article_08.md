@@ -6,90 +6,52 @@ version: 1
 status: draft
 ---
 
-# Reviewer Goal
-Evaluate religiously sensitive content through the shared universal review protocol before applying article-specific rules. Understand context, identify protected interests, distinguish discussion from advocacy, and produce evidence-based assessments only.
+# Metadata
 
-# Policy Intent
-Map explicit screenplay evidence to the protected religious interest before selecting a more specific article or atom. Do not speculate. Do not infer beyond the quoted evidence.
+# Mission
+Apply Universal Review Protocol before article-specific law.
 
-# Protected Concepts
-PLACEHOLDER: canonical protected concepts for Article 8 have not yet been supplied in this phase.
+# Scope
+Religion-related hate, discrimination, and protected-belief harm.
 
-# Detection Objectives
-- Identify explicit religious evidence in dialogue, narration, actions, or scene descriptions.
-- Distinguish discussion, quotation, reporting, or reference from advocacy or abuse.
-- Preserve grounded analysis and avoid speculation.
+# Violation Definition
+Define the religion-specific harm patterns that are violations.
 
-# Trigger Phrases
-PLACEHOLDER: article-specific trigger phrases not yet supplied.
+# Vocabulary
+PLACEHOLDER: canonical religion / hate / discrimination concepts will be filled in later.
 
-# Explicit Violations
-PLACEHOLDER: canonical explicit violation patterns not yet supplied.
-
-# Compound Violations
-PLACEHOLDER: combined or multi-article religious violation patterns not yet supplied.
-
-# Common Patterns
-- Explicit evidence only.
-- Context must be considered before classification.
-- The protected interest must be identified before final selection.
-
-# Context Rules
-- A scene can mention religion without violating the article.
-- Context may negate or change the significance of an otherwise sensitive phrase.
-- The reviewer must stay grounded in the screenplay text.
-
-# Exceptions
-PLACEHOLDER: canonical exceptions not yet supplied.
+# Context Examples
+PLACEHOLDER: canonical religion context examples will be filled in later.
 
 # False Positives
 - Speculation without explicit evidence.
 - Treating mere discussion as an active violation.
 - Classifying a quote without checking the surrounding context.
 
-# Educational Context
-PLACEHOLDER: educational-use rules not yet supplied.
+# False Negatives
+PLACEHOLDER: article 08 false-negative patterns will be filled in later.
 
-# Historical Context
-PLACEHOLDER: historical-context rules not yet supplied.
+# Reviewer Advice
+- Read the Universal Review Protocol first.
+- Then apply Article 08 law.
+- Keep the evidence grounded and quote-based.
 
-# Satire and Fiction Rules
-PLACEHOLDER: satire / fiction / dramatic-use rules not yet supplied.
+# Golden Rule
+Separate discussion, quotation, and condemnation from active violations.
 
-# Quran Verification Rules
-PLACEHOLDER: Quran verification rules not yet supplied.
+# Atom Knowledge
+PLACEHOLDER: canonical religion atoms will be filled in later.
 
-# Hadith Verification Rules
-PLACEHOLDER: Hadith verification rules not yet supplied.
-
-# Scholar Verification Rules
-PLACEHOLDER: scholar verification rules not yet supplied.
-
-# Severity Guidance
-PLACEHOLDER: severity guidance for Article 8 not yet supplied.
-
-# Evidence Extraction Rules
+# Evidence Requirements
 Accept only explicit screenplay evidence. Quote dialogue, narration, actions, or scene descriptions. Reject speculation.
 
-# Classification Guidance
-1. Confirm explicit evidence.
-2. Identify the protected interest.
-3. Check whether context negates the concern.
-4. Select the best matching article only after the evidence is grounded.
-5. Use the atom only if it is uniquely applicable.
-
-# Saudi Cultural Guidance
-PLACEHOLDER: Saudi cultural guidance for Article 8 not yet supplied.
-
-# Canonical Positive Examples
-PLACEHOLDER: positive religious examples not yet supplied.
-
-# Canonical Negative Examples
-PLACEHOLDER: negative religious examples not yet supplied.
+# Output Requirements
+Return grounded religion-specific reasoning only.
 
 # Reviewer Notes
-- This document is the canonical Article 8 religion knowledge source for future reviewer prompts and compilers.
-- It intentionally contains placeholders until the canonical religion policy content is supplied.
-- It inherits the current evidence-first reviewer discipline from the existing reviewer academy.
-- Shared reviewer-brain steps belong in `Universal/11_Universal_Review_Protocol.md`.
+- The religion reviewer should apply the universal protocol first.
+- Article-specific policy lives here, not in shared protocol files.
+
+# Version History
+v1: migrated shared review brain out of article 08 into the universal protocol layer.
 

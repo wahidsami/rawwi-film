@@ -1,10 +1,6 @@
 # Glossary Template
 
-## Term
-
-## Definition
-
-## Notes
-
-## Related Articles
-
+Term
+Definition
+Related Articles
+Notes

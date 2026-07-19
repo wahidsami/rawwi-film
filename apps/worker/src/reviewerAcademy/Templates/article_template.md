@@ -11,51 +11,42 @@ status: draft
 # Metadata
 
 # Mission
-Apply Universal Review Protocol before reading article-specific law.
+Apply Universal Review Protocol before article-specific law.
 
 # Scope
-Use the shared protocol first. Then read the article law.
+State the protected interest and the article boundaries.
 
-# Core Concepts
+# Violation Definition
+Define what counts as a violation for this article.
 
-# Violation Patterns
+# Vocabulary
+List article-specific terms, phrases, and canonical concepts.
 
-# Decision Rules
-
-# Verification Rules
-
-# Trigger Phrases
-
-# Positive Examples
-
-# Negative Examples
-
-# Counter Examples
-
-# Borderline Examples
+# Context Examples
+Show how context changes applicability.
 
 # False Positives
+List situations that should not be classified as violations.
 
 # False Negatives
+List situations that are easy to miss but should be classified.
 
-# Saudi Dialect Examples
+# Reviewer Advice
+Explain the decision posture and common pitfalls.
 
-# Gulf Dialect Examples
+# Golden Rule
+State the one rule the reviewer must never violate.
 
-# Egyptian Dialect Examples
+# Atom Knowledge
+List atoms, sub-rules, or sub-patterns for this article.
 
-# Levant Dialect Examples
+# Evidence Requirements
+Describe what evidence is required to support a finding.
 
-# Screenplay Examples
-
-# Common AI Mistakes
-
-# Common Confused Articles
-
-# Ownership Rules
+# Output Requirements
+Describe the expected article-level output format.
 
 # Reviewer Notes
-Shared reasoning belongs in `Universal/11_Universal_Review_Protocol.md`.
-Do not duplicate the universal protocol steps inside article manuals.
+Shared reasoning belongs in `../Universal/11_Universal_Review_Protocol.md`.
+Article manuals should carry only article-specific law.
 
-# Version History

@@ -1,0 +1,1 @@
+Accept only explicit screenplay evidence. Reject assumptions and unsupported inference.

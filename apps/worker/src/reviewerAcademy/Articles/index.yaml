@@ -1,5 +1,6 @@
 articles:
   article_01:
+    file: article_01.md
     reviewer: General
     inherits:
       - universal
@@ -10,6 +11,7 @@ articles:
     neighboring_articles: []
     atoms: []
   article_02:
+    file: article_02.md
     reviewer: General
     inherits:
       - universal
@@ -20,6 +22,7 @@ articles:
     neighboring_articles: []
     atoms: []
   article_03:
+    file: article_03.md
     reviewer: General
     inherits:
       - universal
@@ -30,6 +33,7 @@ articles:
     neighboring_articles: []
     atoms: []
   article_04:
+    file: article_04.md
     reviewer: General
     inherits:
       - universal
@@ -48,6 +52,7 @@ articles:
       - atom_4_7
       - atom_4_8
   article_05:
+    file: article_05.md
     reviewer: General
     inherits:
       - universal
@@ -63,6 +68,7 @@ articles:
       - atom_5_4
       - atom_5_5
   article_06:
+    file: article_06.md
     reviewer: Children
     inherits:
       - universal
@@ -78,6 +84,7 @@ articles:
       - atom_6_4
       - atom_6_5
   article_07:
+    file: article_07.md
     reviewer: SexualContent
     inherits:
       - universal
@@ -93,6 +100,7 @@ articles:
       - atom_7_4
       - atom_7_5
   article_08:
+    file: article_08.md
     reviewer: Religion
     inherits:
       - universal
@@ -107,6 +115,7 @@ articles:
       - atom_8_3
       - atom_8_4
   article_09:
+    file: article_09.md
     reviewer: Violence
     inherits:
       - universal
@@ -122,6 +131,7 @@ articles:
       - atom_9_4
       - atom_9_5
   article_10:
+    file: article_10.md
     reviewer: Drugs
     inherits:
       - universal
@@ -137,6 +147,7 @@ articles:
       - atom_10_4
       - atom_10_5
   article_11:
+    file: article_11.md
     reviewer: History
     inherits:
       - universal
@@ -151,6 +162,7 @@ articles:
       - atom_11_3
       - atom_11_4
   article_12:
+    file: article_12.md
     reviewer: Security
     inherits:
       - universal
@@ -166,6 +178,7 @@ articles:
       - atom_12_4
       - atom_12_5
   article_13:
+    file: article_13.md
     reviewer: Crime
     inherits:
       - universal
@@ -181,6 +194,7 @@ articles:
       - atom_13_4
       - atom_13_5
   article_14:
+    file: article_14.md
     reviewer: Security
     inherits:
       - universal
@@ -196,6 +210,7 @@ articles:
       - atom_14_4
       - atom_14_5
   article_15:
+    file: article_15.md
     reviewer: Security
     inherits:
       - universal
@@ -211,6 +226,7 @@ articles:
       - atom_15_4
       - atom_15_5
   article_16:
+    file: article_16.md
     reviewer: History
     inherits:
       - universal
@@ -226,6 +242,7 @@ articles:
       - atom_16_4
       - atom_16_5
   article_17:
+    file: article_17.md
     reviewer: Society
     inherits:
       - universal
@@ -242,6 +259,7 @@ articles:
       - atom_17_5
       - atom_17_6
   article_18:
+    file: article_18.md
     reviewer: State
     inherits:
       - universal
@@ -257,6 +275,7 @@ articles:
       - atom_18_4
       - atom_18_5
   article_19:
+    file: article_19.md
     reviewer: State
     inherits:
       - universal
@@ -272,6 +291,7 @@ articles:
       - atom_19_4
       - atom_19_5
   article_20:
+    file: article_20.md
     reviewer: State
     inherits:
       - universal
@@ -287,6 +307,7 @@ articles:
       - atom_20_4
       - atom_20_5
   article_21:
+    file: article_21.md
     reviewer: Security
     inherits:
       - universal
@@ -302,6 +323,7 @@ articles:
       - atom_21_4
       - atom_21_5
   article_22:
+    file: article_22.md
     reviewer: State
     inherits:
       - universal
@@ -317,6 +339,7 @@ articles:
       - atom_22_4
       - atom_22_5
   article_23:
+    file: article_23.md
     reviewer: SexualContent
     inherits:
       - universal
@@ -332,6 +355,7 @@ articles:
       - atom_23_4
       - atom_23_5
   article_24:
+    file: article_24.md
     reviewer: SexualContent
     inherits:
       - universal
@@ -347,6 +371,7 @@ articles:
       - atom_24_4
       - atom_24_5
   article_25:
+    file: article_25.md
     reviewer: General
     inherits:
       - universal
@@ -357,6 +382,7 @@ articles:
     neighboring_articles: []
     atoms: []
   article_26:
+    file: article_26.md
     reviewer: General
     inherits:
       - universal
@@ -366,3 +392,5 @@ articles:
     purpose: ""
     neighboring_articles: []
     atoms: []
+
+

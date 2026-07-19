@@ -1,0 +1,1 @@
+Read → Understand → Evidence → Protected Interest → Article → Atom → Grounded Finding.

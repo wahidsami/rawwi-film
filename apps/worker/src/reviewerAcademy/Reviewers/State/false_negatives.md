@@ -1,0 +1,1 @@
+Document subtle patterns that may become significant when supported by sufficient evidence.

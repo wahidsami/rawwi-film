@@ -1,10 +1,6 @@
 # Counter Example Template
 
-## Scenario
-
-## Why It Looks Similar
-
-## Why It Is Different
-
-## Why It Is Not A Violation
-
+Scenario
+Why it appears similar
+Why it is different
+Why no violation exists

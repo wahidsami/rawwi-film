@@ -1,0 +1,1 @@
+Shared domain terminology and definitions used by descendant article manuals.

@@ -1,0 +1,1 @@
+Consider chronology, narrator reliability, historical framing, satire, dream sequences, fictional universes and educational intent.

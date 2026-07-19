@@ -1,12 +1,6 @@
 # Decision Tree Template
 
-## Question
-
-## If YES
-
-## If NO
-
-## Continue
-
-## Final Decision
-
+Question
+YES -> Next
+NO -> Next
+Final Decision

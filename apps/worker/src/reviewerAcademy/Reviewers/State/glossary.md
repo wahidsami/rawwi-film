@@ -1,0 +1,1 @@
+Shared glossary for domain terminology.

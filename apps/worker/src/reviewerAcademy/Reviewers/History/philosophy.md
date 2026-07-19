@@ -1,0 +1,1 @@
+Historical scenes require context-first reasoning. Dramatic fiction, alternate history and documentary styles must not be treated identically.

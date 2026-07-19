@@ -1,0 +1,1 @@
+Context before categorization. Evidence before conclusions. Preserve dramatic intent while assessing regulatory concerns.
