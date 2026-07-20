@@ -212,6 +212,81 @@ type ScriptPageMetaRow = {
   meta?: Record<string, unknown> | null;
 };
 
+type AggregationReportRow = Record<string, unknown>;
+
+type AggregationReportStore = {
+  findReportIdByJobId(jobId: string): Promise<string | null>;
+  insertReportOnce(jobId: string, reportRow: AggregationReportRow): Promise<string | null>;
+};
+
+export function createAggregationReportStore(client = supabase): AggregationReportStore {
+  return {
+    async findReportIdByJobId(jobId: string): Promise<string | null> {
+      const { data, error } = await client
+        .from("analysis_reports")
+        .select("id")
+        .eq("job_id", jobId)
+        .maybeSingle();
+
+      if (error) {
+        logger.warn("Aggregation: failed to read existing report id", { jobId, error: error.message });
+        return null;
+      }
+
+      return (data as { id?: string } | null)?.id ?? null;
+    },
+
+    async insertReportOnce(jobId: string, reportRow: AggregationReportRow): Promise<string | null> {
+      const { data, error } = await client
+        .from("analysis_reports")
+        .upsert(reportRow, { onConflict: "job_id", ignoreDuplicates: true })
+        .select("id")
+        .maybeSingle();
+
+      if (error) {
+        logger.warn("Aggregation: failed to insert report row", { jobId, error: error.message });
+        return null;
+      }
+
+      const insertedId = (data as { id?: string } | null)?.id ?? null;
+      if (insertedId) return insertedId;
+
+      const { data: existingData, error: existingError } = await client
+        .from("analysis_reports")
+        .select("id")
+        .eq("job_id", jobId)
+        .maybeSingle();
+
+      if (existingError) {
+        logger.warn("Aggregation: failed to read existing report id after duplicate insert", { jobId, error: existingError.message });
+        return null;
+      }
+
+      const existingId = (existingData as { id?: string } | null)?.id ?? null;
+      return existingId;
+    },
+  };
+}
+
+export async function persistAggregationReportOnce(
+  jobId: string,
+  reportRow: AggregationReportRow,
+  store: AggregationReportStore = createAggregationReportStore(),
+): Promise<{ inserted: boolean; reportId: string | null }> {
+  const existingReportId = await store.findReportIdByJobId(jobId);
+  if (existingReportId) {
+    return { inserted: false, reportId: existingReportId };
+  }
+
+  const insertedReportId = await store.insertReportOnce(jobId, reportRow);
+  if (insertedReportId) {
+    return { inserted: true, reportId: insertedReportId };
+  }
+
+  const fallbackReportId = await store.findReportIdByJobId(jobId);
+  return { inserted: false, reportId: fallbackReportId };
+}
+
 type JobConfigMeta = {
   analysis_engine?: string;
   pipeline_version?: string;
@@ -2285,17 +2360,28 @@ export async function runAggregation(jobId: string): Promise<void> {
     .from("analysis_reports")
     .select("id")
     .eq("job_id", jobId)
-    .single();
+    .maybeSingle();
   if (existing) {
     logger.info("V3 finalization trace: existing report detected", {
       jobId,
       reportId: (existing as { id?: string } | null)?.id ?? null,
     });
-    await finalizeRevisionCycleReanalysis((existing as { id?: string } | null)?.id ?? null);
     logger.info("V3 finalization trace: about to mark job completed from existing report path", { jobId });
+    const totalProgress = Math.max(1, Number((job as { progress_total?: number | null }).progress_total ?? 1));
+    const completedProgress = (job as { partial_finalize_requested?: boolean | null }).partial_finalize_requested
+      ? Math.max(0, Number((job as { progress_done?: number | null }).progress_done ?? 0))
+      : totalProgress;
+    const completedPercent = (job as { partial_finalize_requested?: boolean | null }).partial_finalize_requested
+      ? Math.floor((100 * completedProgress) / totalProgress)
+      : 100;
     await supabase
       .from("analysis_jobs")
-      .update({ status: "completed", completed_at: new Date().toISOString() })
+      .update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+        progress_done: completedProgress,
+        progress_percent: completedPercent,
+      })
       .eq("id", jobId);
     logger.info("V3 finalization trace: job marked completed from existing report path", { jobId });
     const { logAuditEvent } = await import("./audit.js");
@@ -2517,16 +2603,35 @@ export async function runAggregation(jobId: string): Promise<void> {
   const j = job as { created_by?: string | null };
   if (j.created_by != null) reportRow.created_by = j.created_by;
 
-  const { data: savedReport, error: reportErr } = await supabase
-    .from("analysis_reports")
-    .upsert(reportRow, { onConflict: "job_id" })
-    .select("id")
-    .single();
+  const { inserted: reportInserted, reportId } = await persistAggregationReportOnce(jobId, reportRow);
 
-  if (reportErr) {
-    logger.error("Aggregation: report upsert FAILED", { jobId, error: reportErr });
+  if (!reportInserted) {
+    logger.info("Aggregation report already persisted by another worker; exiting without rewriting", {
+      jobId,
+      reportId,
+    });
+    if (reportId) {
+      const totalProgress = Math.max(1, Number((job as { progress_total?: number | null }).progress_total ?? 1));
+      const completedProgress = (job as { partial_finalize_requested?: boolean | null }).partial_finalize_requested
+        ? Math.max(0, Number((job as { progress_done?: number | null }).progress_done ?? 0))
+        : totalProgress;
+      const completedPercent = (job as { partial_finalize_requested?: boolean | null }).partial_finalize_requested
+        ? Math.floor((100 * completedProgress) / totalProgress)
+        : 100;
+      await supabase
+        .from("analysis_jobs")
+        .update({
+          status: "completed",
+          completed_at: new Date().toISOString(),
+          progress_done: completedProgress,
+          progress_percent: completedPercent,
+        })
+        .eq("id", jobId);
+    }
+    clearCachedJobResources(jobId);
+    return;
   }
-  const reportId = (savedReport as { id?: string } | null)?.id ?? null;
+
   if (reportId) {
     await persistLineageEvents(
       list.map((finding) =>
@@ -2646,7 +2751,7 @@ export async function runAggregation(jobId: string): Promise<void> {
         pipelineVersion: String((job as { config_snapshot?: { pipeline_version?: string } }).config_snapshot?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION),
         finalFindingCount: summary.totals.findings_count,
         observationCount: summary.report_overview?.total_observations ?? summary.report_hints?.length ?? 0,
-        reportStatus: reportErr ? "error" : "completed",
+        reportStatus: "completed",
         jobStatus: "completed",
         reportSummary: summary.report_overview ?? null,
         reportHtml,
@@ -2690,7 +2795,7 @@ export async function runAggregation(jobId: string): Promise<void> {
     findings_count: list.length,
     findings_count_total: summary.totals.findings_count,
     severity_counts: summary.totals.severity_counts,
-    reportError: reportErr ?? null,
+    reportError: null,
     aggregationDurationMs: Date.now() - aggregationStartedAt,
     scriptSummarySource: fullScriptText.length > 0 ? "analysis_jobs.normalized_text" : "none",
   });

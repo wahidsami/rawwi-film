@@ -290,14 +290,6 @@ async function processOneJob(): Promise<boolean> {
     return true;
   }
 
-  const recoveredChunks = await recoverStaleJudgingChunks(config.STALE_JUDGING_MS);
-  if (recoveredChunks > 0) {
-    logger.info("Recovered stale judging chunks before polling next job", {
-      recoveredChunks,
-      staleJudgingMs: config.STALE_JUDGING_MS,
-    });
-  }
-
   const jobStartedAt = Date.now();
   const job = await fetchNextJob();
   if (!job) {
@@ -413,7 +405,7 @@ async function processOneJob(): Promise<boolean> {
 
 function startStaleJudgingSweep(): ReturnType<typeof setInterval> {
   let running = false;
-  return setInterval(() => {
+  const sweep = () => {
     if (running) return;
     running = true;
     void recoverStaleJudgingChunks(config.STALE_JUDGING_MS)
@@ -431,7 +423,9 @@ function startStaleJudgingSweep(): ReturnType<typeof setInterval> {
       .finally(() => {
         running = false;
       });
-  }, config.STALE_JUDGING_SWEEP_INTERVAL_MS);
+  };
+  void sweep();
+  return setInterval(sweep, config.STALE_JUDGING_SWEEP_INTERVAL_MS);
 }
 
 async function runOnce(jobId: string | undefined): Promise<void> {
