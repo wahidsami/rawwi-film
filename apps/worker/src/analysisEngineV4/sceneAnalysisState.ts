@@ -96,6 +96,17 @@ export type SceneAnalysisExplanation = Readonly<{
   rationale: readonly string[];
 }>;
 
+export type SceneAnalysisQualityJudgment = Readonly<{
+  status: "pass" | "reject";
+  quoteExists: boolean;
+  explanationReferencesQuote: boolean;
+  articleMatchesConcept: boolean;
+  sceneSummarySupportsExplanation: boolean;
+  explanationMentionsAnotherFinding: boolean;
+  explanationInventsFacts: boolean;
+  rejectionReasons: readonly string[];
+}>;
+
 export type SceneAnalysisTraceSnapshot = Readonly<{
   sceneId: string;
   status: SceneAnalysisStatus;
@@ -113,11 +124,17 @@ export type SceneAnalysisTraceSnapshot = Readonly<{
   evidenceSpanCount: number;
   detectedConceptIds: readonly string[];
   knowledgeDomains: readonly string[];
+  legalCandidateArticleIds: readonly number[];
+  legalPrimaryArticleId: number | null;
+  legalSecondaryArticleIds: readonly number[];
+  legalSupportingArticleIds: readonly number[];
   candidateArticleIds: readonly number[];
   rankedPrimaryArticleId: number | null;
   rankedSecondaryArticleIds: readonly number[];
   candidateAtomIds: readonly string[];
   explanationSummary: string | null;
+  qualityJudgmentStatus: SceneAnalysisQualityJudgment["status"] | null;
+  qualityJudgmentRejectionReasons: readonly string[];
   traceLength: number;
 }>;
 
@@ -144,6 +161,10 @@ export type SceneAnalysisState = Readonly<{
   primaryEvidenceReason: string | null;
   detectedConcepts: readonly SceneAnalysisConcept[];
   knowledgeDomains: readonly string[];
+  legalCandidateArticles: readonly SceneAnalysisArticleCandidate[];
+  legalPrimaryArticle: SceneAnalysisArticleCandidate | null;
+  legalSecondaryArticles: readonly SceneAnalysisArticleCandidate[];
+  legalSupportingArticles: readonly SceneAnalysisArticleCandidate[];
   candidateArticles: readonly SceneAnalysisArticleCandidate[];
   rankedCandidateArticles: readonly SceneAnalysisArticleCandidate[];
   primaryArticle: SceneAnalysisArticleCandidate | null;
@@ -151,6 +172,7 @@ export type SceneAnalysisState = Readonly<{
   candidateAtoms: readonly SceneAnalysisAtomCandidate[];
   rankedCandidateAtoms: readonly SceneAnalysisAtomCandidate[];
   explanation: SceneAnalysisExplanation | null;
+  qualityJudgment: SceneAnalysisQualityJudgment | null;
   trace: readonly SceneAnalysisTraceEntry[];
 }>;
 
@@ -196,6 +218,10 @@ export function createSceneAnalysisState(input: Readonly<{
     primaryEvidenceReason: null,
     detectedConcepts: freezeReadonlyArray([]),
     knowledgeDomains: freezeReadonlyArray([]),
+    legalCandidateArticles: freezeReadonlyArray([]),
+    legalPrimaryArticle: null,
+    legalSecondaryArticles: freezeReadonlyArray([]),
+    legalSupportingArticles: freezeReadonlyArray([]),
     candidateArticles: freezeReadonlyArray([]),
     rankedCandidateArticles: freezeReadonlyArray([]),
     primaryArticle: null,
@@ -203,6 +229,7 @@ export function createSceneAnalysisState(input: Readonly<{
     candidateAtoms: freezeReadonlyArray([]),
     rankedCandidateAtoms: freezeReadonlyArray([]),
     explanation: null,
+    qualityJudgment: null,
     trace: freezeReadonlyArray([]),
   });
 }
@@ -220,6 +247,10 @@ export function freezeSceneAnalysisState(state: SceneAnalysisState | Readonly<Re
     evidenceSpans: freezeReadonlyArray((state as SceneAnalysisState).evidenceSpans ?? []),
     detectedConcepts: freezeReadonlyArray((state as SceneAnalysisState).detectedConcepts ?? []),
     knowledgeDomains: freezeReadonlyArray((state as SceneAnalysisState).knowledgeDomains ?? []),
+    legalCandidateArticles: freezeReadonlyArray((state as SceneAnalysisState).legalCandidateArticles ?? []),
+    legalPrimaryArticle: (state as SceneAnalysisState).legalPrimaryArticle ?? null,
+    legalSecondaryArticles: freezeReadonlyArray((state as SceneAnalysisState).legalSecondaryArticles ?? []),
+    legalSupportingArticles: freezeReadonlyArray((state as SceneAnalysisState).legalSupportingArticles ?? []),
     candidateArticles: freezeReadonlyArray((state as SceneAnalysisState).candidateArticles ?? []),
     rankedCandidateArticles: freezeReadonlyArray((state as SceneAnalysisState).rankedCandidateArticles ?? []),
     secondaryArticles: freezeReadonlyArray((state as SceneAnalysisState).secondaryArticles ?? []),
@@ -227,6 +258,7 @@ export function freezeSceneAnalysisState(state: SceneAnalysisState | Readonly<Re
     rankedCandidateAtoms: freezeReadonlyArray((state as SceneAnalysisState).rankedCandidateAtoms ?? []),
     trace: freezeReadonlyArray((state as SceneAnalysisState).trace ?? []),
     explanation: (state as SceneAnalysisState).explanation ?? null,
+    qualityJudgment: (state as SceneAnalysisState).qualityJudgment ?? null,
     primaryArticle: (state as SceneAnalysisState).primaryArticle ?? null,
   } as SceneAnalysisState);
 }
@@ -251,11 +283,17 @@ export function snapshotSceneAnalysisState(state: SceneAnalysisState): SceneAnal
     evidenceSpanCount: state.evidenceSpans.length,
     detectedConceptIds: freezeReadonlyArray(state.detectedConcepts.map((concept) => concept.conceptId)),
     knowledgeDomains: freezeReadonlyArray(state.knowledgeDomains),
+    legalCandidateArticleIds: freezeReadonlyArray(state.legalCandidateArticles.map((candidate) => candidate.articleId)),
+    legalPrimaryArticleId: state.legalPrimaryArticle?.articleId ?? null,
+    legalSecondaryArticleIds: freezeReadonlyArray(state.legalSecondaryArticles.map((candidate) => candidate.articleId)),
+    legalSupportingArticleIds: freezeReadonlyArray(state.legalSupportingArticles.map((candidate) => candidate.articleId)),
     candidateArticleIds: freezeReadonlyArray(state.candidateArticles.map((candidate) => candidate.articleId)),
     rankedPrimaryArticleId: state.primaryArticle?.articleId ?? null,
     rankedSecondaryArticleIds: freezeReadonlyArray(state.secondaryArticles.map((candidate) => candidate.articleId)),
     candidateAtomIds: freezeReadonlyArray(state.candidateAtoms.map((candidate) => candidate.atomId)),
     explanationSummary: state.explanation?.summary ?? null,
+    qualityJudgmentStatus: state.qualityJudgment?.status ?? null,
+    qualityJudgmentRejectionReasons: freezeReadonlyArray(state.qualityJudgment?.rejectionReasons ?? []),
     traceLength: state.trace.length,
   } satisfies SceneAnalysisTraceSnapshot);
 }

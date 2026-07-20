@@ -5,13 +5,15 @@ import type {
   SceneAnalysisAtomCandidate,
   SceneAnalysisConcept,
   SceneAnalysisEvidenceSpan,
-  SceneAnalysisExplanation,
   SceneAnalysisSentence,
   SceneAnalysisState,
 } from "./sceneAnalysisState.js";
 import { freezeSceneAnalysisState } from "./sceneAnalysisState.js";
 import { createSceneUnderstandingNode, buildSceneUnderstandingPrompt, understandScene } from "./sceneUnderstandingNode.js";
 import { createCandidateEvidenceNode } from "./candidateEvidenceNode.js";
+import { createConceptClassificationNode } from "./conceptClassificationNode.js";
+import { createExplanationNode } from "./explanationNode.js";
+import { createQualityJudgeNode } from "./qualityJudgeNode.js";
 
 type ConceptDefinition = Readonly<{
   conceptId: string;
@@ -308,33 +310,6 @@ function resolveAtomsFromArticles(
   return Object.freeze([...atoms].sort((left, right) => right.score - left.score || left.canonicalAtomCode.localeCompare(right.canonicalAtomCode)));
 }
 
-function composeExplanation(
-  evidence: SceneAnalysisEvidenceSpan | null,
-  article: SceneAnalysisArticleCandidate | null,
-  atom: SceneAnalysisAtomCandidate | null,
-  concepts: readonly SceneAnalysisConcept[],
-): SceneAnalysisExplanation {
-  const groundedEvidence = evidence?.text ?? "";
-  const conceptSummary = concepts.map((concept) => concept.label).join(", ") || "none";
-  const rationale = [
-    article ? `Primary article ${article.articleId} (${article.titleAr}) selected from the detected domains.` : "No primary article selected.",
-    atom ? `Primary atom ${atom.atomId} (${atom.atomTitleAr}) selected from the same grounded evidence.` : "No primary atom selected.",
-    `Detected concepts: ${conceptSummary}.`,
-  ];
-
-  return Object.freeze({
-    summary: article
-      ? `Grounded evidence supports ${article.titleAr}${atom ? ` / ${atom.atomTitleAr}` : ""}.`
-      : "Grounded evidence did not resolve to a dominant GCAM article.",
-    groundedEvidence,
-    primaryArticleId: article?.articleId ?? null,
-    primaryArticleTitleAr: article?.titleAr ?? null,
-    primaryAtomId: atom?.atomId ?? null,
-    primaryAtomTitleAr: atom?.atomTitleAr ?? null,
-    rationale: Object.freeze(rationale),
-  });
-}
-
 export function createNormalizeSceneStateNode() {
   return (state: SceneAnalysisState): SceneAnalysisState => freezeSceneAnalysisState({
     ...state,
@@ -361,32 +336,7 @@ export function createExtractEvidenceSpansNode() {
 }
 
 export function createDetectConceptsNode() {
-  return (state: SceneAnalysisState): SceneAnalysisState => {
-    const concepts = CONCEPT_DEFINITIONS
-      .map((definition) => scoreConcept(definition, state.evidenceSpans))
-      .filter((value): value is SceneAnalysisConcept => value !== null);
-
-    const spanConceptIds = new Map<string, Set<string>>();
-    for (const concept of concepts) {
-      for (const spanId of concept.evidenceSpanIds) {
-        const bucket = spanConceptIds.get(spanId) ?? new Set<string>();
-        bucket.add(concept.conceptId);
-        spanConceptIds.set(spanId, bucket);
-      }
-    }
-
-    const evidenceSpans = state.evidenceSpans.map((span) => Object.freeze({
-      ...span,
-      conceptIds: Object.freeze([...(spanConceptIds.get(span.spanId) ?? new Set<string>())].sort((left, right) => left.localeCompare(right))),
-      rationale: span.rationale.length > 0 ? span.rationale : Object.freeze([`No concept attached to ${span.spanId}.`]),
-    }));
-
-    return freezeSceneAnalysisState({
-      ...state,
-      evidenceSpans,
-      detectedConcepts: Object.freeze(concepts.sort((left, right) => right.confidence - left.confidence || left.conceptId.localeCompare(right.conceptId))),
-    });
-  };
+  return createConceptClassificationNode();
 }
 
 export function createResolveKnowledgeDomainsNode() {
@@ -434,14 +384,7 @@ export function createResolveCandidateAtomsNode() {
 }
 
 export function createComposeExplanationNode() {
-  return (state: SceneAnalysisState): SceneAnalysisState => {
-    const primaryEvidence = state.evidenceSpans.find((span) => span.spanId === state.primaryEvidenceSpanId) ?? state.evidenceSpans[0] ?? null;
-    const primaryAtom = state.rankedCandidateAtoms[0] ?? null;
-    return freezeSceneAnalysisState({
-      ...state,
-      explanation: composeExplanation(primaryEvidence, state.primaryArticle, primaryAtom, state.detectedConcepts),
-    });
-  };
+  return createExplanationNode();
 }
 
 export function createFinalizeSceneAnalysisNode() {
@@ -458,13 +401,14 @@ export function createDefaultSceneAnalysisNodeSequence(): readonly {
   return Object.freeze([
     { name: "understand_scene", node: createSceneUnderstandingNode() },
     { name: "candidate_evidence", node: createCandidateEvidenceNode() },
+    { name: "concept_classification", node: createConceptClassificationNode() },
     { name: "normalize_scene", node: createNormalizeSceneStateNode() },
-    { name: "detect_concepts", node: createDetectConceptsNode() },
     { name: "resolve_domains", node: createResolveKnowledgeDomainsNode() },
     { name: "resolve_articles", node: createResolveCandidateArticlesNode() },
     { name: "rank_articles", node: createRankCandidateArticlesNode() },
     { name: "resolve_atoms", node: createResolveCandidateAtomsNode() },
-    { name: "compose_explanation", node: createComposeExplanationNode() },
+    { name: "explanation", node: createExplanationNode() },
+    { name: "quality_judge", node: createQualityJudgeNode() },
     { name: "finalize", node: createFinalizeSceneAnalysisNode() },
   ]);
 }
@@ -472,6 +416,8 @@ export function createDefaultSceneAnalysisNodeSequence(): readonly {
 export {
   buildSceneUnderstandingPrompt,
   createCandidateEvidenceNode,
+  createExplanationNode,
+  createQualityJudgeNode,
   createSceneUnderstandingNode,
   understandScene,
 };

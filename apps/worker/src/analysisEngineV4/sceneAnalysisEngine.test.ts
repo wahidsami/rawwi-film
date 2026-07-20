@@ -30,7 +30,7 @@ async function testGraphProducesTraceAndEvidenceFirstState(): Promise<void> {
   const result = await engine.run("scene-trace", initialText);
 
   assert.equal(result.status, "complete");
-  assert.equal(result.trace.length, 10);
+  assert.equal(result.trace.length, 11);
   assert.equal(result.sentences.length > 0, true);
   assert.equal(result.evidenceSpans.length > 0, true);
   assert.equal(result.primaryEvidenceText?.includes("يا كلب"), true);
@@ -47,6 +47,12 @@ async function testGraphProducesTraceAndEvidenceFirstState(): Promise<void> {
   assert.equal(result.trace[0]?.changedKeys.includes("sceneModel"), true);
   assert.equal(result.trace[1]?.node, "candidate_evidence");
   assert.equal(result.trace[1]?.changedKeys.includes("evidenceSpanCount"), true);
+  assert.equal(result.trace[2]?.node, "concept_classification");
+  assert.equal(result.trace[2]?.changedKeys.includes("detectedConceptIds"), true);
+  assert.equal(result.trace[8]?.node, "explanation");
+  assert.equal(result.trace[8]?.changedKeys.includes("explanationSummary"), true);
+  assert.equal(result.trace[9]?.node, "quality_judge");
+  assert.equal(result.trace[9]?.changedKeys.includes("qualityJudgmentStatus"), true);
   assert.equal(result.trace.at(-1)?.node, "finalize");
   assert.equal(result.trace.some((entry) => entry.changedKeys.length > 0), true);
   assert.equal(Object.isFrozen(result), true);
