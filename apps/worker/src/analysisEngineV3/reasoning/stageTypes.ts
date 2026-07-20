@@ -1,40 +1,35 @@
 export type V3ReasoningStageName =
-  | "narrative_understanding"
-  | "evidence_identification"
-  | "context_evaluation"
-  | "legal_evaluation"
-  | "exception_evaluation"
-  | "finding_construction"
-  | "reporting";
+  | "evidence_extraction"
+  | "evidence_judge"
+  | "concept_identification"
+  | "legal_classification"
+  | "explanation"
+  | "consistency_validation";
 
 export type V3ReasoningStageIO = {
-  narrative_understanding: {
-    inputs: ["story_memory", "chunk", "subject", "glossary"];
-    outputs: ["narrative_understanding"];
+  evidence_extraction: {
+    inputs: ["chunk"];
+    outputs: ["grounded_evidence"];
   };
-  evidence_identification: {
-    inputs: ["chunk", "narrative_understanding", "subject"];
-    outputs: ["candidate_evidence"];
+  evidence_judge: {
+    inputs: ["grounded_evidence"];
+    outputs: ["observed_facts"];
   };
-  context_evaluation: {
-    inputs: ["story_memory", "chunk", "candidate_evidence", "narrative_understanding"];
-    outputs: ["context_evaluation"];
+  concept_identification: {
+    inputs: ["grounded_evidence", "observed_facts"];
+    outputs: ["concepts", "knowledge_domains"];
   };
-  legal_evaluation: {
-    inputs: ["subject", "candidate_evidence", "context_evaluation", "glossary"];
-    outputs: ["legal_decision"];
+  legal_classification: {
+    inputs: ["grounded_evidence", "observed_facts", "concepts", "knowledge_domains"];
+    outputs: ["primary_article", "secondary_articles", "applicable_atoms"];
   };
-  exception_evaluation: {
-    inputs: ["subject", "candidate_evidence", "context_evaluation", "legal_decision"];
-    outputs: ["exceptions"];
+  explanation: {
+    inputs: ["grounded_evidence", "concepts", "primary_article", "secondary_articles"];
+    outputs: ["explanation"];
   };
-  finding_construction: {
-    inputs: ["candidate_evidence", "legal_decision", "exceptions", "context_evaluation"];
-    outputs: ["finding"];
-  };
-  reporting: {
-    inputs: ["finding", "candidate_evidence", "context_evaluation", "legal_decision", "exceptions"];
-    outputs: ["reporting"];
+  consistency_validation: {
+    inputs: ["grounded_evidence", "concepts", "primary_article", "explanation"];
+    outputs: ["validated_finding"];
   };
 };
 
@@ -47,4 +42,3 @@ export type V3ReasoningStageMetadata<Name extends V3ReasoningStageName = V3Reaso
 };
 
 export type V3ReasoningStageId = V3ReasoningStageName;
-

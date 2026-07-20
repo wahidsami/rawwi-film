@@ -19,7 +19,11 @@ export function createLegalEvidenceResult(result: LegalEvidenceResult): LegalEvi
     primaryCandidateIndex: result.primaryCandidateIndex,
     admissible: result.admissible,
     confidence: Number(result.confidence.toFixed(6)),
+    quote: result.quote ?? null,
+    scene: result.scene ?? null,
+    page: result.page ?? null,
+    evidenceType: result.evidenceType ?? "unknown",
+    observedFacts: result.observedFacts ? [...result.observedFacts] : [],
     notes: result.notes ? [...result.notes] : undefined,
   };
 }
-

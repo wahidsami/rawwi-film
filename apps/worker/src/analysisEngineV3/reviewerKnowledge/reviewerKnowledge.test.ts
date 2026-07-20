@@ -519,7 +519,7 @@ function testMethodologyRenderer(): void {
   const rendered = renderReviewerMethodologySection(methodology, assessment);
 
   assertCondition(rendered.includes("Reviewer Methodology"), "methodology section should render");
-  assertCondition(rendered.includes("Narrative Understanding"), "methodology stage catalog should render");
+  assertCondition(rendered.includes("Evidence Extraction"), "methodology stage catalog should render");
   console.log("✓ methodology renderer is deterministic");
 }
 

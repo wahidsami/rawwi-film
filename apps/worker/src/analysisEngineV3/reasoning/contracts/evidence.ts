@@ -1,10 +1,9 @@
 import type { V3ReasoningStageMetadata } from "../stageTypes.js";
 
-export const EVIDENCE_IDENTIFICATION_CONTRACT: V3ReasoningStageMetadata<"evidence_identification"> = {
-  name: "evidence_identification",
-  description: "Locate candidate evidence inside the chunk.",
-  purpose: "Identify literal spans worth evaluating further.",
-  inputs: ["chunk", "narrative_understanding", "subject"],
-  outputs: ["candidate_evidence"],
+export const CONCEPT_IDENTIFICATION_CONTRACT: V3ReasoningStageMetadata<"concept_identification"> = {
+  name: "concept_identification",
+  description: "Determine concepts only from the grounded evidence and literal facts.",
+  purpose: "Extract legal concepts from the grounded evidence without naming the final GCAM article.",
+  inputs: ["grounded_evidence", "observed_facts"],
+  outputs: ["concepts", "knowledge_domains"],
 };
-

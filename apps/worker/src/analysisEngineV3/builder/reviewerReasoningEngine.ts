@@ -376,100 +376,49 @@ function buildPromptReviewerDecisionPipeline(
     }))),
     stages: Object.freeze([
       Object.freeze({
-        key: "literal_meaning",
-        title: "Literal Meaning",
+        key: "evidence_extraction",
+        title: "Evidence Extraction",
         summary: evidenceCandidates.map((candidate) => candidate.text).join(" | ") || input.chunkContext.localChunk,
         confidence: assessment.evidenceStrength,
       }),
       Object.freeze({
-        key: "implied_meaning",
-        title: "Implied Meaning",
-        summary: assessment.literalVsImpliedMeaning,
-        confidence: assessment.confidence,
+        key: "evidence_judge",
+        title: "Evidence Judge",
+        summary: assessment.reasoningTrace.join(" | ") || "No literal facts were extracted.",
+        confidence: assessment.evidenceStrength,
       }),
       Object.freeze({
-        key: "speaker_analysis",
-        title: "Speaker Analysis",
-        summary: assessment.speaker ?? "Unknown speaker.",
-        confidence: assessment.confidence,
-      }),
-      Object.freeze({
-        key: "target_analysis",
-        title: "Target Analysis",
-        summary: assessment.target ?? "Unknown target.",
-        confidence: assessment.confidence,
-      }),
-      Object.freeze({
-        key: "intent_analysis",
-        title: "Intent Analysis",
-        summary: assessment.narrativeIntent,
-        confidence: assessment.confidence,
-      }),
-      Object.freeze({
-        key: "narrative_purpose",
-        title: "Narrative Purpose",
-        summary: assessment.narrativeUnderstanding,
-        confidence: assessment.confidence,
-      }),
-      Object.freeze({
-        key: "context_positioning",
-        title: "Context Positioning",
-        summary: assessment.contextClassification,
-        confidence: assessment.confidence,
-      }),
-      Object.freeze({
-        key: "knowledge_retrieval",
-        title: "Reviewer Knowledge Retrieval",
-        summary: knowledgeSummary.join(" | ") || "No reviewer knowledge assets were selected.",
-        confidence: conceptContext.confidence,
-      }),
-      Object.freeze({
-        key: "legal_concept_identification",
-        title: "Legal Concept Identification",
-        summary: "Identify the smallest legal concept(s) present in the evidence before naming any GCAM article.",
-        confidence: assessment.confidence,
-      }),
-      Object.freeze({
-        key: "knowledge_domain_mapping",
-        title: "Knowledge Domain Mapping",
-        summary: "Map each legal concept to one or more Academy knowledge domains.",
-        confidence: assessment.confidence,
-      }),
-      Object.freeze({
-        key: "precedent_retrieval",
-        title: "Precedent Retrieval",
-        summary: precedentIds.length > 0 ? precedentIds.join(" | ") : "No precedents matched.",
-        confidence: conceptContext.confidence,
-      }),
-      Object.freeze({
-        key: "gcam_applicability",
-        title: "GCAM Applicability",
-        summary: primaryArticleIds.length > 0
-          ? `${articleEvaluationSummary} | Resolve the legal concepts first, then map them to knowledge domains, then resolve the candidate GCAM article set before choosing the primary article.`
-          : "No GCAM articles were preselected; resolve the candidate article set from the mapped knowledge domains.",
-        confidence: conceptContext.confidence,
-      }),
-      Object.freeze({
-        key: "article_ranking",
-        title: "Candidate Article Ranking",
-        summary: primaryArticleIds.length > 0
-          ? `Primary article first, then optional secondary articles: ${primaryArticleIds.join(" | ")}. Rank by evidence, context, story, dialogue, scene description, and deterministic ownership rules.`
-          : "Rank the candidate article set into a primary article and optional secondary articles.",
-        confidence: conceptContext.confidence,
-      }),
-      Object.freeze({
-        key: "reasoning_generation",
-        title: "Reasoning Generation",
+        key: "concept_identification",
+        title: "Concept Identification",
         summary: [
-    `Evidence: ${evidenceSummary.join(" | ") || "none"}`,
-    `Reasoning trace: ${assessment.reasoningTrace.join(" | ") || "none"}`,
-    `Recommendation: assist the reviewer reasoning only; the legal engine remains authoritative.`,
+          `concepts=${conceptContext.conceptIds.join("|") || "none"}`,
+          `knowledge_domains=${assessment.applicableConceptIds.join("|") || "none"}`,
+          `knowledge_retrieval=${knowledgeSummary.join(" | ") || "none"}`,
+        ].join(" | "),
+        confidence: conceptContext.confidence,
+      }),
+      Object.freeze({
+        key: "legal_classification",
+        title: "Legal Classification",
+        summary: primaryArticleIds.length > 0
+          ? `candidate_articles=${primaryArticleIds.join("|")} | precedents=${precedentIds.join(" | ") || "none"} | article_evaluations=${articleEvaluationSummary}`
+          : `candidate_articles=none | precedents=${precedentIds.join(" | ") || "none"} | article_evaluations=${articleEvaluationSummary}`,
+        confidence: conceptContext.confidence,
+      }),
+      Object.freeze({
+        key: "explanation",
+        title: "Explanation",
+        summary: [
+          `Evidence: ${evidenceSummary.join(" | ") || "none"}`,
+          `Reasoning trace: ${assessment.reasoningTrace.join(" | ") || "none"}`,
+          `Knowledge summary: ${knowledgeSummary.join(" | ") || "none"}`,
+          `Recommendation: assist the reviewer reasoning only; the legal engine remains authoritative.`,
         ].join(" | "),
         confidence: assessment.confidence,
       }),
       Object.freeze({
-        key: "preliminary_decision",
-        title: "Preliminary Decision",
+        key: "consistency_validation",
+        title: "Consistency Validation",
         summary: preliminaryStatus,
         confidence: preliminaryConfidence,
       }),
@@ -590,7 +539,7 @@ function buildGptReviewerAssistant(
       secondary_articles: "Return optional secondary GCAM articles when the legal concepts intersect multiple articles.",
     }),
     evidence: Object.freeze({
-      literal_meaning: assessment.reasoningTrace[0] ?? reasoningPipeline.literalMeaning ?? null,
+      literal_meaning: promptEvidenceCandidates[0]?.text ?? input.chunkContext.localChunk,
       supporting_evidence: [...assessment.reasoningTrace, ...promptEvidenceCandidates.map((candidate) => candidate.text)],
       evidence_candidates: pipelineEvidenceCandidates,
       confidence: assessment.evidenceStrength,

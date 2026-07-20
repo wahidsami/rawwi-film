@@ -2,6 +2,12 @@ import type { ConceptContext } from "../concepts/conceptTypes.js";
 import type { V3PromptBuilderInput } from "../builder/builderTypes.js";
 
 export type ReviewerMethodologyStageName =
+  | "evidence_extraction"
+  | "evidence_judge"
+  | "concept_identification"
+  | "legal_classification"
+  | "explanation"
+  | "consistency_validation"
   | "narrative_understanding"
   | "speaker_identification"
   | "target_identification"
@@ -75,4 +81,3 @@ export type ReviewerMethodologyRunnerInput = Readonly<{
   promptInput: V3PromptBuilderInput;
   conceptContext: ConceptContext;
 }>;
-

@@ -62,6 +62,11 @@ export type LegalEvidenceResult = {
   readonly primaryCandidateIndex: number | null;
   readonly admissible: boolean;
   readonly confidence: number;
+  readonly quote?: string | null;
+  readonly scene?: string | null;
+  readonly page?: number | null;
+  readonly evidenceType?: "dialogue" | "scene_description" | "story_context" | "mixed" | "unknown";
+  readonly observedFacts?: readonly string[];
   readonly notes?: readonly string[];
 };
 

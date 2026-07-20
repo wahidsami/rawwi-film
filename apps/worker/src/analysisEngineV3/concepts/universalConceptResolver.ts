@@ -30,16 +30,6 @@ function joinTexts(values: readonly (string | null | undefined)[]): string {
   return values.map((value) => (value ? normalizeText(value) : "")).filter(Boolean).join(" ");
 }
 
-function normalizeStoryMemory(value: V3PromptBuilderInput["storyMemory"] | ConceptRecognitionInput["storyMemory"]): string {
-  if (typeof value === "string") return normalizeText(value);
-  if (!value) return "";
-  return joinTexts([
-    value.summary ?? "",
-    ...(value.notes ?? []),
-    ...(value.scenes ?? []),
-  ]);
-}
-
 function uniqueSorted(values: readonly string[]): readonly string[] {
   return Object.freeze([...new Set(values.map((value) => normalizeText(value)).filter(Boolean))].sort((left, right) => left.localeCompare(right)));
 }
@@ -93,7 +83,7 @@ function buildSyntheticConcept(registry: ConceptRegistry, conceptId: string, cor
   });
 }
 
-function collectCorpusText(input: Pick<ConceptRecognitionInput, "storyMemory" | "narrative" | "evidence" | "semantic" | "context">): string {
+function collectCorpusText(input: Pick<ConceptRecognitionInput, "narrative" | "evidence" | "semantic" | "context">): string {
   return joinTexts([
     input.narrative.speaker,
     input.narrative.listener,
@@ -115,7 +105,6 @@ function collectCorpusText(input: Pick<ConceptRecognitionInput, "storyMemory" | 
     input.semantic.emotion,
     input.semantic.riskContext,
     input.context.localContext,
-    input.context.chunkContext,
     input.context.narrativeContext,
     ...input.evidence.candidates.map((candidate) => candidate.text),
   ]);
@@ -131,14 +120,14 @@ function collectDetectedEntities(input: Pick<ConceptRecognitionInput, "entities"
   ].filter((value): value is string => typeof value === "string" && value.trim().length > 0));
 }
 
-function inferEvidenceType(input: Pick<ConceptRecognitionInput, "narrative" | "context" | "storyMemory">): UniversalConceptEvidenceType {
+function inferEvidenceType(input: Pick<ConceptRecognitionInput, "narrative" | "context">): UniversalConceptEvidenceType {
   const dialogue = Boolean(input.narrative.dialogue) || /(^|\n)\s*[^:\n]{1,40}:\s*/.test(input.context.localContext) || /[«»"]/u.test(input.context.localContext);
   const description = Boolean(input.narrative.sceneDescription) || Boolean(input.narrative.narration);
 
   if (dialogue && description) return "mixed";
   if (dialogue) return "dialogue";
   if (description) return "scene_description";
-  return "unknown";
+  return input.context.narrativeContext ? "story_context" : "unknown";
 }
 
 function inferSceneDescriptionType(input: Pick<ConceptRecognitionInput, "narrative" | "context">): UniversalConceptEvidenceType {
@@ -284,7 +273,6 @@ function buildResolution(
     confidenceHint: number;
     dialogueHint: boolean;
     descriptionHint: boolean;
-    storyMemoryPresent: boolean;
     sceneMemoryPresent: boolean;
   }>,
 ): UniversalConceptResolution {
@@ -298,16 +286,15 @@ function buildResolution(
     ...(input.exceptionSignals ?? []),
     ...(input.dialogueHint ? ["dialogue"] : []),
     ...(input.descriptionHint ? ["scene_description"] : []),
-    ...(input.storyMemoryPresent ? ["story_memory"] : []),
     ...(input.sceneMemoryPresent ? ["scene_memory"] : []),
   ]);
-  const evidenceType = input.dialogueHint && (input.descriptionHint || input.storyMemoryPresent || input.sceneMemoryPresent)
+  const evidenceType = input.dialogueHint && (input.descriptionHint || input.sceneMemoryPresent)
     ? "mixed"
     : input.dialogueHint
       ? "dialogue"
       : input.descriptionHint
         ? "scene_description"
-        : input.storyMemoryPresent || input.sceneMemoryPresent
+        : input.sceneMemoryPresent
           ? "story_context"
           : "unknown";
   const sceneDescriptionType = input.dialogueHint && input.descriptionHint
@@ -317,13 +304,9 @@ function buildResolution(
       : input.descriptionHint
         ? "scene_description"
         : "unknown";
-  const storyContextType = input.storyMemoryPresent && input.sceneMemoryPresent
-    ? "mixed"
-    : input.storyMemoryPresent
-      ? "story_memory"
-      : input.sceneMemoryPresent
-        ? "scene_memory"
-        : "none";
+  const storyContextType = input.sceneMemoryPresent
+    ? "scene_memory"
+    : "none";
   const confidence = clampConfidence(conceptContext.conceptCount > 0 ? Math.max(conceptContext.confidence, input.confidenceHint) : 0);
   const reason = knowledgeDomains.length > 0
     ? `Detected concepts ${detectedConceptIds.join(", ")} -> knowledge domains ${knowledgeDomains.join(", ")}.`
@@ -351,13 +334,6 @@ function collectRoutingCorpusText(input: Readonly<{
 }>): string {
   return joinTexts([
     input.promptInput.chunkContext.localChunk,
-    input.assessment.narrativeUnderstanding,
-    input.assessment.narrativeIntent,
-    input.assessment.contextClassification,
-    input.assessment.literalVsImpliedMeaning,
-    input.assessment.speaker,
-    input.assessment.target,
-    input.assessment.victim,
     ...input.conceptContext.concepts.flatMap((concept) => [
       concept.id,
       concept.label,
@@ -385,7 +361,6 @@ export function resolveUniversalConceptsFromRecognitionInput(
     confidenceHint: input.contextConfidence,
     dialogueHint: Boolean(input.narrative.dialogue) || Boolean(input.flags?.dialogue),
     descriptionHint: Boolean(input.narrative.sceneDescription) || Boolean(input.narrative.narration) || Boolean(input.flags?.description),
-    storyMemoryPresent: Boolean(input.storyMemory && input.storyMemory.trim().length > 0),
     sceneMemoryPresent: Boolean(input.context.sceneMemory && input.context.sceneMemory.trim().length > 0),
   });
 }
@@ -401,7 +376,6 @@ export function resolveUniversalConceptsFromRouting(
   const corpusText = collectRoutingCorpusText(input);
   const dialogueHint = Boolean(input.promptInput.chunkContext.localChunk.includes(":") || /[«»"]/u.test(input.promptInput.chunkContext.localChunk));
   const descriptionHint = Boolean(input.assessment.contextClassification === "narrative" || input.assessment.contextClassification === "documentary" || input.assessment.contextClassification === "educational");
-  const storyMemoryPresent = normalizeStoryMemory(input.promptInput.storyMemory).length > 0;
   const sceneMemoryPresent = Boolean(input.promptInput.chunkContext.sceneMemory && input.promptInput.chunkContext.sceneMemory.trim().length > 0);
 
   return buildResolution(registry, input.conceptContext, corpusText, {
@@ -415,7 +389,6 @@ export function resolveUniversalConceptsFromRouting(
     confidenceHint: input.assessment.confidence,
     dialogueHint,
     descriptionHint,
-    storyMemoryPresent,
     sceneMemoryPresent,
   });
 }
