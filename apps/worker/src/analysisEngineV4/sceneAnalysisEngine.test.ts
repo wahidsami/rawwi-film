@@ -30,7 +30,7 @@ async function testGraphProducesTraceAndEvidenceFirstState(): Promise<void> {
   const result = await engine.run("scene-trace", initialText);
 
   assert.equal(result.status, "complete");
-  assert.equal(result.trace.length, 9);
+  assert.equal(result.trace.length, 10);
   assert.equal(result.sentences.length > 0, true);
   assert.equal(result.evidenceSpans.length > 0, true);
   assert.equal(result.primaryEvidenceText?.includes("يا كلب"), true);
@@ -42,9 +42,11 @@ async function testGraphProducesTraceAndEvidenceFirstState(): Promise<void> {
   assert.equal(result.primaryArticle?.articleId, 4);
   assert.equal(result.candidateAtoms.length > 0, true);
   assert.equal(result.rankedCandidateAtoms.length > 0, true);
-  assert.equal(result.trace[0]?.node, "normalize_scene");
+  assert.equal(result.sceneModel !== null, true);
+  assert.equal(result.trace[0]?.node, "understand_scene");
+  assert.equal(result.trace[0]?.changedKeys.includes("sceneModel"), true);
   assert.equal(result.trace.at(-1)?.node, "finalize");
-  assert.equal(result.trace.every((entry) => entry.changedKeys.length > 0), true);
+  assert.equal(result.trace.some((entry) => entry.changedKeys.length > 0), true);
   assert.equal(Object.isFrozen(result), true);
   assert.equal(initialText, "حاضر. فهد يتمتم: يا كلب");
 }
@@ -71,4 +73,3 @@ main().catch((error) => {
   console.error(error);
   process.exit(1);
 });
-

@@ -8,6 +8,7 @@ import {
   createExtractEvidenceSpansNode,
   createFinalizeSceneAnalysisNode,
   createNormalizeSceneStateNode,
+  createSceneUnderstandingNode,
   createRankCandidateArticlesNode,
   createResolveCandidateArticlesNode,
   createResolveCandidateAtomsNode,
@@ -25,6 +26,7 @@ export type SceneAnalysisEngine = Readonly<{
 
 function buildDefaultGraph(): StateGraph {
   const graph = new StateGraph();
+  const understandScene = createSceneUnderstandingNode();
   const normalize = createNormalizeSceneStateNode();
   const extractEvidence = createExtractEvidenceSpansNode();
   const detectConcepts = createDetectConceptsNode();
@@ -36,6 +38,7 @@ function buildDefaultGraph(): StateGraph {
   const finalize = createFinalizeSceneAnalysisNode();
 
   graph
+    .addNode("understand_scene", understandScene)
     .addNode("normalize_scene", normalize)
     .addNode("extract_evidence", extractEvidence)
     .addNode("detect_concepts", detectConcepts)
@@ -45,7 +48,8 @@ function buildDefaultGraph(): StateGraph {
     .addNode("resolve_atoms", resolveAtoms)
     .addNode("compose_explanation", composeExplanation)
     .addNode("finalize", finalize)
-    .setEntryPoint("normalize_scene")
+    .setEntryPoint("understand_scene")
+    .addEdge("understand_scene", "normalize_scene")
     .addEdge("normalize_scene", "extract_evidence")
     .addEdge("extract_evidence", "detect_concepts")
     .addEdge("detect_concepts", "resolve_domains")
@@ -91,4 +95,3 @@ export {
   createResolveKnowledgeDomainsNode,
   createDefaultSceneAnalysisNodeSequence,
 };
-

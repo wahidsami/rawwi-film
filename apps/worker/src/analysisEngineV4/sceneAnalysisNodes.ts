@@ -10,6 +10,7 @@ import type {
   SceneAnalysisState,
 } from "./sceneAnalysisState.js";
 import { freezeSceneAnalysisState } from "./sceneAnalysisState.js";
+import { createSceneUnderstandingNode, buildSceneUnderstandingPrompt, understandScene } from "./sceneUnderstandingNode.js";
 
 type ConceptDefinition = Readonly<{
   conceptId: string;
@@ -329,8 +330,8 @@ export function createNormalizeSceneStateNode() {
   return (state: SceneAnalysisState): SceneAnalysisState => freezeSceneAnalysisState({
     ...state,
     status: state.status === "pending" ? "running" : state.status,
-    normalizedSceneText: normalizeText(state.sceneText),
-    sentences: splitSentences(state.sceneText),
+    normalizedSceneText: state.sceneModel?.normalizedSceneText ?? normalizeText(state.sceneText),
+    sentences: state.sceneModel?.sentences ?? splitSentences(state.sceneText),
   });
 }
 
@@ -446,6 +447,7 @@ export function createDefaultSceneAnalysisNodeSequence(): readonly {
   node: (state: SceneAnalysisState) => SceneAnalysisState;
 }[] {
   return Object.freeze([
+    { name: "understand_scene", node: createSceneUnderstandingNode() },
     { name: "normalize_scene", node: createNormalizeSceneStateNode() },
     { name: "extract_evidence", node: createExtractEvidenceSpansNode() },
     { name: "detect_concepts", node: createDetectConceptsNode() },
@@ -457,3 +459,9 @@ export function createDefaultSceneAnalysisNodeSequence(): readonly {
     { name: "finalize", node: createFinalizeSceneAnalysisNode() },
   ]);
 }
+
+export {
+  buildSceneUnderstandingPrompt,
+  createSceneUnderstandingNode,
+  understandScene,
+};

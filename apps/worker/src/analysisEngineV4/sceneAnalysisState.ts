@@ -1,5 +1,33 @@
 export type SceneAnalysisStatus = "pending" | "running" | "complete" | "failed";
 
+export type SceneModelLine = Readonly<{
+  lineId: string;
+  text: string;
+  startOffset: number;
+  endOffset: number;
+  lineType: "dialogue" | "action" | "heading" | "transition" | "story_context";
+}>;
+
+export type SceneModelHeading = Readonly<{
+  raw: string | null;
+  sceneType: "interior" | "exterior" | "mixed" | "unknown";
+  location: string | null;
+  timeOfDay: string | null;
+}>;
+
+export type SceneModel = Readonly<{
+  sceneId: string;
+  rawSceneText: string;
+  normalizedSceneText: string;
+  heading: SceneModelHeading;
+  lines: readonly SceneModelLine[];
+  sentences: readonly SceneAnalysisSentence[];
+  dialogueLines: readonly SceneModelLine[];
+  actionLines: readonly SceneModelLine[];
+  characters: readonly string[];
+  summary: string;
+}>;
+
 export type SceneAnalysisSentence = Readonly<{
   sentenceId: string;
   text: string;
@@ -64,6 +92,14 @@ export type SceneAnalysisTraceSnapshot = Readonly<{
   sceneId: string;
   status: SceneAnalysisStatus;
   sceneText: string;
+  sceneModel: Readonly<{
+    heading: SceneModelHeading;
+    lineCount: number;
+    sentenceCount: number;
+    dialogueLineCount: number;
+    actionLineCount: number;
+    characterCount: number;
+  }> | null;
   normalizedSceneText: string;
   sentenceCount: number;
   evidenceSpanCount: number;
@@ -91,6 +127,7 @@ export type SceneAnalysisState = Readonly<{
   sceneId: string;
   status: SceneAnalysisStatus;
   sceneText: string;
+  sceneModel: SceneModel | null;
   normalizedSceneText: string;
   sentences: readonly SceneAnalysisSentence[];
   evidenceSpans: readonly SceneAnalysisEvidenceSpan[];
@@ -142,6 +179,7 @@ export function createSceneAnalysisState(input: Readonly<{
     sceneId: input.sceneId,
     status: "pending",
     sceneText: input.sceneText,
+    sceneModel: null,
     normalizedSceneText: "",
     sentences: freezeReadonlyArray([]),
     evidenceSpans: freezeReadonlyArray([]),
@@ -164,6 +202,12 @@ export function createSceneAnalysisState(input: Readonly<{
 export function freezeSceneAnalysisState(state: SceneAnalysisState | Readonly<Record<string, unknown>>): SceneAnalysisState {
   return deepFreeze({
     ...state,
+    sceneModel: (state as SceneAnalysisState).sceneModel
+      ? {
+          ...((state as SceneAnalysisState).sceneModel as SceneModel),
+          heading: { ...((state as SceneAnalysisState).sceneModel as SceneModel).heading },
+        }
+      : null,
     sentences: freezeReadonlyArray((state as SceneAnalysisState).sentences ?? []),
     evidenceSpans: freezeReadonlyArray((state as SceneAnalysisState).evidenceSpans ?? []),
     detectedConcepts: freezeReadonlyArray((state as SceneAnalysisState).detectedConcepts ?? []),
@@ -184,6 +228,16 @@ export function snapshotSceneAnalysisState(state: SceneAnalysisState): SceneAnal
     sceneId: state.sceneId,
     status: state.status,
     sceneText: state.sceneText,
+    sceneModel: state.sceneModel
+      ? Object.freeze({
+          heading: Object.freeze({ ...state.sceneModel.heading }),
+          lineCount: state.sceneModel.lines.length,
+          sentenceCount: state.sceneModel.sentences.length,
+          dialogueLineCount: state.sceneModel.dialogueLines.length,
+          actionLineCount: state.sceneModel.actionLines.length,
+          characterCount: state.sceneModel.characters.length,
+        })
+      : null,
     normalizedSceneText: state.normalizedSceneText,
     sentenceCount: state.sentences.length,
     evidenceSpanCount: state.evidenceSpans.length,
@@ -197,4 +251,3 @@ export function snapshotSceneAnalysisState(state: SceneAnalysisState): SceneAnal
     traceLength: state.trace.length,
   } satisfies SceneAnalysisTraceSnapshot);
 }
-
