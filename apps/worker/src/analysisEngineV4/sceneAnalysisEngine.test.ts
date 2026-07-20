@@ -45,6 +45,8 @@ async function testGraphProducesTraceAndEvidenceFirstState(): Promise<void> {
   assert.equal(result.sceneModel !== null, true);
   assert.equal(result.trace[0]?.node, "understand_scene");
   assert.equal(result.trace[0]?.changedKeys.includes("sceneModel"), true);
+  assert.equal(result.trace[1]?.node, "candidate_evidence");
+  assert.equal(result.trace[1]?.changedKeys.includes("evidenceSpanCount"), true);
   assert.equal(result.trace.at(-1)?.node, "finalize");
   assert.equal(result.trace.some((entry) => entry.changedKeys.length > 0), true);
   assert.equal(Object.isFrozen(result), true);

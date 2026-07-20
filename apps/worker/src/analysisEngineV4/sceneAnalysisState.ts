@@ -28,6 +28,12 @@ export type SceneModel = Readonly<{
   summary: string;
 }>;
 
+export type SceneEvidencePageReference = Readonly<{
+  pageNumber: number;
+  startOffsetPage: number;
+  endOffsetPage: number;
+}>;
+
 export type SceneAnalysisSentence = Readonly<{
   sentenceId: string;
   text: string;
@@ -41,8 +47,10 @@ export type SceneAnalysisEvidenceSpan = Readonly<{
   text: string;
   startOffset: number;
   endOffset: number;
+  lineId: string;
   sentenceIndex: number;
   sourceType: "dialogue" | "scene_description" | "story_context";
+  pageReferences: readonly SceneEvidencePageReference[];
   conceptIds: readonly string[];
   confidence: number;
   rationale: readonly string[];

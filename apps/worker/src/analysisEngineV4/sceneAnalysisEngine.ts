@@ -5,7 +5,6 @@ import {
   createComposeExplanationNode,
   createDefaultSceneAnalysisNodeSequence,
   createDetectConceptsNode,
-  createExtractEvidenceSpansNode,
   createFinalizeSceneAnalysisNode,
   createNormalizeSceneStateNode,
   createSceneUnderstandingNode,
@@ -14,6 +13,7 @@ import {
   createResolveCandidateAtomsNode,
   createResolveKnowledgeDomainsNode,
 } from "./sceneAnalysisNodes.js";
+import { createCandidateEvidenceNode } from "./candidateEvidenceNode.js";
 
 export type SceneAnalysisEngineOptions = Readonly<{
   enabled?: boolean;
@@ -27,8 +27,8 @@ export type SceneAnalysisEngine = Readonly<{
 function buildDefaultGraph(): StateGraph {
   const graph = new StateGraph();
   const understandScene = createSceneUnderstandingNode();
+  const candidateEvidence = createCandidateEvidenceNode();
   const normalize = createNormalizeSceneStateNode();
-  const extractEvidence = createExtractEvidenceSpansNode();
   const detectConcepts = createDetectConceptsNode();
   const resolveDomains = createResolveKnowledgeDomainsNode();
   const resolveArticles = createResolveCandidateArticlesNode();
@@ -39,8 +39,8 @@ function buildDefaultGraph(): StateGraph {
 
   graph
     .addNode("understand_scene", understandScene)
+    .addNode("candidate_evidence", candidateEvidence)
     .addNode("normalize_scene", normalize)
-    .addNode("extract_evidence", extractEvidence)
     .addNode("detect_concepts", detectConcepts)
     .addNode("resolve_domains", resolveDomains)
     .addNode("resolve_articles", resolveArticles)
@@ -49,9 +49,9 @@ function buildDefaultGraph(): StateGraph {
     .addNode("compose_explanation", composeExplanation)
     .addNode("finalize", finalize)
     .setEntryPoint("understand_scene")
-    .addEdge("understand_scene", "normalize_scene")
-    .addEdge("normalize_scene", "extract_evidence")
-    .addEdge("extract_evidence", "detect_concepts")
+    .addEdge("understand_scene", "candidate_evidence")
+    .addEdge("candidate_evidence", "normalize_scene")
+    .addEdge("normalize_scene", "detect_concepts")
     .addEdge("detect_concepts", "resolve_domains")
     .addEdge("resolve_domains", "resolve_articles")
     .addEdge("resolve_articles", "rank_articles")
@@ -86,7 +86,6 @@ export async function runSceneAnalysis(sceneId: string, sceneText: string, optio
 export {
   createComposeExplanationNode,
   createDetectConceptsNode,
-  createExtractEvidenceSpansNode,
   createFinalizeSceneAnalysisNode,
   createNormalizeSceneStateNode,
   createRankCandidateArticlesNode,

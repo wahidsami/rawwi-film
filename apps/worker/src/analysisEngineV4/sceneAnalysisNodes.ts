@@ -11,6 +11,7 @@ import type {
 } from "./sceneAnalysisState.js";
 import { freezeSceneAnalysisState } from "./sceneAnalysisState.js";
 import { createSceneUnderstandingNode, buildSceneUnderstandingPrompt, understandScene } from "./sceneUnderstandingNode.js";
+import { createCandidateEvidenceNode } from "./candidateEvidenceNode.js";
 
 type ConceptDefinition = Readonly<{
   conceptId: string;
@@ -112,8 +113,16 @@ function collectEvidenceSpans(sentences: readonly SceneAnalysisSentence[]): read
     text: sentence.text,
     startOffset: sentence.startOffset,
     endOffset: sentence.endOffset,
+    lineId: sentence.sentenceId,
     sentenceIndex: index,
     sourceType: sentence.sourceType,
+    pageReferences: Object.freeze([
+      Object.freeze({
+        pageNumber: 1,
+        startOffsetPage: sentence.startOffset,
+        endOffsetPage: sentence.endOffset,
+      }),
+    ]),
     conceptIds: Object.freeze([]),
     confidence: 1,
     rationale: Object.freeze([`Sentence ${index + 1} is the grounded evidence span.`]),
@@ -448,8 +457,8 @@ export function createDefaultSceneAnalysisNodeSequence(): readonly {
 }[] {
   return Object.freeze([
     { name: "understand_scene", node: createSceneUnderstandingNode() },
+    { name: "candidate_evidence", node: createCandidateEvidenceNode() },
     { name: "normalize_scene", node: createNormalizeSceneStateNode() },
-    { name: "extract_evidence", node: createExtractEvidenceSpansNode() },
     { name: "detect_concepts", node: createDetectConceptsNode() },
     { name: "resolve_domains", node: createResolveKnowledgeDomainsNode() },
     { name: "resolve_articles", node: createResolveCandidateArticlesNode() },
@@ -462,6 +471,7 @@ export function createDefaultSceneAnalysisNodeSequence(): readonly {
 
 export {
   buildSceneUnderstandingPrompt,
+  createCandidateEvidenceNode,
   createSceneUnderstandingNode,
   understandScene,
 };
