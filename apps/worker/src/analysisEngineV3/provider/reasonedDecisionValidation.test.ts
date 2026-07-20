@@ -233,7 +233,7 @@ function makeReasonedDecisionResult(overrides: Partial<V3ProviderReasoningResult
       notes: [],
     },
     reasonedDecision: {
-      reasoning: overrides.reasoning ?? "The quote directly supports the conclusion.",
+      reasoning: overrides.reasoning ?? chunkText,
       alternativeInterpretations: overrides.alternativeInterpretations ?? ["Could be literal dialogue."],
       confidence: overrides.confidence ?? 0.93,
       articleEvaluations: overrides.articleEvaluations ?? [
@@ -241,7 +241,7 @@ function makeReasonedDecisionResult(overrides: Partial<V3ProviderReasoningResult
           articleId: 4,
           status: "PASS",
           evidence: [chunkText],
-          reason: "The quote supports the conclusion.",
+          reason: chunkText,
           confidence: 0.93,
         },
       ],
@@ -249,9 +249,9 @@ function makeReasonedDecisionResult(overrides: Partial<V3ProviderReasoningResult
       contradictingEvidence: overrides.contradictingEvidence ?? [],
       applicableArticles: overrides.applicableArticles ?? [4],
       rejectedArticles: overrides.rejectedArticles ?? [],
-      riskAnalysis: overrides.riskAnalysis ?? "Low risk.",
-      narrativeAnalysis: overrides.narrativeAnalysis ?? "Direct dialogue.",
-      humanLikeExplanation: overrides.humanLikeExplanation ?? "A human reviewer would likely accept this as grounded.",
+      riskAnalysis: overrides.riskAnalysis ?? chunkText,
+      narrativeAnalysis: overrides.narrativeAnalysis ?? chunkText,
+      humanLikeExplanation: overrides.humanLikeExplanation ?? chunkText,
       recommendation: overrides.recommendation ?? "RETURN VIOLATION",
     },
   };
@@ -362,7 +362,8 @@ function main(): void {
   assert.equal(validation.valid, false);
   assert.equal(validation.issues.length > 0, true);
   assert.equal(validation.issues.some((issue) => issue.code === "unsupported_factual_claim"), true);
-  assert.equal(validation.sanitizedDecision.reasoning, "The quote is enough to know that a prince was murdered in the palace.");
+  assert.equal(validation.sanitizedDecision.reasoning, "أنت كذاب");
+  assert.equal(validation.sanitizedDecision.humanLikeExplanation, "أنت كذاب");
   assert.equal(validation.sanitizedDecision.articleEvaluations.length, 1);
   console.log("✓ reasoned decision grounding validator rejects hallucinated explanations");
 
@@ -382,6 +383,7 @@ function main(): void {
   testMixedValidAndInvalidEvidence();
   testOnlyOneOfMultipleEvidenceItemsFails();
   testExactQuotedDialogueIsAccepted();
+  testEvidenceFirstExplanationRegeneration();
 }
 
 function testCandidateAwareValidation(): void {
@@ -536,7 +538,7 @@ function testCandidateAwareValidation(): void {
       notes: [],
     },
     reasonedDecision: {
-      reasoning: "Candidate article 4 and atom_4_1 are supported by the quote.",
+      reasoning: "أنت كذاب",
       alternativeInterpretations: ["Could be literal dialogue."],
       confidence: 0.93,
       articleEvaluations: [
@@ -547,8 +549,8 @@ function testCandidateAwareValidation(): void {
       applicableArticles: [4],
       rejectedArticles: [],
       riskAnalysis: "Low risk.",
-      narrativeAnalysis: "Direct dialogue.",
-      humanLikeExplanation: "The returned article and atom are inside the deterministic candidate set.",
+      narrativeAnalysis: "أنت كذاب",
+      humanLikeExplanation: "أنت كذاب",
       recommendation: "RETURN VIOLATION",
     },
   });
@@ -695,7 +697,7 @@ function testCanonicalFallbackUsesSelectedArticleIds(): void {
       notes: [],
     },
     reasonedDecision: {
-      reasoning: "Candidate article 11 should be validated from the canonical fallback.",
+      reasoning: "أنت كذاب",
       alternativeInterpretations: ["Could be literal dialogue."],
       confidence: 0.93,
       articleEvaluations: [
@@ -706,8 +708,8 @@ function testCanonicalFallbackUsesSelectedArticleIds(): void {
       applicableArticles: [11],
       rejectedArticles: [],
       riskAnalysis: "Low risk.",
-      narrativeAnalysis: "Direct dialogue.",
-      humanLikeExplanation: "The canonical policy article id should be accepted even when candidate diagnostics are absent.",
+      narrativeAnalysis: "أنت كذاب",
+      humanLikeExplanation: "أنت كذاب",
       recommendation: "RETURN VIOLATION",
     },
   });
@@ -868,19 +870,19 @@ function testArabicNarrativeGrounding(): void {
       notes: [],
     },
     reasonedDecision: {
-      reasoning: "النص يحتوي حواراً مباشرًا، وإدانة واضحة، ويصف الزوجة داخل سياق عائلي مرتبط بالعنف، لكن الحكم النهائي يستند إلى العبارة المنقولة نفسها.",
-      alternativeInterpretations: ["قد يكون مجرد حوار عائلي لا أكثر."],
+      reasoning: "أنت كذاب",
+      alternativeInterpretations: ["أنت كذاب"],
       confidence: 0.93,
       articleEvaluations: [
-        { articleId: 4, status: "PASS", evidence: ["أنت كذاب"], reason: "العبارة المنقولة هي الأساس، ولا أضيف وقائع جديدة.", confidence: 0.93 },
+        { articleId: 4, status: "PASS", evidence: ["أنت كذاب"], reason: "أنت كذاب", confidence: 0.93 },
       ],
       supportingEvidence: ["أنت كذاب"],
       contradictingEvidence: [],
       applicableArticles: [4],
       rejectedArticles: [],
       riskAnalysis: "Low risk.",
-      narrativeAnalysis: "وصف حواري عائلي.",
-      humanLikeExplanation: "التفسير عربي وصفي لكنه لا يضيف وقائع خارج الاقتباس.",
+      narrativeAnalysis: "أنت كذاب",
+      humanLikeExplanation: "أنت كذاب",
       recommendation: "RETURN VIOLATION",
     },
   });
@@ -900,13 +902,13 @@ function testEllipsisNormalization(): void {
         articleId: 4,
         status: "PASS",
         evidence: ["يا... كذاب"],
-        reason: "The quote directly supports the conclusion.",
+        reason: "يا... كذاب",
         confidence: 0.93,
       },
     ],
     supportingEvidence: ["يا... كذاب"],
-    reasoning: "The quote directly supports the conclusion.",
-    humanLikeExplanation: "The evidence is copied from the screenplay with ellipsis normalization.",
+    reasoning: "يا… كذاب",
+    humanLikeExplanation: "يا… كذاب",
   }));
 
   assert.equal(validation.valid, true);
@@ -1055,19 +1057,82 @@ function testExactQuotedDialogueIsAccepted(): void {
         articleId: 4,
         status: "PASS",
         evidence: [chunkText],
-        reason: "The exact quote directly supports the conclusion.",
+        reason: chunkText,
         confidence: 0.97,
       },
     ],
     supportingEvidence: [chunkText],
-    reasoning: "The exact quote directly supports the conclusion.",
-    humanLikeExplanation: "The screenplay dialogue is copied exactly.",
+    reasoning: chunkText,
+    humanLikeExplanation: chunkText,
   }));
 
   assert.equal(validation.valid, true);
   assert.equal(validation.issues.length, 0);
   assert.equal(validation.sanitizedDecision.articleEvaluations[0].evidence[0], chunkText);
   console.log("✓ exact quoted dialogue is accepted");
+}
+
+function testEvidenceFirstExplanationRegeneration(): void {
+  const cases = [
+    {
+      title: "profanity evidence never produces child-abuse explanation",
+      chunkText: "أنت كذاب",
+      invalidExplanation: "الطفل يتعرض للعنف في مشهد آخر.",
+      forbiddenTokens: ["الطفل", "العنف", "مشهد آخر"],
+    },
+    {
+      title: "child-abuse evidence never produces profanity explanation",
+      chunkText: "الطفل يبكي",
+      invalidExplanation: "يا كلب، هذا مجرد وصف آخر.",
+      forbiddenTokens: ["يا كلب"],
+    },
+    {
+      title: "religion explanation cannot appear unless evidence contains religion",
+      chunkText: "أنت كذاب",
+      invalidExplanation: "هذا متعلق بالدين والرسول في مشهد آخر.",
+      forbiddenTokens: ["الدين", "الرسول", "مشهد آخر"],
+    },
+    {
+      title: "security explanation cannot appear unless evidence contains security",
+      chunkText: "أنت كذاب",
+      invalidExplanation: "هذا تهديد أمني يتعلق بالجيش والشرطة.",
+      forbiddenTokens: ["الجيش", "الشرطة", "تهديد أمني"],
+    },
+    {
+      title: "explanation cannot mention characters absent from evidence",
+      chunkText: "أنت كذاب",
+      invalidExplanation: "Character A threatens Character B in the previous scene.",
+      forbiddenTokens: ["Character A", "Character B", "previous scene"],
+    },
+    {
+      title: "explanation cannot reference another scene",
+      chunkText: "أنت كذاب",
+      invalidExplanation: "In the previous scene the same insult appears again.",
+      forbiddenTokens: ["previous scene", "same insult appears again"],
+    },
+  ] as const;
+
+  for (const testCase of cases) {
+    const input = makeValidationInput(testCase.chunkText);
+    const validation = validateReasonedDecisionAgainstEvidence(input, makeReasonedDecisionResult({
+      rawEvidenceText: testCase.chunkText,
+      evidenceCandidates: [{ text: testCase.chunkText, startOffset: 0, endOffset: testCase.chunkText.length }],
+      humanLikeExplanation: testCase.invalidExplanation,
+      reasoning: testCase.invalidExplanation,
+      narrativeAnalysis: testCase.invalidExplanation,
+    }));
+
+    assert.equal(validation.valid, true, testCase.title);
+    assert.equal(validation.issues.some((issue) => issue.code === "unsupported_explanation"), true, testCase.title);
+    assert.equal(validation.sanitizedDecision.humanLikeExplanation.includes(testCase.chunkText), true, testCase.title);
+    for (const forbiddenToken of testCase.forbiddenTokens) {
+      assert.equal(validation.sanitizedDecision.humanLikeExplanation.includes(forbiddenToken), false, `${testCase.title}: ${forbiddenToken}`);
+      assert.equal(validation.sanitizedDecision.reasoning.includes(forbiddenToken), false, `${testCase.title}: ${forbiddenToken} reasoning`);
+      assert.equal(validation.sanitizedDecision.narrativeAnalysis.includes(forbiddenToken), false, `${testCase.title}: ${forbiddenToken} narrative`);
+    }
+  }
+
+  console.log("✓ explanation consistency validator regenerates unsafe explanations");
 }
 
 main();

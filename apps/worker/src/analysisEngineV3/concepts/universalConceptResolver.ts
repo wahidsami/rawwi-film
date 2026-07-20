@@ -95,7 +95,6 @@ function buildSyntheticConcept(registry: ConceptRegistry, conceptId: string, cor
 
 function collectCorpusText(input: Pick<ConceptRecognitionInput, "storyMemory" | "narrative" | "evidence" | "semantic" | "context">): string {
   return joinTexts([
-    input.storyMemory,
     input.narrative.speaker,
     input.narrative.listener,
     input.narrative.target,
@@ -115,8 +114,6 @@ function collectCorpusText(input: Pick<ConceptRecognitionInput, "storyMemory" | 
     input.semantic.victim,
     input.semantic.emotion,
     input.semantic.riskContext,
-    input.context.storyMemory,
-    input.context.sceneMemory,
     input.context.localContext,
     input.context.chunkContext,
     input.context.narrativeContext,
@@ -137,12 +134,10 @@ function collectDetectedEntities(input: Pick<ConceptRecognitionInput, "entities"
 function inferEvidenceType(input: Pick<ConceptRecognitionInput, "narrative" | "context" | "storyMemory">): UniversalConceptEvidenceType {
   const dialogue = Boolean(input.narrative.dialogue) || /(^|\n)\s*[^:\n]{1,40}:\s*/.test(input.context.localContext) || /[«»"]/u.test(input.context.localContext);
   const description = Boolean(input.narrative.sceneDescription) || Boolean(input.narrative.narration);
-  const story = Boolean(input.storyMemory && input.storyMemory.trim().length > 0) || Boolean(input.context.sceneMemory);
 
   if (dialogue && description) return "mixed";
   if (dialogue) return "dialogue";
   if (description) return "scene_description";
-  if (story) return "story_context";
   return "unknown";
 }
 
@@ -356,8 +351,6 @@ function collectRoutingCorpusText(input: Readonly<{
 }>): string {
   return joinTexts([
     input.promptInput.chunkContext.localChunk,
-    normalizeStoryMemory(input.promptInput.storyMemory),
-    input.promptInput.chunkContext.sceneMemory ?? null,
     input.assessment.narrativeUnderstanding,
     input.assessment.narrativeIntent,
     input.assessment.contextClassification,

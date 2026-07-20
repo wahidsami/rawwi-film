@@ -200,6 +200,7 @@ function testDeterministicReviewerDecisionContext(): void {
   assert.equal(first.reasoning.stages.length, 12, "reasoning pipeline should contain 12 stages");
   assert.equal(first.reasoning.articleEvaluations.length, 1, "article-by-article reasoning should evaluate each article independently");
   assert.equal(first.reasoning.articleEvaluations[0]?.status, "PASS", "the supplied article should pass in this deterministic test");
+  assert.deepEqual(first.reasoning.supportingEvidence, ["يا كلب"], "supporting evidence should stay anchored to the grounded span");
   assert.equal(first.reasoning.preliminaryDecision.status, "accept", "preliminary decision should be stable");
   assert(first.knowledgeAssets !== null, "knowledge assets should be present");
   console.log("✓ reviewer decision context is deterministic");

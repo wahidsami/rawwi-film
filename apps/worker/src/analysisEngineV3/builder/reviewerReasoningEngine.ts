@@ -121,14 +121,6 @@ function collectQueryTerms(
   assessment: ReviewerAssessment,
   packs: readonly ReviewerKnowledgePack[],
 ): readonly string[] {
-  const storyMemory = typeof input.storyMemory === "string"
-    ? input.storyMemory
-    : [
-        input.storyMemory.summary ?? "",
-        ...(input.storyMemory.notes ?? []),
-        ...(input.storyMemory.scenes ?? []),
-      ].join(" | ");
-
   return uniqueStringsWithNormalization([
     input.subjectModule.id,
     input.subjectModule.titleAr,
@@ -141,9 +133,6 @@ function collectQueryTerms(
     ...(input.subjectModule.nonExamples ?? []),
     ...(input.subjectModule.notes ?? []),
     input.chunkContext.localChunk,
-    ...(input.chunkContext.neighboringSentences ?? []),
-    input.chunkContext.sceneMemory ?? "",
-    storyMemory,
     ...(input.glossary.entries.flatMap((entry) => [entry.term, entry.definition ?? "", ...(entry.variants ?? [])])),
     ...conceptContext.conceptIds,
     ...conceptContext.concepts.map((concept) => concept.label),
@@ -354,7 +343,6 @@ function buildPromptReviewerDecisionPipeline(
   const evidenceCandidates = splitSentenceEvidenceCandidates(input.chunkContext.localChunk, 0, assessment.evidenceStrength);
   const evidenceSummary = uniqueStringsWithNormalization([
     ...evidenceCandidates.map((candidate) => candidate.text),
-    ...(input.chunkContext.neighboringSentences ?? []),
     assessment.reasoningTrace.join(" | "),
   ]);
   const articleEvaluationSummary = primaryArticleIds.length > 0

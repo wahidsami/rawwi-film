@@ -124,7 +124,7 @@ function testDuplicateMerging(): void {
   console.log("✓ duplicate concept merging");
 }
 
-function testStoryMemoryContributesRecognition(): void {
+function testStoryMemoryDoesNotDriveRecognition(): void {
   const input = makeInput("Hello there");
   const storyMemoryText = "Earlier scene mentions gambling and alcohol.";
   const recognizer = createConceptRecognizer(createDefaultConceptRegistry());
@@ -153,9 +153,9 @@ function testStoryMemoryContributesRecognition(): void {
     },
   }));
 
-  assert(context.conceptIds.includes("gambling"), "story memory should contribute gambling recognition");
-  assert(context.conceptIds.includes("alcohol"), "story memory should contribute alcohol recognition");
-  console.log("✓ story memory contributes concept recognition");
+  assert(!context.conceptIds.includes("gambling"), "story memory should not contribute gambling recognition");
+  assert(!context.conceptIds.includes("alcohol"), "story memory should not contribute alcohol recognition");
+  console.log("✓ story memory does not drive concept recognition");
 }
 
 function testDeterministicOutput(): void {
@@ -170,7 +170,7 @@ async function main(): Promise<void> {
   testConceptRecognition();
   testArabicProfanityFallbackRecognition();
   testDuplicateMerging();
-  testStoryMemoryContributesRecognition();
+  testStoryMemoryDoesNotDriveRecognition();
   testDeterministicOutput();
   console.log("\nAll concept recognizer tests passed.");
 }

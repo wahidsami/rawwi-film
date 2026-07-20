@@ -58,6 +58,16 @@ function collectEvidenceTexts(candidates: readonly { readonly text: string }[]):
   return uniqueStrings(candidates.map((candidate) => candidate.text));
 }
 
+function selectGroundedEvidenceText(input: ReviewerDecisionPreparationInput): string {
+  const primary = input.intelligence.evidence.candidates[input.intelligence.evidence.primaryCandidateIndex ?? 0] ?? input.intelligence.evidence.candidates[0] ?? null;
+  return normalizeText(
+    primary?.text ??
+      input.intelligence.evidence.candidates[0]?.text ??
+      input.intelligence.context.localContext ??
+      "",
+  );
+}
+
 function objectArray(value: unknown): readonly Record<string, unknown>[] {
   return Array.isArray(value) ? (value.filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null) as readonly Record<string, unknown>[]) : [];
 }
@@ -168,12 +178,10 @@ function buildArticleEvaluations(
   const failSet = new Set(rejectedArticles);
   const subjectArticleIds = [...new Set(input.subjectModuleArticleIds ?? [])].sort((left, right) => left - right);
   const sourceArticleIds = subjectArticleIds.length > 0 ? subjectArticleIds : [...new Set([...passSet, ...failSet])].sort((left, right) => left - right);
+  const groundedEvidence = selectGroundedEvidenceText(input);
   const sharedEvidence = normalizeArticleEvidence([
     ...(input.reasonedDecision?.supportingEvidence ?? []),
-    ...input.intelligence.evidence.candidates.map((candidate) => candidate.text),
-    input.intelligence.evidence.primaryCandidateIndex !== null
-      ? input.intelligence.evidence.candidates[input.intelligence.evidence.primaryCandidateIndex]?.text ?? ""
-      : "",
+    groundedEvidence,
   ]);
 
   return Object.freeze(sourceArticleIds.map((articleId) => Object.freeze({
@@ -248,10 +256,9 @@ function buildReasoningStages(
   knowledgeAssets: ReviewerDecisionKnowledgeAssets,
   preliminaryDecision: ReviewerDecisionPreliminaryDecision,
 ): readonly ReviewerDecisionReasoningStage[] {
-  const primaryEvidence = input.intelligence.evidence.candidates[input.intelligence.evidence.primaryCandidateIndex ?? 0] ?? input.intelligence.evidence.candidates[0] ?? null;
+  const groundedEvidence = selectGroundedEvidenceText(input);
   const literalMeaning = normalizeText(
-    collectEvidenceTexts(input.intelligence.evidence.candidates).join(" | ") ||
-      primaryEvidence?.text ||
+    groundedEvidence ||
       input.intelligence.semantic.semanticMeaning ||
       input.intelligence.context.localContext,
   );
@@ -282,7 +289,7 @@ function buildReasoningStages(
 
   const supportingEvidence = uniqueStrings([
     ...(input.reasonedDecision?.supportingEvidence ?? []),
-    ...input.intelligence.evidence.candidates.map((candidate) => candidate.text),
+    groundedEvidence,
     literalMeaning,
   ]);
   const counterEvidence = uniqueStrings([
@@ -471,11 +478,7 @@ export function buildReviewerDecisionContext(input: ReviewerDecisionPreparationI
     articleEvaluations,
   );
   const reasoning = Object.freeze({
-    literalMeaning: normalizeText(
-      collectEvidenceTexts(input.intelligence.evidence.candidates).join(" | ") ||
-        input.intelligence.semantic.semanticMeaning ||
-        input.intelligence.context.localContext,
-    ),
+    literalMeaning: normalizeText(selectGroundedEvidenceText(input) || input.intelligence.semantic.semanticMeaning || input.intelligence.context.localContext),
     impliedMeaning: normalizeText(
       input.reasonedDecision?.reasoning ??
         input.reasonedDecision?.narrativeAnalysis ??
@@ -505,10 +508,7 @@ export function buildReviewerDecisionContext(input: ReviewerDecisionPreparationI
     rejectedGcamArticles: Object.freeze(articleEvaluations.filter((evaluation) => evaluation.status === "FAIL").map((evaluation) => evaluation.articleId)),
     supportingEvidence: Object.freeze(uniqueStrings([
       ...(input.reasonedDecision?.supportingEvidence ?? []),
-      ...input.intelligence.evidence.candidates.map((candidate) => candidate.text),
-      input.intelligence.evidence.primaryCandidateIndex !== null
-        ? input.intelligence.evidence.candidates[input.intelligence.evidence.primaryCandidateIndex]?.text ?? ""
-        : "",
+      selectGroundedEvidenceText(input),
     ])),
     counterEvidence: Object.freeze(uniqueStrings([
       ...(input.reasonedDecision?.contradictingEvidence ?? []),

@@ -626,6 +626,13 @@ type FactualClaimDiagnostic = Readonly<{
   reason: string;
 }>;
 
+type ExplanationRegeneration = Readonly<{
+  reasoning: string;
+  narrativeAnalysis: string;
+  humanLikeExplanation: string;
+  groundedEvidence: string;
+}>;
+
 function sentenceHasExactGrounding(
   sentence: string,
   exactEvidenceTexts: ReadonlySet<string>,
@@ -692,6 +699,115 @@ function assessFactualClaimGrounding(
     reason: concreteClaimTokens.length > 0
       ? "The sentence introduces concrete factual content that is not grounded in the quoted evidence, current scene, candidate articles, candidate atoms, or reviewer scope."
       : "The sentence introduces factual content that is not grounded in the quoted evidence, current scene, candidate articles, candidate atoms, or reviewer scope.",
+  });
+}
+
+function containsForeignSceneReference(sentence: string): boolean {
+  const normalizedSentence = normalizeGroundingText(sentence);
+  if (normalizedSentence.length === 0) return false;
+
+  const patterns: readonly RegExp[] = [
+    /\b(?:previous|earlier|later|another|other|different)\s+(?:scene|dialogue|context)\b/iu,
+    /\b(?:some other|the other)\s+(?:scene|dialogue|context)\b/iu,
+    /\b(?:another|different)\s+(?:scene|dialogue)\b/iu,
+    /\b(?:prior|subsequent)\s+(?:scene|dialogue|context)\b/iu,
+    /(?:المشهد|حوار|السياق)\s+(?:السابق|اللاحق|الآخر|آخر|المختلف)/u,
+    /(?:مشهد|حوار|سياق)\s+(?:آخر|مختلف|سابق|لاحق)/u,
+    /(?:المشهد\s+السابق|المشهد\s+التالي|مشهد\s+آخر|حوار\s+آخر|سياق\s+آخر|سياق\s+سابق|سياق\s+لاحق)/u,
+  ];
+
+  return patterns.some((pattern) => pattern.test(normalizedSentence));
+}
+
+function evaluateExplanationConsistency(
+  explanation: string,
+  groundingTokens: ReadonlySet<string>,
+  exactEvidenceTexts: ReadonlySet<string>,
+  candidateArticleTokens: ReadonlySet<string>,
+  candidateAtomTokens: ReadonlySet<string>,
+  candidateReviewerTokens: ReadonlySet<string>,
+): readonly FactualClaimDiagnostic[] {
+  const diagnostics: FactualClaimDiagnostic[] = [];
+  for (const sentence of splitSentences(explanation)) {
+    const factualClaimDiagnostic = assessFactualClaimGrounding(
+      sentence,
+      groundingTokens,
+      exactEvidenceTexts,
+      candidateArticleTokens,
+      candidateAtomTokens,
+      candidateReviewerTokens,
+    );
+    if (factualClaimDiagnostic) {
+      diagnostics.push(factualClaimDiagnostic);
+      continue;
+    }
+
+    const tokens = splitTokens(sentence);
+    const unsupportedVocabularyTokens = tokens.filter((token) =>
+      token.length >= 3 &&
+      !groundingTokens.has(token) &&
+      !candidateArticleTokens.has(token) &&
+      !candidateAtomTokens.has(token) &&
+      !candidateReviewerTokens.has(token) &&
+      !GENERIC_EXPLANATORY_TOKENS.has(token),
+    );
+
+    if (unsupportedVocabularyTokens.length > 0) {
+      diagnostics.push(Object.freeze({
+        sentence,
+        unsupportedVocabularyTokens: Object.freeze([...new Set(unsupportedVocabularyTokens)]),
+        supportRatio: 0,
+        reason: "The sentence introduces vocabulary that is not grounded in the quoted evidence, current scene, candidate articles, candidate atoms, or reviewer scope.",
+      }));
+      continue;
+    }
+
+    if (containsForeignSceneReference(sentence)) {
+      diagnostics.push(Object.freeze({
+        sentence,
+        unsupportedVocabularyTokens: Object.freeze([]),
+        supportRatio: 0,
+        reason: "The sentence refers to another scene or context instead of the grounded screenplay fragment.",
+      }));
+    }
+  }
+
+  return Object.freeze(diagnostics);
+}
+
+function selectGroundedEvidenceText(
+  input: V3PromptBuilderInput,
+  result: V3ProviderReasoningResult,
+  acceptedEvaluations: readonly V3ReasonedDecisionArticleEvaluation[],
+): string {
+  const evaluationEvidence = acceptedEvaluations.flatMap((evaluation) => evaluation.evidence).map((evidence) => normalizeGroundingText(evidence)).filter((evidence) => evidence.length > 0);
+  if (evaluationEvidence.length > 0) {
+    return evaluationEvidence.sort((left, right) => left.length - right.length || left.localeCompare(right))[0] ?? "";
+  }
+
+  const candidateEvidence = result.evidence.candidates
+    .map((candidate) => normalizeGroundingText(candidate.text ?? ""))
+    .filter((candidate) => candidate.length > 0);
+  if (candidateEvidence.length > 0) {
+    return candidateEvidence.sort((left, right) => left.length - right.length || left.localeCompare(right))[0] ?? "";
+  }
+
+  return normalizeGroundingText(input.chunkContext.localChunk ?? "");
+}
+
+function buildEvidenceFirstExplanation(
+  input: V3PromptBuilderInput,
+  result: V3ProviderReasoningResult,
+  acceptedEvaluations: readonly V3ReasonedDecisionArticleEvaluation[],
+): ExplanationRegeneration {
+  const groundedEvidence = selectGroundedEvidenceText(input, result, acceptedEvaluations);
+  const evidenceText = groundedEvidence.length > 0 ? groundedEvidence : normalizeGroundingText(input.chunkContext.localChunk ?? "");
+
+  return Object.freeze({
+    groundedEvidence: evidenceText,
+    reasoning: evidenceText,
+    narrativeAnalysis: evidenceText,
+    humanLikeExplanation: evidenceText,
   });
 }
 
@@ -990,6 +1106,53 @@ export function validateReasonedDecisionAgainstEvidence(
     });
   }
 
+  const explanationDiagnostics = evaluateExplanationConsistency(
+    [
+      result.reasonedDecision.reasoning,
+      result.reasonedDecision.narrativeAnalysis,
+      result.reasonedDecision.humanLikeExplanation,
+    ].join(" | "),
+    groundingTokens,
+    exactEvidenceTexts,
+    candidateArticleTokens,
+    candidateAtomTokens,
+    candidateReviewerTokens,
+  );
+
+  if (explanationDiagnostics.length > 0) {
+    const issue = createValidationIssue(
+      "unsupported_explanation",
+      "reasonedDecision.humanLikeExplanation",
+      [
+        "The reviewer explanation referenced facts outside the grounded evidence span and has been regenerated from the same evidence.",
+        `Unsupported sentences: ${explanationDiagnostics.slice(0, 3).map((diagnostic) => diagnostic.sentence).join(" | ")}`,
+      ].join(" "),
+      "recoverable",
+      {
+        validatorStage: "explanation_consistency",
+        diagnosticCount: explanationDiagnostics.length,
+        groundedEvidence: selectGroundedEvidenceText(input, result, acceptedEvaluations),
+      },
+    );
+    issues.push(issue);
+    logger.warn("V3 reasoned decision explanation regenerated", {
+      validator_name: "reasonedDecisionValidation",
+      validator_stage: "explanation_consistency",
+      candidate_reviewers: [...candidateReviewerIds],
+      candidate_reviewer_labels: [...candidateReviewerLabels],
+      candidate_articles: [...candidateArticleIds],
+      candidate_atoms: [...candidateAtomIds],
+      grounded_evidence: selectGroundedEvidenceText(input, result, acceptedEvaluations),
+      unsupported_sentences: explanationDiagnostics.slice(0, 5).map((diagnostic) => ({
+        sentence: diagnostic.sentence,
+        unsupportedVocabularyTokens: diagnostic.unsupportedVocabularyTokens,
+        supportRatio: diagnostic.supportRatio,
+        reason: diagnostic.reason,
+      })),
+      line_of_code: "reasonedDecisionValidation.ts:736-797",
+    });
+  }
+
   if (rejectedEvaluationRecords.length > 0) {
     logger.warn("V3 reasoned decision evaluation rejections", {
       validator_name: "reasonedDecisionValidation",
@@ -1009,6 +1172,9 @@ export function validateReasonedDecisionAgainstEvidence(
   }
 
   const fatalIssues = issues.filter(isFatalValidationIssue);
+  const explanationFix = explanationDiagnostics.length > 0
+    ? buildEvidenceFirstExplanation(input, result, acceptedEvaluations)
+    : null;
 
   if (fatalIssues.length > 0) {
     logValidationRejection(input, result, issues, candidateArticleIds, candidateAtomIds, candidateReviewerIds, candidateReviewerLabels);
@@ -1028,6 +1194,13 @@ export function validateReasonedDecisionAgainstEvidence(
         ...rejectedEvaluationRecords.map(({ evaluation }) => evaluation.articleId),
       ]),
     ].sort((left, right) => left - right)),
+    ...(explanationFix
+      ? {
+          reasoning: explanationFix.reasoning,
+          narrativeAnalysis: explanationFix.narrativeAnalysis,
+          humanLikeExplanation: explanationFix.humanLikeExplanation,
+        }
+      : {}),
   });
 
   return Object.freeze({
