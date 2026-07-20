@@ -52,9 +52,10 @@ async function testBenchmarkPersistenceStoresTraceDocuments(): Promise<void> {
   try {
     const report = await runSceneAnalysisBenchmark([
       {
-        id: "benchmark-scene-1",
+        screenplayId: "benchmark-scene-1",
         sceneId: "scene-benchmark-1",
         sceneText: "حاضر. فهد يتمتم: يا كلب",
+        expectedFindings: [],
       },
     ], { traceFilePath });
 

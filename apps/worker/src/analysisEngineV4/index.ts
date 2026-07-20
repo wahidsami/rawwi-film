@@ -8,3 +8,4 @@ export * from "./explanationNode.js";
 export * from "./qualityJudgeNode.js";
 export * from "./stateGraph.js";
 export * from "./sceneAnalysisEngine.js";
+export * from "./benchmark/index.js";

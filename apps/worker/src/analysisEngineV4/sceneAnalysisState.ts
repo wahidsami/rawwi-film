@@ -181,7 +181,7 @@ export type SceneAnalysisTrace = Readonly<{
       startedAt: string;
       finishedAt: string;
       durationMs: number;
-     }>>; 
+    }>>;
   }>;
   nodeExecutionOrder: readonly string[];
   steps: readonly SceneAnalysisTraceEntry[];
