@@ -171,12 +171,12 @@ function testKnowledgeDomainOverlapRanking(): void {
     canonicalArticleOwnershipByArticleId: buildCanonicalArticleOwnershipMap(registry),
   });
 
-  assert.deepEqual(ranking.candidateArticles, [12, 17, 18]);
-  assert.equal(ranking.primaryArticle !== null, true);
-  assert.equal(ranking.candidateArticles.includes(ranking.primaryArticle ?? -1), true);
-  assert.equal(ranking.secondaryArticles.length > 0, true);
-  assert.equal(ranking.articleEvaluations.length, 1);
-  assert.equal(ranking.articleEvaluations[0]?.status, "PASS");
+  assert.deepEqual(ranking.rankedCandidateArticles, [12, 17, 18]);
+  assert.equal(ranking.rankedPrimaryArticle !== null, true);
+  assert.equal(ranking.rankedCandidateArticles.includes(ranking.rankedPrimaryArticle ?? -1), true);
+  assert.equal(ranking.rankedSecondaryArticles.length > 0, true);
+  assert.equal(ranking.rankedArticleEvaluations.length, 1);
+  assert.equal(ranking.rankedArticleEvaluations[0]?.status, "PASS");
 }
 
 function testSingleArticleFallbackPreserved(): void {
@@ -206,13 +206,27 @@ function testSingleArticleFallbackPreserved(): void {
     candidateArticles: [4],
     applicableArticles: [4],
     primaryArticle: 4,
+    articleEvaluations: [
+      {
+        articleId: 4,
+        status: "PASS",
+        evidence: ["يا كلب"],
+        reason: "Article 4 is supported.",
+        confidence: 0.9,
+      },
+    ],
   }), ranking);
-  assert.equal(ranking.primaryArticle, 4);
-  assert.deepEqual(ranking.candidateArticles, [4]);
+  assert.equal(ranking.rankedPrimaryArticle, 4);
+  assert.deepEqual(ranking.rankedCandidateArticles, [4]);
+  assert.equal(ranking.rankedArticleEvaluations.length, 1);
+  assert.equal(ranking.rankedArticleEvaluations[0]?.articleId, 4);
+  assert.equal(ranking.rankedArticleEvaluations[0]?.status, "PASS");
   assert.equal(enriched.articleEvaluations.length, 1);
   assert.equal(enriched.articleEvaluations[0]?.articleId, 4);
   assert.equal(enriched.articleEvaluations[0]?.status, "PASS");
   assert.deepEqual(enriched.candidateArticles, [4]);
+  assert.deepEqual(enriched.applicableArticles, [4]);
+  assert.equal((enriched as { rankedCandidateArticles?: readonly number[] }).rankedCandidateArticles?.[0], 4);
 }
 
 function testExistingMultiArticleEvaluationsArePreserved(): void {
@@ -277,11 +291,14 @@ function testExistingMultiArticleEvaluationsArePreserved(): void {
     secondaryArticles: [8],
   }), ranking);
 
-  assert.equal(ranking.primaryArticle, 4);
-  assert.equal(ranking.articleEvaluations.length, 1);
+  assert.equal(ranking.rankedPrimaryArticle, 4);
+  assert.equal(ranking.rankedArticleEvaluations.length, 1);
   assert.equal(enriched.articleEvaluations.length, 2);
   assert.equal(enriched.articleEvaluations[0]?.articleId, 4);
   assert.equal(enriched.articleEvaluations[1]?.articleId, 8);
+  assert.deepEqual(enriched.candidateArticles, [4, 8, 11]);
+  assert.deepEqual(enriched.applicableArticles, [4, 8, 11]);
+  assert.deepEqual((enriched as { rankedCandidateArticles?: readonly number[] }).rankedCandidateArticles, ranking.rankedCandidateArticles);
 }
 
 function main(): void {

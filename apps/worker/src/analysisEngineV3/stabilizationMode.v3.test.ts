@@ -12,11 +12,13 @@ const [
   { validateReasonedDecisionAgainstEvidence },
   { mapLegalDecisionToFindings },
   { createLegalDecision },
+  { applyLegalArticleRanking, rankLegalArticles },
   { applyPersistenceFilters },
 ] = await Promise.all([
   import("./provider/reasonedDecisionValidation.js"),
   import("./runtime/findingMapper.js"),
   import("./legal/legalResult.js"),
+  import("./legalRanking/legalArticleRanker.js"),
   import("../pipeline.js"),
 ]);
 
@@ -213,6 +215,7 @@ function makeReasonedDecisionResult() {
       reasoning: "The provider detected profanity in the quoted evidence.",
       alternativeInterpretations: [],
       confidence: 0.94,
+      candidateArticles: [8, 11, 14],
       articleEvaluations: [
         {
           articleId: 8,
@@ -232,6 +235,32 @@ function makeReasonedDecisionResult() {
       recommendation: "Approve",
     },
   };
+}
+
+function testCandidateUniverseRemainsImmutableAfterLegalRanking(): void {
+  const input = makePromptInput();
+  input.subjectModule.articleIds = [];
+  const providerResult = makeReasonedDecisionResult();
+  const ranking = rankLegalArticles({
+    promptInput: input as never,
+    intelligence: providerResult.semantic as never,
+    reasonedDecision: providerResult.reasonedDecision as never,
+    selectedReviewerIds: ["v4_11_profanity"],
+    canonicalArticleOwnershipByArticleId: {},
+  });
+  const rankedDecision = applyLegalArticleRanking(providerResult.reasonedDecision as never, ranking);
+
+  assert.deepEqual(providerResult.reasonedDecision.candidateArticles, [8, 11, 14], "provider candidate articles should remain immutable");
+  assert.deepEqual(rankedDecision.candidateArticles, [8, 11, 14], "legal ranking must not shrink the provider article universe");
+  assert.deepEqual(rankedDecision.candidateArticles, providerResult.reasonedDecision.candidateArticles, "provider and validator article universes must match");
+
+  const validation = validateReasonedDecisionAgainstEvidence(input as never, {
+    ...providerResult,
+    reasonedDecision: rankedDecision,
+  } as never);
+
+  assert.equal(validation.valid, true, "validation should accept the immutable provider article universe");
+  assert.deepEqual(validation.sanitizedDecision.candidateArticles, [8, 11, 14], "validator must consume the original provider article universe");
 }
 
 function buildLegalDecision() {

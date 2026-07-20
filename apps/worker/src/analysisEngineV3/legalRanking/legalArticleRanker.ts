@@ -29,14 +29,14 @@ export type LegalArticleScore = Readonly<{
 
 export type LegalArticleRankerResult = Readonly<{
   knowledgeDomains: readonly string[];
-  candidateArticles: readonly number[];
-  primaryArticle: number | null;
-  secondaryArticles: readonly number[];
+  rankedCandidateArticles: readonly number[];
+  rankedPrimaryArticle: number | null;
+  rankedSecondaryArticles: readonly number[];
   rejectedArticles: readonly number[];
   rankingReason: string;
   confidence: number;
   articleScores: readonly LegalArticleScore[];
-  articleEvaluations: readonly V3ReasonedDecisionArticleEvaluation[];
+  rankedArticleEvaluations: readonly V3ReasonedDecisionArticleEvaluation[];
 }>;
 
 function normalizeText(value: string | null | undefined): string {
@@ -211,8 +211,8 @@ export function rankLegalArticles(input: LegalArticleRankerInput): LegalArticleR
     .map((articleId) => scoreArticle(input, articleId, knowledgeDomains))
     .sort((left, right) => right.score - left.score || left.articleId - right.articleId);
 
-  const primaryArticle = articleScores[0]?.articleId ?? null;
-  const secondaryArticles = uniqueNumbers(
+  const rankedPrimaryArticle = articleScores[0]?.articleId ?? null;
+  const rankedSecondaryArticles = uniqueNumbers(
     articleScores
       .slice(1)
       .filter((score) => score.score > 0)
@@ -220,22 +220,22 @@ export function rankLegalArticles(input: LegalArticleRankerInput): LegalArticleR
       .map((score) => score.articleId),
   );
   const rankedCandidateArticles = uniqueNumbers([
-    ...(primaryArticle !== null ? [primaryArticle] : []),
-    ...secondaryArticles,
+    ...(rankedPrimaryArticle !== null ? [rankedPrimaryArticle] : []),
+    ...rankedSecondaryArticles,
   ]);
   const rejectedArticles = uniqueNumbers(articleScores.filter((score) => !rankedCandidateArticles.includes(score.articleId)).map((score) => score.articleId));
   const primaryScore = articleScores[0]?.score ?? 0;
   const confidence = clampScore(primaryScore);
   const primaryReasons = articleScores[0]?.reasons ?? [];
-  const rankingReason = primaryArticle === null
+  const rankingReason = rankedPrimaryArticle === null
     ? "No deterministic GCAM article could be ranked from the supplied knowledge domains."
-    : `Primary article ${primaryArticle} selected from ${knowledgeDomains.length > 0 ? knowledgeDomains.join(", ") : "fallback signals"}; reasons: ${primaryReasons.slice(0, 5).join(" | ") || "deterministic ownership bridge"}.`;
+    : `Primary article ${rankedPrimaryArticle} selected from ${knowledgeDomains.length > 0 ? knowledgeDomains.join(", ") : "fallback signals"}; reasons: ${primaryReasons.slice(0, 5).join(" | ") || "deterministic ownership bridge"}.`;
 
-  const articleEvaluations: readonly V3ReasonedDecisionArticleEvaluation[] = primaryArticle === null
+  const rankedArticleEvaluations: readonly V3ReasonedDecisionArticleEvaluation[] = rankedPrimaryArticle === null
     ? Object.freeze([])
     : Object.freeze([
         Object.freeze({
-          articleId: primaryArticle,
+          articleId: rankedPrimaryArticle,
           status: "PASS" as const,
           evidence: Object.freeze(uniqueEvidence([
             ...input.reasonedDecision.supportingEvidence,
@@ -248,50 +248,37 @@ export function rankLegalArticles(input: LegalArticleRankerInput): LegalArticleR
 
   return Object.freeze({
     knowledgeDomains,
-    candidateArticles: rankedCandidateArticles,
-    primaryArticle,
-    secondaryArticles,
+    rankedCandidateArticles,
+    rankedPrimaryArticle,
+    rankedSecondaryArticles,
     rejectedArticles,
     rankingReason,
     confidence,
     articleScores,
-    articleEvaluations,
+    rankedArticleEvaluations,
   });
 }
 
 export function applyLegalArticleRanking(
   reasonedDecision: V3ReasonedDecisionResult,
   ranking: LegalArticleRankerResult,
-): V3ReasonedDecisionResult {
-  const candidateArticles = ranking.candidateArticles.length > 0
-    ? ranking.candidateArticles
-    : reasonedDecision.candidateArticles ?? [];
-  const primaryArticle = ranking.primaryArticle ?? reasonedDecision.primaryArticle ?? null;
-  const secondaryArticles = ranking.secondaryArticles.length > 0
-    ? ranking.secondaryArticles
-    : reasonedDecision.secondaryArticles ?? [];
-  const articleEvaluations = reasonedDecision.articleEvaluations.length > 0
-    ? reasonedDecision.articleEvaluations
-    : ranking.articleEvaluations;
-
-  const applicableArticles = articleEvaluations
-    .filter((evaluation) => evaluation.status === "PASS")
-    .map((evaluation) => evaluation.articleId);
-  const rejectedArticles = uniqueNumbers([
-    ...(reasonedDecision.rejectedArticles ?? []),
-    ...ranking.rejectedArticles,
-  ]);
-
+): V3ReasonedDecisionResult & Readonly<{
+  rankedCandidateArticles: readonly number[];
+  rankedPrimaryArticle: number | null;
+  rankedSecondaryArticles: readonly number[];
+  rankedArticleEvaluations: readonly V3ReasonedDecisionArticleEvaluation[];
+  rankedRejectedArticles: readonly number[];
+  rankedRankingReason: string;
+  rankedConfidence: number;
+}> {
   return Object.freeze({
     ...reasonedDecision,
-    knowledgeDomains: ranking.knowledgeDomains.length > 0 ? ranking.knowledgeDomains : reasonedDecision.knowledgeDomains ?? [],
-    candidateArticles,
-    primaryArticle,
-    secondaryArticles,
-    articleEvaluations,
-    applicableArticles,
-    rejectedArticles,
-    recommendation: reasonedDecision.recommendation || ranking.rankingReason,
-    reasoning: reasonedDecision.reasoning || ranking.rankingReason,
+    rankedCandidateArticles: ranking.rankedCandidateArticles,
+    rankedPrimaryArticle: ranking.rankedPrimaryArticle,
+    rankedSecondaryArticles: ranking.rankedSecondaryArticles,
+    rankedArticleEvaluations: ranking.rankedArticleEvaluations,
+    rankedRejectedArticles: ranking.rejectedArticles,
+    rankedRankingReason: ranking.rankingReason,
+    rankedConfidence: ranking.confidence,
   });
 }
