@@ -1,0 +1,200 @@
+export type SceneAnalysisStatus = "pending" | "running" | "complete" | "failed";
+
+export type SceneAnalysisSentence = Readonly<{
+  sentenceId: string;
+  text: string;
+  startOffset: number;
+  endOffset: number;
+  sourceType: "dialogue" | "scene_description" | "story_context";
+}>;
+
+export type SceneAnalysisEvidenceSpan = Readonly<{
+  spanId: string;
+  text: string;
+  startOffset: number;
+  endOffset: number;
+  sentenceIndex: number;
+  sourceType: "dialogue" | "scene_description" | "story_context";
+  conceptIds: readonly string[];
+  confidence: number;
+  rationale: readonly string[];
+}>;
+
+export type SceneAnalysisConcept = Readonly<{
+  conceptId: string;
+  label: string;
+  knowledgeDomains: readonly string[];
+  evidenceSpanIds: readonly string[];
+  confidence: number;
+  rationale: readonly string[];
+}>;
+
+export type SceneAnalysisArticleCandidate = Readonly<{
+  articleId: number;
+  titleAr: string;
+  matchedKnowledgeDomains: readonly string[];
+  matchedConceptIds: readonly string[];
+  evidenceSpanIds: readonly string[];
+  score: number;
+  rationale: readonly string[];
+}>;
+
+export type SceneAnalysisAtomCandidate = Readonly<{
+  articleId: number;
+  articleTitleAr: string;
+  atomId: string;
+  atomTitleAr: string;
+  canonicalAtomCode: string;
+  evidenceSpanIds: readonly string[];
+  score: number;
+  rationale: readonly string[];
+}>;
+
+export type SceneAnalysisExplanation = Readonly<{
+  summary: string;
+  groundedEvidence: string;
+  primaryArticleId: number | null;
+  primaryArticleTitleAr: string | null;
+  primaryAtomId: string | null;
+  primaryAtomTitleAr: string | null;
+  rationale: readonly string[];
+}>;
+
+export type SceneAnalysisTraceSnapshot = Readonly<{
+  sceneId: string;
+  status: SceneAnalysisStatus;
+  sceneText: string;
+  normalizedSceneText: string;
+  sentenceCount: number;
+  evidenceSpanCount: number;
+  detectedConceptIds: readonly string[];
+  knowledgeDomains: readonly string[];
+  candidateArticleIds: readonly number[];
+  rankedPrimaryArticleId: number | null;
+  rankedSecondaryArticleIds: readonly number[];
+  candidateAtomIds: readonly string[];
+  explanationSummary: string | null;
+  traceLength: number;
+}>;
+
+export type SceneAnalysisTraceEntry = Readonly<{
+  node: string;
+  startedAt: string;
+  finishedAt: string;
+  durationMs: number;
+  changedKeys: readonly string[];
+  before: SceneAnalysisTraceSnapshot;
+  after: SceneAnalysisTraceSnapshot;
+}>;
+
+export type SceneAnalysisState = Readonly<{
+  sceneId: string;
+  status: SceneAnalysisStatus;
+  sceneText: string;
+  normalizedSceneText: string;
+  sentences: readonly SceneAnalysisSentence[];
+  evidenceSpans: readonly SceneAnalysisEvidenceSpan[];
+  primaryEvidenceSpanId: string | null;
+  primaryEvidenceText: string | null;
+  primaryEvidenceReason: string | null;
+  detectedConcepts: readonly SceneAnalysisConcept[];
+  knowledgeDomains: readonly string[];
+  candidateArticles: readonly SceneAnalysisArticleCandidate[];
+  rankedCandidateArticles: readonly SceneAnalysisArticleCandidate[];
+  primaryArticle: SceneAnalysisArticleCandidate | null;
+  secondaryArticles: readonly SceneAnalysisArticleCandidate[];
+  candidateAtoms: readonly SceneAnalysisAtomCandidate[];
+  rankedCandidateAtoms: readonly SceneAnalysisAtomCandidate[];
+  explanation: SceneAnalysisExplanation | null;
+  trace: readonly SceneAnalysisTraceEntry[];
+}>;
+
+function deepFreeze<T>(value: T, seen: WeakSet<object> = new WeakSet<object>()): T {
+  if (value === null || typeof value !== "object") {
+    return value;
+  }
+
+  const objectValue = value as unknown as object;
+  if (seen.has(objectValue)) {
+    return value;
+  }
+  seen.add(objectValue);
+
+  for (const key of Object.keys(objectValue)) {
+    const child = (objectValue as Record<string, unknown>)[key];
+    if (child !== null && typeof child === "object") {
+      deepFreeze(child, seen);
+    }
+  }
+
+  return Object.freeze(value);
+}
+
+function freezeReadonlyArray<T>(values: readonly T[]): readonly T[] {
+  return Object.freeze([...values]);
+}
+
+export function createSceneAnalysisState(input: Readonly<{
+  sceneId: string;
+  sceneText: string;
+}>): SceneAnalysisState {
+  return freezeSceneAnalysisState({
+    sceneId: input.sceneId,
+    status: "pending",
+    sceneText: input.sceneText,
+    normalizedSceneText: "",
+    sentences: freezeReadonlyArray([]),
+    evidenceSpans: freezeReadonlyArray([]),
+    primaryEvidenceSpanId: null,
+    primaryEvidenceText: null,
+    primaryEvidenceReason: null,
+    detectedConcepts: freezeReadonlyArray([]),
+    knowledgeDomains: freezeReadonlyArray([]),
+    candidateArticles: freezeReadonlyArray([]),
+    rankedCandidateArticles: freezeReadonlyArray([]),
+    primaryArticle: null,
+    secondaryArticles: freezeReadonlyArray([]),
+    candidateAtoms: freezeReadonlyArray([]),
+    rankedCandidateAtoms: freezeReadonlyArray([]),
+    explanation: null,
+    trace: freezeReadonlyArray([]),
+  });
+}
+
+export function freezeSceneAnalysisState(state: SceneAnalysisState | Readonly<Record<string, unknown>>): SceneAnalysisState {
+  return deepFreeze({
+    ...state,
+    sentences: freezeReadonlyArray((state as SceneAnalysisState).sentences ?? []),
+    evidenceSpans: freezeReadonlyArray((state as SceneAnalysisState).evidenceSpans ?? []),
+    detectedConcepts: freezeReadonlyArray((state as SceneAnalysisState).detectedConcepts ?? []),
+    knowledgeDomains: freezeReadonlyArray((state as SceneAnalysisState).knowledgeDomains ?? []),
+    candidateArticles: freezeReadonlyArray((state as SceneAnalysisState).candidateArticles ?? []),
+    rankedCandidateArticles: freezeReadonlyArray((state as SceneAnalysisState).rankedCandidateArticles ?? []),
+    secondaryArticles: freezeReadonlyArray((state as SceneAnalysisState).secondaryArticles ?? []),
+    candidateAtoms: freezeReadonlyArray((state as SceneAnalysisState).candidateAtoms ?? []),
+    rankedCandidateAtoms: freezeReadonlyArray((state as SceneAnalysisState).rankedCandidateAtoms ?? []),
+    trace: freezeReadonlyArray((state as SceneAnalysisState).trace ?? []),
+    explanation: (state as SceneAnalysisState).explanation ?? null,
+    primaryArticle: (state as SceneAnalysisState).primaryArticle ?? null,
+  } as SceneAnalysisState);
+}
+
+export function snapshotSceneAnalysisState(state: SceneAnalysisState): SceneAnalysisTraceSnapshot {
+  return deepFreeze({
+    sceneId: state.sceneId,
+    status: state.status,
+    sceneText: state.sceneText,
+    normalizedSceneText: state.normalizedSceneText,
+    sentenceCount: state.sentences.length,
+    evidenceSpanCount: state.evidenceSpans.length,
+    detectedConceptIds: freezeReadonlyArray(state.detectedConcepts.map((concept) => concept.conceptId)),
+    knowledgeDomains: freezeReadonlyArray(state.knowledgeDomains),
+    candidateArticleIds: freezeReadonlyArray(state.candidateArticles.map((candidate) => candidate.articleId)),
+    rankedPrimaryArticleId: state.primaryArticle?.articleId ?? null,
+    rankedSecondaryArticleIds: freezeReadonlyArray(state.secondaryArticles.map((candidate) => candidate.articleId)),
+    candidateAtomIds: freezeReadonlyArray(state.candidateAtoms.map((candidate) => candidate.atomId)),
+    explanationSummary: state.explanation?.summary ?? null,
+    traceLength: state.trace.length,
+  } satisfies SceneAnalysisTraceSnapshot);
+}
+
