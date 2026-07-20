@@ -44,7 +44,6 @@ import { PIPELINE_EVIDENCE_GROUNDING_VERSION, groundFindingEvidenceToChunk } fro
 import { V3_SUBJECT_DEFINITIONS } from "./v3PromptPack.js";
 import { buildLineageEvent, ensureFindingLineageId, persistLineageEvents } from "./findingLineage.js";
 import { canonicalStringify } from "./canonicalJson.js";
-import { runV3RuntimeAdapter } from "./analysisEngineV3/runtime/runtimeAdapter.js";
 import { runWithV3AutomaticFallback } from "./analysisEngineV3/runtime/automaticFallback.js";
 import { recordV3FallbackExecution } from "./analysisEngineV3/runtime/runtimeMetrics.js";
 import { attachV3DiagnosticReport } from "./analysisEngineV3/runtime/reportMapper.js";
@@ -53,6 +52,7 @@ import { buildV3InspectionChunkFindingKey } from "./analysisEngineV3/inspection/
 import { buildV3PersistenceInspectionRecord } from "./analysisEngineV3/inspection/inspectionStageBuilders.js";
 import { buildV3ProviderFailureDiagnosticReport } from "./analysisEngineV3/runtime/v3DiagnosticReport.js";
 import { processChunkJudgeV2 } from "./pipelineV2.js";
+import { create as createAnalysisEngine } from "./analysisEngine/engineFactory.js";
 
 export type FindingWithGlobal = Omit<JudgeFinding, "source" | "evidence_hash" | "canonical_hash" | "lineage_id" | "parent_lineage_id" | "related_article_ids"> & {
   source?: string | null;
@@ -2140,31 +2140,33 @@ export async function processChunkJudge(
         enabled: !config.V3_DIAGNOSTIC_MODE && config.V3_ENABLE_AUTOMATIC_FALLBACK,
         runPrimary: async () => {
           const runtimeAdapterStartedAt = Date.now();
-          logger.info("V3 instrumentation ENTER: runV3RuntimeAdapter", {
+          logger.info("V3 instrumentation ENTER: analysisEngine.execute", {
             jobId,
             chunkId: chunk.id,
             runKey,
           });
-          const runtimeResult = await runV3RuntimeAdapter({
-            jobId,
-            chunkId: chunk.id,
-            scriptId,
-            versionId,
-            chunkText,
-            chunkStart,
-            chunkEnd,
-            chunkIndex: chunk.chunk_index,
-            startLine: chunk.start_line ?? null,
-            endLine: chunk.end_line ?? null,
-            storyMemory: analysisPromptContext ?? null,
-            sceneMemory: null,
-            neighboringSentences: [],
-            analysisPromptContext: analysisPromptContext ?? null,
-            promptLexiconTerms: terms,
-            analysisSignatureContext: analysisSignatureBase,
-            diagnosticsEnabled: config.ENABLE_AI_DIAGNOSTICS,
+          const runtimeResult = await createAnalysisEngine().execute({
+            request: {
+              jobId,
+              chunkId: chunk.id,
+              scriptId,
+              versionId,
+              chunkText,
+              chunkStart,
+              chunkEnd,
+              chunkIndex: chunk.chunk_index,
+              startLine: chunk.start_line ?? null,
+              endLine: chunk.end_line ?? null,
+              storyMemory: analysisPromptContext ?? null,
+              sceneMemory: null,
+              neighboringSentences: [],
+              analysisPromptContext: analysisPromptContext ?? null,
+              promptLexiconTerms: terms,
+              analysisSignatureContext: analysisSignatureBase,
+              diagnosticsEnabled: config.ENABLE_AI_DIAGNOSTICS,
+            },
           });
-          logger.info("V3 instrumentation EXIT: runV3RuntimeAdapter", {
+          logger.info("V3 instrumentation EXIT: analysisEngine.execute", {
             jobId,
             chunkId: chunk.id,
             runKey,
