@@ -2,6 +2,7 @@ import { isDeepStrictEqual } from "node:util";
 
 import type { SceneAnalysisState, SceneAnalysisTraceEntry, SceneAnalysisTraceSnapshot } from "./sceneAnalysisState.js";
 import { freezeSceneAnalysisState, snapshotSceneAnalysisState } from "./sceneAnalysisState.js";
+import { createSceneAnalysisTraceNodeView } from "./sceneAnalysisTraceViewer.js";
 
 function changedKeys(before: SceneAnalysisTraceSnapshot, after: SceneAnalysisTraceSnapshot): readonly string[] {
   const keys = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((key) => key !== "traceLength");
@@ -15,6 +16,8 @@ export function buildSceneAnalysisTraceEntry(input: Readonly<{
   durationMs: number;
   before: SceneAnalysisTraceSnapshot;
   after: SceneAnalysisTraceSnapshot;
+  beforeState: SceneAnalysisState;
+  afterState: SceneAnalysisState;
 }>): SceneAnalysisTraceEntry {
   return Object.freeze({
     node: input.node,
@@ -24,6 +27,8 @@ export function buildSceneAnalysisTraceEntry(input: Readonly<{
     changedKeys: changedKeys(input.before, input.after),
     before: input.before,
     after: input.after,
+    beforeView: createSceneAnalysisTraceNodeView(input.beforeState),
+    afterView: createSceneAnalysisTraceNodeView(input.afterState),
   });
 }
 
@@ -52,6 +57,7 @@ export function createTraceTransition(
     durationMs,
     before: snapshotSceneAnalysisState(state),
     after: snapshotSceneAnalysisState(nextState),
+    beforeState: state,
+    afterState: nextState,
   });
 }
-

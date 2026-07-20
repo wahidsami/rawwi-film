@@ -146,6 +146,45 @@ export type SceneAnalysisTraceEntry = Readonly<{
   changedKeys: readonly string[];
   before: SceneAnalysisTraceSnapshot;
   after: SceneAnalysisTraceSnapshot;
+  beforeView: SceneAnalysisTraceNodeView;
+  afterView: SceneAnalysisTraceNodeView;
+}>;
+
+export type SceneAnalysisTraceNodeView = Readonly<{
+  status: SceneAnalysisStatus;
+  sceneSummary: string;
+  evidence: readonly SceneAnalysisEvidenceSpan[];
+  concepts: readonly SceneAnalysisConcept[];
+  knowledgeDomains: readonly string[];
+  candidateArticles: readonly SceneAnalysisArticleCandidate[];
+  rankedArticles: readonly SceneAnalysisArticleCandidate[];
+  selectedArticle: SceneAnalysisArticleCandidate | null;
+  explanation: SceneAnalysisExplanation | null;
+  judgeResult: SceneAnalysisQualityJudgment | null;
+}>;
+
+export type SceneAnalysisTrace = Readonly<{
+  sceneId: string;
+  sceneSummary: string;
+  evidence: readonly SceneAnalysisEvidenceSpan[];
+  concepts: readonly SceneAnalysisConcept[];
+  knowledgeDomains: readonly string[];
+  candidateArticles: readonly SceneAnalysisArticleCandidate[];
+  rankedArticles: readonly SceneAnalysisArticleCandidate[];
+  selectedArticle: SceneAnalysisArticleCandidate | null;
+  explanation: SceneAnalysisExplanation | null;
+  judgeResult: SceneAnalysisQualityJudgment | null;
+  timing: Readonly<{
+    totalMs: number;
+    nodeTimings: ReadonlyArray<Readonly<{
+      node: string;
+      startedAt: string;
+      finishedAt: string;
+      durationMs: number;
+     }>>; 
+  }>;
+  nodeExecutionOrder: readonly string[];
+  steps: readonly SceneAnalysisTraceEntry[];
 }>;
 
 export type SceneAnalysisState = Readonly<{
@@ -297,3 +336,4 @@ export function snapshotSceneAnalysisState(state: SceneAnalysisState): SceneAnal
     traceLength: state.trace.length,
   } satisfies SceneAnalysisTraceSnapshot);
 }
+
