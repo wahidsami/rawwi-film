@@ -13,6 +13,7 @@ import type { DecisionProvenanceCollection } from "./provenance/decisionProvenan
 import { buildDecisionProvenanceCollection } from "./provenance/decisionProvenanceBuilder.js";
 import { normalizeDecisionProvenanceCollectionForDocument } from "./provenance/decisionProvenanceSerializer.js";
 import { createTruthVerificationSummary, type FindingTruth, type FindingTruthNodeVerification, type TruthVerificationSummary } from "./truthVerification.js";
+import { buildFindingProbeTrace, type FindingProbeTrace } from "./findingProbe.js";
 
 function freezeTraceNodeView(view: SceneAnalysisTraceNodeView): SceneAnalysisTraceNodeView {
   return Object.freeze({
@@ -116,6 +117,7 @@ function normalizeVerifiedFindingCollectionForDocument(collection: SceneAnalysis
 
 export type SceneAnalysisTraceWithProvenance = SceneAnalysisTrace & Readonly<{
   decisionProvenanceCollection: DecisionProvenanceCollection | null;
+  findingProbe: FindingProbeTrace | null;
 }>;
 
 function createDecisionProvenanceCollectionFromState(state: SceneAnalysisState): DecisionProvenanceCollection | null {
@@ -181,6 +183,10 @@ export function buildSceneAnalysisTrace(state: SceneAnalysisState): SceneAnalysi
     durationMs: entry.durationMs,
   })));
   const decisionProvenanceCollection = createDecisionProvenanceCollectionFromState(state);
+  const findingProbe = buildFindingProbeTrace({
+    steps,
+    findingTruth: state.findingTruth,
+  });
   return Object.freeze({
     sceneId: state.sceneId,
     sceneSummary: state.sceneModel?.summary ?? state.normalizedSceneText ?? state.sceneText,
@@ -209,6 +215,28 @@ export function buildSceneAnalysisTrace(state: SceneAnalysisState): SceneAnalysi
     }),
     nodeExecutionOrder: Object.freeze(steps.map((entry) => entry.node)),
     steps,
+    findingProbe,
+  });
+}
+
+function freezeFindingProbeTrace(trace: FindingProbeTrace | null): FindingProbeTrace | null {
+  if (!trace) {
+    return null;
+  }
+
+  return Object.freeze({
+    ...trace,
+    selection: Object.freeze({
+      ...trace.selection,
+    }),
+    steps: Object.freeze(trace.steps.map((step) => Object.freeze({
+      ...step,
+      mutation: step.mutation
+        ? Object.freeze({
+            ...step.mutation,
+          })
+        : null,
+    }))),
   });
 }
 
@@ -252,6 +280,7 @@ export type SceneAnalysisTraceDocument = Readonly<{
   }>;
   nodeExecutionOrder: readonly string[];
   steps: readonly SceneAnalysisTraceDocumentStep[];
+  findingProbe?: FindingProbeTrace | null;
 }>;
 
 export type SceneAnalysisTraceReplay = Readonly<{
@@ -405,6 +434,7 @@ export function createSceneAnalysisTraceDocument(trace: SceneAnalysisTraceWithPr
     }),
     nodeExecutionOrder: trace.nodeExecutionOrder,
     steps: Object.freeze(steps),
+    ...(trace.findingProbe ? { findingProbe: freezeFindingProbeTrace(trace.findingProbe) } : {}),
   });
 }
 

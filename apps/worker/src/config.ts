@@ -147,6 +147,8 @@ export const config = {
   V3_STABILIZATION_MODE: (process.env.V3_STABILIZATION_MODE ?? "false").toLowerCase() === "true",
   V3_RAW_PROVIDER_TEST: (process.env.V3_RAW_PROVIDER_TEST ?? "false").toLowerCase() === "true",
   V4_SHADOW_MODE: (process.env.V4_SHADOW_MODE ?? "false").toLowerCase() === "true",
+  DEBUG_FINDING_TEXT: process.env.DEBUG_FINDING_TEXT ?? "",
+  DEBUG_TRUTH_ID: process.env.DEBUG_TRUTH_ID ?? "",
   ANALYSIS_SKIP_SCRIPT_SUMMARY_ON_LARGE_JOBS: (process.env.ANALYSIS_SKIP_SCRIPT_SUMMARY_ON_LARGE_JOBS ?? "true").toLowerCase() !== "false",
   ANALYSIS_SKIP_REVISIT_ON_LARGE_JOBS: (process.env.ANALYSIS_SKIP_REVISIT_ON_LARGE_JOBS ?? "true").toLowerCase() !== "false",
   ANALYSIS_SKIP_DEEP_AUDITOR_ON_LARGE_JOBS: (process.env.ANALYSIS_SKIP_DEEP_AUDITOR_ON_LARGE_JOBS ?? "false").toLowerCase() === "true",
