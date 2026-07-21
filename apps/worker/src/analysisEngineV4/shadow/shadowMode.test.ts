@@ -174,11 +174,88 @@ async function testShadowExecutorPersistsSeparatedPayload(): Promise<void> {
   assert.equal(String(evaluationRecord.mode), "shadow");
 }
 
+async function testShadowExecutorLogsStageFailureAndRejects(): Promise<void> {
+  const visible = buildResult([buildFinding()], "v3");
+  const shadow = buildResult([buildFinding()], "v4");
+  const logs: string[] = [];
+  const originalInfo = console.info;
+  const originalWarn = console.warn;
+  console.info = (...args: unknown[]) => {
+    logs.push(`info:${args.map((arg) => {
+      if (typeof arg === "string") return arg;
+      try {
+        return JSON.stringify(arg);
+      } catch {
+        return String(arg);
+      }
+    }).join(" ")}`);
+  };
+  console.warn = (...args: unknown[]) => {
+    logs.push(`warn:${args.map((arg) => {
+      if (typeof arg === "string") return arg;
+      try {
+        return JSON.stringify(arg);
+      } catch {
+        return String(arg);
+      }
+    }).join(" ")}`);
+  };
+
+  try {
+    const failingComparator = () => {
+      const error = new Error("comparator failed");
+      (error as Error & { code?: string }).code = "E_COMPARATOR";
+      throw error;
+    };
+
+    await assert.rejects(() => runV4ShadowMode({
+      jobContext: {
+        request: {
+          jobId: "job-2",
+          chunkId: "chunk-2",
+          scriptId: "script-2",
+          versionId: "version-2",
+          chunkText: "INT. ROOM - NIGHT\nفهد: يا كلب",
+          chunkStart: 0,
+          chunkEnd: 18,
+          chunkIndex: 0,
+          startLine: 1,
+          endLine: 1,
+          storyMemory: null,
+          sceneMemory: null,
+          neighboringSentences: [],
+          analysisPromptContext: null,
+          promptLexiconTerms: [],
+          analysisSignatureContext: null,
+          diagnosticsEnabled: false,
+        },
+      },
+      visibleResult: visible,
+      runKey: "run-2",
+    }, {
+      shadowEngine: {
+        async execute() {
+          return shadow;
+        },
+      },
+      comparator: failingComparator as never,
+    }), /comparator failed/);
+
+    assert.ok(logs.some((line) => line.includes("[V4] Stage=comparator FAILED")), "expected comparator stage failure log");
+    assert.ok(logs.some((line) => line.includes("[V4] Shadow execution aborted")), "expected outer abort log");
+  } finally {
+    console.info = originalInfo;
+    console.warn = originalWarn;
+  }
+}
+
 async function main(): Promise<void> {
   await testComparatorIsDeterministic();
   console.log("✓ shadow comparator is deterministic");
   await testShadowExecutorPersistsSeparatedPayload();
   console.log("✓ shadow executor persists separated V4 payload");
+  await testShadowExecutorLogsStageFailureAndRejects();
+  console.log("✓ shadow executor logs stage failure and rejects");
   console.log("\nAll V4 shadow mode tests passed.");
 }
 
