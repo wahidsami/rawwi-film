@@ -8,6 +8,10 @@ function list(values: readonly string[]): string {
   return values.length > 0 ? values.join(", ") : "none";
 }
 
+function numberOrDash(value: number | null | undefined): string {
+  return value == null || Number.isNaN(value) ? "n/a" : String(value);
+}
+
 function formatFailures(report: BenchmarkReport): string {
   const lines: string[] = [];
   for (const stage of Object.keys(report.perStageFailures) as Array<keyof typeof report.perStageFailures>) {
@@ -26,28 +30,52 @@ function formatFailures(report: BenchmarkReport): string {
   return lines.join("\n").trimEnd();
 }
 
+function renderEngineMetrics(report: BenchmarkReport): string {
+  const lines: string[] = [];
+  lines.push("## Engine Quality Comparison");
+  lines.push("");
+  lines.push("| Engine | Finding Precision | Finding Recall | Evidence Accuracy | Evidence Span Accuracy | Concept Accuracy | GCAM Article Accuracy | Explanation Accuracy | Duplicate Rate | Hallucination Rate | Overall Review Score |");
+  lines.push("| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |");
+  for (const engine of ["v3", "v4"] as const) {
+    const metrics = report.engineMetrics[engine];
+    lines.push(`| ${engine.toUpperCase()} | ${percent(metrics.findingPrecision)} | ${percent(metrics.findingRecall)} | ${percent(metrics.evidenceAccuracy)} | ${percent(metrics.evidenceSpanAccuracy)} | ${percent(metrics.conceptAccuracy)} | ${percent(metrics.gcamArticleAccuracy)} | ${percent(metrics.explanationAccuracy)} | ${percent(metrics.duplicateFindingRate)} | ${percent(metrics.hallucinationRate)} | ${percent(metrics.overallReviewScore)} |`);
+  }
+  lines.push("");
+  return lines.join("\n");
+}
+
+function renderEngineExecution(report: BenchmarkReport): string {
+  const lines: string[] = [];
+  lines.push("## Engine Runtime");
+  lines.push("");
+  lines.push("| Engine | Runtime (ms) | Prompt Tokens | Completion Tokens | Estimated Cost (USD) | Comparisons |");
+  lines.push("| --- | ---: | ---: | ---: | ---: | ---: |");
+  for (const engine of ["v3", "v4"] as const) {
+    const execution = report.engineExecution[engine];
+    const comparisons = report.engineComparisons[engine].length;
+    lines.push(`| ${engine.toUpperCase()} | ${numberOrDash(execution.runtimeMs)} | ${numberOrDash(execution.promptTokenEstimate)} | ${numberOrDash(execution.completionTokenEstimate)} | ${numberOrDash(execution.estimatedCostUsd)} | ${comparisons} |`);
+  }
+  lines.push("");
+  return lines.join("\n");
+}
+
 export function renderBenchmarkReportMarkdown(report: BenchmarkReport): string {
   const lines: string[] = [];
+  const totalHumanFindings = report.cases.reduce((sum, result) => sum + result.humanFindings.length, 0);
+
   lines.push(`# V4 Benchmark Report`);
   lines.push("");
   lines.push(`Benchmark ID: ${report.benchmarkId}`);
   lines.push("");
-  lines.push(`## Metrics`);
+  lines.push(`## Human Ground Truth`);
   lines.push("");
-  lines.push("| Metric | Value |");
-  lines.push("| --- | ---: |");
-  lines.push(`| Finding Precision | ${percent(report.metrics.findingPrecision)} |`);
-  lines.push(`| Finding Recall | ${percent(report.metrics.findingRecall)} |`);
-  lines.push(`| Evidence Accuracy | ${percent(report.metrics.evidenceAccuracy)} |`);
-  lines.push(`| Evidence Span Accuracy | ${percent(report.metrics.evidenceSpanAccuracy)} |`);
-  lines.push(`| Concept Accuracy | ${percent(report.metrics.conceptAccuracy)} |`);
-  lines.push(`| GCAM Article Accuracy | ${percent(report.metrics.gcamArticleAccuracy)} |`);
-  lines.push(`| Explanation Accuracy | ${percent(report.metrics.explanationAccuracy)} |`);
-  lines.push(`| Duplicate Finding Rate | ${percent(report.metrics.duplicateFindingRate)} |`);
-  lines.push(`| Hallucination Rate | ${percent(report.metrics.hallucinationRate)} |`);
-  lines.push(`| Overall Review Score | ${percent(report.metrics.overallReviewScore)} |`);
+  lines.push(`- Screenplays: ${report.cases.length}`);
+  lines.push(`- Human findings: ${totalHumanFindings}`);
   lines.push("");
-
+  lines.push(renderEngineMetrics(report).trimEnd());
+  lines.push("");
+  lines.push(renderEngineExecution(report).trimEnd());
+  lines.push("");
   lines.push(`## Stage Scores`);
   lines.push("");
   lines.push("| Stage | Score | Passed | Total |");
@@ -121,6 +149,7 @@ export function renderBenchmarkReportMarkdown(report: BenchmarkReport): string {
     lines.push(`### ${result.screenplayId}`);
     lines.push(`- Scene ID: ${result.sceneId}`);
     lines.push(`- Scene Summary: ${result.sceneSummary}`);
+    lines.push(`- Human Findings: ${result.humanFindings.length}`);
     lines.push(`- Expected Findings: ${result.findingComparisons.length}`);
     lines.push(`- Actual Findings: ${result.actualFindings.length}`);
     lines.push(`- Duplicate Findings: ${result.duplicateFindingCount}`);
@@ -131,4 +160,3 @@ export function renderBenchmarkReportMarkdown(report: BenchmarkReport): string {
 
   return `${lines.join("\n").trimEnd()}\n`;
 }
-

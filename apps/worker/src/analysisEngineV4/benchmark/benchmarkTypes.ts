@@ -1,6 +1,9 @@
 import type { SceneAnalysisTraceDocument } from "../sceneAnalysisTraceViewer.js";
+import type { AnalysisResult } from "../../analysisEngine/types.js";
 
 export type BenchmarkFindingAction = "accept" | "reject" | "needs_review";
+
+export type BenchmarkEngineName = "v3" | "v4";
 
 export type BenchmarkEvidence = Readonly<{
   text: string;
@@ -37,6 +40,13 @@ export type BenchmarkActualFinding = Readonly<{
   gcamArticleTitleAr: string | null;
   explanation: string;
   action: BenchmarkFindingAction;
+}>;
+
+export type BenchmarkEngineMetrics = Readonly<{
+  runtimeMs: number;
+  promptTokenEstimate: number | null;
+  completionTokenEstimate: number | null;
+  estimatedCostUsd: number | null;
 }>;
 
 export type BenchmarkStageName =
@@ -82,6 +92,8 @@ export type BenchmarkCaseResult = Readonly<{
   screenplayId: string;
   sceneId: string;
   sceneSummary: string;
+  humanFindings: readonly BenchmarkGroundTruthFinding[];
+  engineComparisons: readonly BenchmarkEngineComparison[];
   sceneUnderstandingScore: BenchmarkStageScore;
   evidenceExtractionScore: BenchmarkStageScore;
   conceptClassificationScore: BenchmarkStageScore;
@@ -100,6 +112,24 @@ export type BenchmarkCaseResult = Readonly<{
   traceDocument: SceneAnalysisTraceDocument;
 }>;
 
+export type BenchmarkEngineComparison = Readonly<{
+  engine: BenchmarkEngineName;
+  analysisResult: AnalysisResult;
+  actualFindings: readonly BenchmarkActualFinding[];
+  findingComparisons: readonly BenchmarkFindingComparison[];
+  falsePositives: readonly BenchmarkActualFinding[];
+  falseNegatives: readonly BenchmarkGroundTruthFinding[];
+  incorrectEvidence: readonly BenchmarkFindingComparison[];
+  incorrectArticleMappings: readonly BenchmarkFindingComparison[];
+  hallucinatedExplanations: readonly BenchmarkFindingComparison[];
+  duplicateFindingCount: number;
+  hallucinationCount: number;
+  stageScores: Readonly<Record<BenchmarkStageName, BenchmarkStageScore>>;
+  metrics: BenchmarkMetrics;
+  traceDocument: SceneAnalysisTraceDocument | null;
+  execution: BenchmarkEngineMetrics;
+}>;
+
 export type BenchmarkMetrics = Readonly<{
   findingPrecision: number;
   findingRecall: number;
@@ -116,7 +146,10 @@ export type BenchmarkMetrics = Readonly<{
 export type BenchmarkReport = Readonly<{
   benchmarkId: string;
   cases: readonly BenchmarkCaseResult[];
+  engineComparisons: Readonly<Record<BenchmarkEngineName, readonly BenchmarkEngineComparison[]>>;
+  engineExecution: Readonly<Record<BenchmarkEngineName, BenchmarkEngineMetrics>>;
   stageScores: Readonly<Record<BenchmarkStageName, BenchmarkStageScore>>;
+  engineMetrics: Readonly<Record<BenchmarkEngineName, BenchmarkMetrics>>;
   metrics: BenchmarkMetrics;
   perStageFailures: Readonly<Record<BenchmarkStageName, readonly BenchmarkStageFailure[]>>;
   falsePositives: readonly BenchmarkActualFinding[];
@@ -126,4 +159,3 @@ export type BenchmarkReport = Readonly<{
   hallucinatedExplanations: readonly BenchmarkFindingComparison[];
   markdown: string;
 }>;
-

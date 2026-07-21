@@ -14,6 +14,7 @@ import {
   replaySceneAnalysisTrace,
 } from "./sceneAnalysisTraceViewer.js";
 import { runSceneAnalysisBenchmark } from "./benchmark/sceneAnalysisBenchmark.js";
+import { createBenchmarkFinding, createBenchmarkTraceDocument, createStaticAnalysisEngine } from "./benchmark/benchmarkTestSupport.js";
 
 async function testTraceDocumentsAreDeterministic(): Promise<void> {
   const engine = createSceneAnalysisEngine();
@@ -49,7 +50,56 @@ async function testTraceReplayStartsFromRequestedNode(): Promise<void> {
 
 async function testBenchmarkPersistenceStoresTraceDocuments(): Promise<void> {
   const tempDir = mkdtempSync(join(tmpdir(), "v4-trace-"));
-  const traceFilePath = join(tempDir, "benchmark-trace.json");
+  const tracePath = join(tempDir, "benchmark-trace.json");
+  const traceDocument = createBenchmarkTraceDocument("scene-benchmark-1", "Scene containing one grounded profanity cue.");
+  const staticResult = {
+    analysisResponse: {
+      promptHash: "benchmark-prompt",
+      semanticHash: "benchmark-semantic",
+      legalHash: "benchmark-legal",
+      stageHashes: [],
+      stageTimings: [],
+      narrative: {},
+      evidence: {},
+      semantic: {},
+      context: {},
+      intelligence: {},
+      legalDecision: {},
+      diagnostics: {},
+    },
+    findings: [
+      createBenchmarkFinding({
+        findingId: "finding-1",
+        articleId: 4,
+        atomId: "4-1",
+        evidenceText: "حاضر. فهد يتمتم: يا كلب",
+        titleAr: "الألفاظ النابية",
+        descriptionAr: "Grounded evidence expresses Profanity.",
+      }),
+    ],
+    diagnostics: {
+      engineVersion: "v4",
+      providerName: "benchmark",
+      modelName: "benchmark",
+      modelVersion: "benchmark",
+      rawResponseHash: "benchmark-raw",
+      responseId: "benchmark-response",
+      responseTimestamp: null,
+      promptHash: "benchmark-prompt",
+      semanticHash: "benchmark-semantic",
+      legalHash: "benchmark-legal",
+      executionSignatureHash: "benchmark-execution",
+      stageHashes: [],
+      stageTimings: [],
+      subjectModuleId: "benchmark",
+      chunkHash: "benchmark-chunk",
+      findingCount: 1,
+    },
+    truthLayerMeta: {
+      scene_analysis_trace: traceDocument,
+    },
+  } as const;
+  const staticEngine = createStaticAnalysisEngine(staticResult as any);
 
   try {
     const report = await runSceneAnalysisBenchmark([
@@ -59,17 +109,19 @@ async function testBenchmarkPersistenceStoresTraceDocuments(): Promise<void> {
         sceneText: "حاضر. فهد يتمتم: يا كلب",
         expectedFindings: [],
       },
-    ], { traceFilePath });
+    ], {
+      tracePath,
+      engines: {
+        v3: staticEngine,
+        v4: staticEngine,
+      },
+    });
 
-    const persisted = JSON.parse(readFileSync(traceFilePath, "utf8")) as {
-      cases: ReadonlyArray<{
-        traceDocument: Record<string, unknown>;
-      }>;
-    };
+    const persisted = JSON.parse(readFileSync(tracePath, "utf8")) as ReadonlyArray<Record<string, unknown> | null>;
 
     assert.equal(report.cases.length, 1);
-    assert.equal(persisted.cases.length, 1);
-    assert.deepStrictEqual(persisted.cases[0]?.traceDocument, report.cases[0]?.traceDocument);
+    assert.equal(persisted.length, 1);
+    assert.deepStrictEqual(persisted[0], report.cases[0]?.traceDocument);
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
   }
