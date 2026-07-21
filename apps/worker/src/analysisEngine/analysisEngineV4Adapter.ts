@@ -3,6 +3,8 @@ import { sha256 } from "../hash.js";
 import { createSceneAnalysisEngine, type SceneAnalysisEngine } from "../analysisEngineV4/sceneAnalysisEngine.js";
 import type { SceneAnalysisState } from "../analysisEngineV4/sceneAnalysisState.js";
 import type { AnalysisEngine, AnalysisJobContext, AnalysisDiagnostics, AnalysisResult } from "./types.js";
+import { buildDecisionProvenanceCollection } from "../analysisEngineV4/provenance/decisionProvenanceBuilder.js";
+import { buildV4ReportAdapter } from "../analysisEngineV4/report/reportAdapter.js";
 import { createLegalDecision, createLegalFinding } from "../analysisEngineV3/legal/legalResult.js";
 import { mapLegalDecisionToFindings, evaluateRuntimeGcamMapping } from "../analysisEngineV3/runtime/findingMapper.js";
 import type { IntelligenceContext } from "../analysisEngineV3/intelligence/intelligenceContext.js";
@@ -400,6 +402,25 @@ function buildAnalysisResponse(state: SceneAnalysisState, request: AnalysisJobCo
     diagnostics,
   });
 
+  const decisionProvenanceCollection = buildDecisionProvenanceCollection({
+    sceneId: state.sceneId,
+    evidenceCollection: state.evidenceCollection,
+    conceptCollection: state.conceptCollection,
+    legalDecisionCollection: state.legalDecisionCollection,
+    explanationCollection: state.explanationCollection,
+    verifiedFindingCollection: state.verifiedFindingCollection,
+  });
+  const reportBundle = buildV4ReportAdapter({
+    sceneId: state.sceneId,
+    jobId: request.jobId,
+    scriptId: request.scriptId,
+    versionId: request.versionId,
+    chunkId: request.chunkId,
+    findings,
+    verifiedFindingCollection: state.verifiedFindingCollection,
+    decisionProvenanceCollection,
+  });
+
   const truthLayerMeta = freeze({
     architecture: "analysis_engine_v4_adapter",
     engine_version: diagnostics.engineVersion,
@@ -416,13 +437,16 @@ function buildAnalysisResponse(state: SceneAnalysisState, request: AnalysisJobCo
     subject_module_id: diagnostics.subjectModuleId,
     chunk_hash: diagnostics.chunkHash,
     finding_count: diagnostics.findingCount,
-    findings_count: findings.length,
+    findings_count: reportBundle.analysisFindings.length,
     gcam_mapping: gcamMapping,
+    analysis_report: reportBundle.analysisReport,
+    decision_provenance: decisionProvenanceCollection?.report ?? null,
+    report_adapter: reportBundle.truthLayerMeta.report_adapter,
   });
 
   return {
     analysisResponse: analysisResponse as unknown as AnalysisResult["analysisResponse"],
-    findings,
+    findings: reportBundle.analysisFindings,
     diagnostics,
     truthLayerMeta,
   };
