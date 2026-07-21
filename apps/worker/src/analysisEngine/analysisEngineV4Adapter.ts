@@ -3,6 +3,7 @@ import { sha256 } from "../hash.js";
 import { createSceneAnalysisEngine, type SceneAnalysisEngine } from "../analysisEngineV4/sceneAnalysisEngine.js";
 import type { SceneAnalysisState } from "../analysisEngineV4/sceneAnalysisState.js";
 import { buildSceneAnalysisTrace, createSceneAnalysisTraceDocument } from "../analysisEngineV4/sceneAnalysisTraceViewer.js";
+import { logger } from "../logger.js";
 import type { AnalysisEngine, AnalysisJobContext, AnalysisDiagnostics, AnalysisResult } from "./types.js";
 import { buildDecisionProvenanceCollection } from "../analysisEngineV4/provenance/decisionProvenanceBuilder.js";
 import { buildV4ReportAdapter } from "../analysisEngineV4/report/reportAdapter.js";
@@ -461,8 +462,17 @@ export function createAnalysisEngineV4Adapter(dependencies: Readonly<{
 
   return freeze({
     async execute(jobContext: AnalysisJobContext): Promise<AnalysisResult> {
+      logger.info("[V4] V4 adapter execute start", {
+        jobId: jobContext.request.jobId,
+        chunkId: jobContext.request.chunkId,
+      });
       const state = await sceneAnalysisEngine.run(jobContext.request.chunkId, jobContext.request.chunkText);
-      return buildAnalysisResponse(state, jobContext.request) as unknown as AnalysisResult;
+      const result = buildAnalysisResponse(state, jobContext.request) as unknown as AnalysisResult;
+      logger.info("[V4] V4 adapter execute end", {
+        jobId: jobContext.request.jobId,
+        chunkId: jobContext.request.chunkId,
+      });
+      return result;
     },
   });
 }

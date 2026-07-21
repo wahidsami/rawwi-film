@@ -111,6 +111,11 @@ export async function persistShadowMode(input: ShadowPersistenceInput): Promise<
   let evaluationPersisted = false;
   let chunkRunPersisted = false;
 
+  logger.info("[V4] Shadow persistence start", {
+    jobId: input.jobId,
+    chunkId: input.chunkId,
+    runKey: shadowRunKey,
+  });
   try {
     const { error } = await supabase
       .from("analysis_chunk_runs")
@@ -180,6 +185,13 @@ export async function persistShadowMode(input: ShadowPersistenceInput): Promise<
     });
   }
 
+  logger.info("[V4] Shadow persistence end", {
+    jobId: input.jobId,
+    chunkId: input.chunkId,
+    runKey: shadowRunKey,
+    chunkRunPersisted,
+    evaluationPersisted,
+  });
   return Object.freeze({
     shadowRunKey,
     evaluationPersisted,

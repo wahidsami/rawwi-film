@@ -47,6 +47,11 @@ export async function runV4ShadowMode(input: Readonly<{
   runKey: string;
 }>, dependencies: ShadowExecutionDependencies = {}): Promise<ShadowExecutionResult | null> {
   const startedAt = Date.now();
+  logger.info("[V4] Shadow execution started", {
+    jobId: input.jobContext.request.jobId,
+    chunkId: input.jobContext.request.chunkId,
+    runKey: input.runKey,
+  });
   const shadowEngine = dependencies.shadowEngine ?? createAnalysisEngineV4Adapter();
   const comparator = dependencies.comparator ?? compareShadowResults;
   const orchestrator = dependencies.orchestrator ?? runRuntimeOrchestrator;
@@ -85,7 +90,17 @@ export async function runV4ShadowMode(input: Readonly<{
       dashboardBuilder: dependencies.dashboardBuilder,
       benchmarkRunner: dependencies.benchmarkRunner,
     });
+    logger.info("[V4] Runtime orchestrator completed", {
+      jobId: input.jobContext.request.jobId,
+      chunkId: input.jobContext.request.chunkId,
+      runKey: input.runKey,
+    });
 
+    logger.info("[V4] Shadow persistence started", {
+      jobId: input.jobContext.request.jobId,
+      chunkId: input.jobContext.request.chunkId,
+      runKey: input.runKey,
+    });
     const persistence = await persist({
       jobId: input.jobContext.request.jobId,
       chunkId: input.jobContext.request.chunkId,
@@ -100,7 +115,17 @@ export async function runV4ShadowMode(input: Readonly<{
       estimatedCostUsd,
       runtime,
     });
+    logger.info("[V4] Shadow persistence completed", {
+      jobId: input.jobContext.request.jobId,
+      chunkId: input.jobContext.request.chunkId,
+      runKey: input.runKey,
+    });
 
+    logger.info("[V4] Shadow execution completed", {
+      jobId: input.jobContext.request.jobId,
+      chunkId: input.jobContext.request.chunkId,
+      runKey: input.runKey,
+    });
     return Object.freeze({
       comparison,
       persistence,

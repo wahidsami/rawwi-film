@@ -2,6 +2,7 @@ import type { AnalysisEngine, AnalysisResult } from "../../analysisEngine/types.
 import { buildCognitiveDashboard } from "../dashboard/cognitiveDashboard.js";
 import { runSceneAnalysisBenchmark } from "../benchmark/benchmarkRunner.js";
 import type { SceneAnalysisTraceDocument } from "../sceneAnalysisTraceViewer.js";
+import { logger } from "../../logger.js";
 import {
   buildRuntimeBenchmarkCase,
   buildRuntimeMetrics,
@@ -38,6 +39,10 @@ export async function runRuntimeOrchestrator(
   input: RuntimeOrchestratorInput,
   dependencies: RuntimeOrchestratorDependencies = {},
 ): Promise<RuntimeOrchestrationResult> {
+  logger.info("[V4] Runtime orchestrator started", {
+    jobId: input.jobContext.request.jobId,
+    chunkId: input.jobContext.request.chunkId,
+  });
   const benchmarkRunner = dependencies.benchmarkRunner ?? runSceneAnalysisBenchmark;
   const dashboardBuilder = dependencies.dashboardBuilder ?? buildCognitiveDashboard;
 
@@ -125,5 +130,9 @@ export async function runRuntimeOrchestrator(
     bundle,
   };
 
+  logger.info("[V4] Runtime orchestrator completed", {
+    jobId: input.jobContext.request.jobId,
+    chunkId: input.jobContext.request.chunkId,
+  });
   return Object.freeze(result);
 }

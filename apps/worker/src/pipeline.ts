@@ -2177,7 +2177,7 @@ export async function processChunkJudge(
             durationMs: Date.now() - runtimeAdapterStartedAt,
           });
           if (config.V4_SHADOW_MODE || analysisEngine === "shadow") {
-            logger.info("V4 shadow mode scheduled", {
+            logger.info("[V4] V4 shadow mode scheduled", {
               jobId,
               chunkId: chunk.id,
               runKey,
@@ -2187,7 +2187,7 @@ export async function processChunkJudge(
               visibleResult: runtimeResult,
               runKey,
             }).catch((error) => {
-              logger.warn("V4 shadow mode execution rejected by promise chain", {
+              logger.warn("[V4] V4 shadow mode execution rejected by promise chain", {
                 jobId,
                 chunkId: chunk.id,
                 runKey,

@@ -1,3 +1,4 @@
+import { logger } from "../logger.js";
 import type { AnalysisEngine, AnalysisEngineName } from "./types.js";
 
 export type AnalysisEngineFactoryOptions = Readonly<{
@@ -40,6 +41,10 @@ function createLazyAnalysisEngineV4Adapter(): AnalysisEngine {
 
 export function create(options: AnalysisEngineFactoryOptions = {}): AnalysisEngine {
   const selection = normalizeSelection(options.env?.ANALYSIS_ENGINE ?? process.env.ANALYSIS_ENGINE);
+  logger.info("[V4] Engine factory selection", {
+    requested: options.env?.ANALYSIS_ENGINE ?? process.env.ANALYSIS_ENGINE ?? null,
+    selected: selection,
+  });
   if (selection === "v4") {
     return options.v4Adapter ?? createLazyAnalysisEngineV4Adapter();
   }
