@@ -9,12 +9,12 @@ export function createAnalysisEngineV3Adapter(dependencies: Readonly<{
 
   return Object.freeze({
     async execute(jobContext: AnalysisJobContext): Promise<AnalysisResult> {
-      logger.info("[V4] V3 adapter execute start", {
+      logger.info("[V4] analysisEngineV3 entered", {
         jobId: jobContext.request.jobId,
         chunkId: jobContext.request.chunkId,
       });
       const runtimeResult = await runtimeAdapter(jobContext.request, jobContext.options ?? {});
-      logger.info("[V4] V3 adapter execute end", {
+      logger.info("[V4] analysisEngineV3 exited", {
         jobId: jobContext.request.jobId,
         chunkId: jobContext.request.chunkId,
       });

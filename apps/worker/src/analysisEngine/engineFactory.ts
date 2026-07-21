@@ -5,6 +5,7 @@ export type AnalysisEngineFactoryOptions = Readonly<{
   env?: Readonly<{ ANALYSIS_ENGINE?: string | undefined }>;
   v3Adapter?: AnalysisEngine;
   v4Adapter?: AnalysisEngine;
+  jobId?: string | null;
 }>;
 
 function normalizeSelection(value: string | undefined | null): AnalysisEngineName {
@@ -42,6 +43,7 @@ function createLazyAnalysisEngineV4Adapter(): AnalysisEngine {
 export function create(options: AnalysisEngineFactoryOptions = {}): AnalysisEngine {
   const selection = normalizeSelection(options.env?.ANALYSIS_ENGINE ?? process.env.ANALYSIS_ENGINE);
   logger.info("[V4] Engine factory selection", {
+    jobId: options.jobId ?? null,
     requested: options.env?.ANALYSIS_ENGINE ?? process.env.ANALYSIS_ENGINE ?? null,
     selected: selection,
   });

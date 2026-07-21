@@ -113,7 +113,7 @@ export async function runV4ShadowMode(input: Readonly<{
   runKey: string;
 }>, dependencies: ShadowExecutionDependencies = {}): Promise<ShadowExecutionResult | null> {
   const startedAt = Date.now();
-  logger.info("[V4] Shadow execution started", {
+  logger.info("[V4] shadowExecutor entered", {
     jobId: input.jobContext.request.jobId,
     chunkId: input.jobContext.request.chunkId,
     runKey: input.runKey,

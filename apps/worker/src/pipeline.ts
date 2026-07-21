@@ -1600,9 +1600,28 @@ export async function processChunkJudge(
   const v3StabilizationMode = analysisEngine === "v3" && config.V3_STABILIZATION_MODE;
   const hybridMode = resolveHybridModeForJob(jobConfig, pipelineVersion, analysisEngine);
   const policyV1Mode = resolvePolicyV1ModeForJob(jobConfig, pipelineVersion, analysisEngine);
+  const shadowEnabled = config.V4_SHADOW_MODE || shouldRunV4ShadowMode(analysisEngine);
   const chunkText = chunk.text;
   const chunkStart = chunk.start_offset;
   const chunkEnd = chunk.end_offset;
+
+  logger.info("[V4] pipeline.ts entered", {
+    jobId,
+    chunkId: chunk.id,
+    pipelineVersion,
+    jobAnalysisEngine: analysisEngine,
+    workerAnalysisEngine: config.ANALYSIS_ENGINE,
+    visibleEnginePath: config.ANALYSIS_ENGINE === "v4" ? "analysisEngineV4" : "analysisEngineV3",
+    visibleEngineSkippedReason: config.ANALYSIS_ENGINE === "v4"
+      ? "analysisEngineV3 skipped because worker ANALYSIS_ENGINE=v4"
+      : "analysisEngineV4 skipped because worker ANALYSIS_ENGINE is not v4",
+    shadowEnabled,
+    shadowSkipReason: shadowEnabled
+      ? null
+      : "shadowExecutor skipped because V4 shadow mode is disabled for this job",
+    jobConfig,
+    executionEntry: "processChunkJudge",
+  });
 
   throwIfAborted(signal);
   if (await isJobCancelled(jobId)) {
@@ -2173,14 +2192,15 @@ export async function processChunkJudge(
               diagnosticsEnabled: config.ENABLE_AI_DIAGNOSTICS,
             },
           } as const;
-          const runtimeResult = await createAnalysisEngine().execute(analysisJobContext);
+          const analysisEngineRunner = createAnalysisEngine({ jobId });
+          const runtimeResult = await analysisEngineRunner.execute(analysisJobContext);
           logger.info("V3 instrumentation EXIT: analysisEngine.execute", {
             jobId,
             chunkId: chunk.id,
             runKey,
             durationMs: Date.now() - runtimeAdapterStartedAt,
           });
-          if (config.V4_SHADOW_MODE || shouldRunV4ShadowMode(analysisEngine)) {
+          if (shadowEnabled) {
             logger.info("[V4] V4 shadow mode scheduled", {
               jobId,
               chunkId: chunk.id,
@@ -2190,13 +2210,22 @@ export async function processChunkJudge(
               jobContext: analysisJobContext,
               visibleResult: runtimeResult,
               runKey,
-            }).catch((error) => {
-              logger.warn("[V4] V4 shadow mode execution rejected by promise chain", {
-                jobId,
-                chunkId: chunk.id,
-                runKey,
-                error: error instanceof Error ? error.message : String(error),
+              }).catch((error) => {
+                logger.warn("[V4] V4 shadow mode execution rejected by promise chain", {
+                  jobId,
+                  chunkId: chunk.id,
+                  runKey,
+                  error: error instanceof Error ? error.message : String(error),
+                });
               });
+          } else {
+            logger.info("[V4] shadowExecutor skipped", {
+              jobId,
+              chunkId: chunk.id,
+              runKey,
+              reason: config.V4_SHADOW_MODE
+                ? "shadow mode enabled but pipeline analysis engine did not request shadow execution"
+                : "shadow mode disabled and analysis engine did not request shadow execution",
             });
           }
           allFindings = sortFindingsStable(runtimeResult.findings as FindingWithGlobal[]);
@@ -3435,6 +3464,24 @@ export async function processChunkJudge(
       inserted: data?.length ?? 0,
       error: error ?? null,
     });
+    logger.info("[V4] analysis_findings inserted", {
+      jobId,
+      chunkId: chunk.id,
+      finalFindingsCount: rows.length,
+      sourceOfFindings: analysisEngine,
+      insertedCount: data?.length ?? 0,
+      skippedCount: rows.length - (data?.length ?? 0),
+    });
+    logger.info("FINAL FINDINGS COUNT", {
+      jobId,
+      chunkId: chunk.id,
+      finalFindingsCount: rows.length,
+    });
+    logger.info("SOURCE OF FINDINGS", {
+      jobId,
+      chunkId: chunk.id,
+      sourceOfFindings: analysisEngine,
+    });
 
       if (config.V3_DIAGNOSTIC_MODE && v3DiagnosticReport) {
         const diagnosticReport = v3DiagnosticReport as V3DiagnosticReport;
@@ -3502,10 +3549,10 @@ export async function processChunkJudge(
         rejectedFindings: diagnosticReport.rejectedFindings,
       });
       if (diagnosticReport.evidenceTrace) {
-        logger.info("V3 evidence trace summary", {
-          jobId,
-          chunkId: chunk.id,
-          promptReplayFilePath: diagnosticReport.evidenceTrace.promptReplayFilePath,
+      logger.info("V3 evidence trace summary", {
+        jobId,
+        chunkId: chunk.id,
+        promptReplayFilePath: diagnosticReport.evidenceTrace.promptReplayFilePath,
           originalChunkLengthChars: diagnosticReport.evidenceTrace.originalChunkText.length,
           stageCount: diagnosticReport.evidenceTrace.stages.length,
           providerFindingsCount: diagnosticReport.providerFindingsCount,
@@ -3515,9 +3562,16 @@ export async function processChunkJudge(
           scopeRejectedCount: diagnosticReport.scopeRejectedCount,
           mapperFindingsCount: diagnosticReport.mapperFindingsCount,
           persistenceFindingsCount: diagnosticReport.persistenceFindingsCount,
-          persistenceInsertedCount: diagnosticReport.persistenceInsertedCount,
-          persistenceSkippedCount: diagnosticReport.persistenceSkippedCount,
-        });
+        persistenceInsertedCount: diagnosticReport.persistenceInsertedCount,
+        persistenceSkippedCount: diagnosticReport.persistenceSkippedCount,
+      });
+      logger.info("[V4] report generated", {
+        jobId,
+        chunkId: chunk.id,
+        sourceOfFindings: analysisEngine,
+        reportGenerated: true,
+        analysisFindingsInserted: data?.length ?? 0,
+      });
       }
       if (routerOutputJson && typeof routerOutputJson === "object") {
         routerOutputJson = attachV3DiagnosticReport(

@@ -2618,6 +2618,11 @@ export async function runAggregation(jobId: string): Promise<void> {
   if (j.created_by != null) reportRow.created_by = j.created_by;
 
   const { inserted: reportInserted, reportId } = await persistAggregationReportOnce(jobId, reportRow);
+  logger.info("report generated", {
+    jobId,
+    reportId,
+    inserted: reportInserted,
+  });
 
   if (!reportInserted) {
     logger.info("Aggregation report already persisted by another worker; exiting without rewriting", {

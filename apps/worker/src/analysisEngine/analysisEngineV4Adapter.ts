@@ -549,13 +549,13 @@ export function createAnalysisEngineV4Adapter(dependencies: Readonly<{
 
   return freeze({
     async execute(jobContext: AnalysisJobContext): Promise<AnalysisResult> {
-      logger.info("[V4] V4 adapter execute start", {
+      logger.info("[V4] analysisEngineV4 entered", {
         jobId: jobContext.request.jobId,
         chunkId: jobContext.request.chunkId,
       });
       const state = await sceneAnalysisEngine.run(jobContext.request.chunkId, jobContext.request.chunkText);
       const result = buildAnalysisResponse(state, jobContext.request) as unknown as AnalysisResult;
-      logger.info("[V4] V4 adapter execute end", {
+      logger.info("[V4] analysisEngineV4 exited", {
         jobId: jobContext.request.jobId,
         chunkId: jobContext.request.chunkId,
       });

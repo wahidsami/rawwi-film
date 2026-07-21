@@ -2,6 +2,7 @@ import type { DecisionProvenanceCollection } from "../provenance/decisionProvena
 import type { VerifiedFindingCollection } from "../judge/qualityJudgeTypes.js";
 import type { V3RuntimeFinding } from "../../analysisEngineV3/runtime/runtimeTypes.js";
 import { createNodeTruthVerification, type FindingTruth } from "../truthVerification.js";
+import { logger } from "../../logger.js";
 
 export type V4AnalysisReportRow = Readonly<{
   sceneId: string;
@@ -98,6 +99,12 @@ function renderReportHtml(input: V4ReportAdapterResult["reportDocument"]): strin
 }
 
 export function buildV4ReportAdapter(input: V4ReportAdapterInput): V4ReportAdapterResult {
+  logger.info("[V4] reportBuilder entered", {
+    jobId: input.jobId,
+    chunkId: input.chunkId,
+    sceneId: input.sceneId,
+    findingsCount: input.findings.length,
+  });
   const analysisFindings = Object.freeze([...input.findings]);
   const severityCountsValue = severityCounts(analysisFindings);
   const findingIds = uniqueSortedStrings(analysisFindings.map((finding) => finding.lineage_id ?? finding.canonical_finding_id ?? `${finding.article_id}:${finding.atom_id ?? "n/a"}:${finding.start_offset_global}:${finding.end_offset_global}`));

@@ -40,7 +40,7 @@ export async function runRuntimeOrchestrator(
   input: RuntimeOrchestratorInput,
   dependencies: RuntimeOrchestratorDependencies = {},
 ): Promise<RuntimeOrchestrationResult> {
-  logger.info("[V4] Runtime orchestrator started", {
+  logger.info("[V4] runtimeOrchestrator entered", {
     jobId: input.jobContext.request.jobId,
     chunkId: input.jobContext.request.chunkId,
   });
@@ -56,6 +56,11 @@ export async function runRuntimeOrchestrator(
     jobContext: input.jobContext,
     shadowResult: input.shadowResult,
     traceDocument,
+  });
+  logger.info("[V4] V4 report generated", {
+    jobId: input.jobContext.request.jobId,
+    chunkId: input.jobContext.request.chunkId,
+    reportFindingsCount: report.analysisFindings.length,
   });
   const reportExecutionTimeMs = Date.now() - reportStartedAt;
   const reportAdapterVerification = ((report.truthLayerMeta as Record<string, unknown> | null | undefined)?.report_adapter as Record<string, unknown> | null | undefined)?.truth_verification as FindingTruthNodeVerification | null ?? null;
@@ -137,7 +142,7 @@ export async function runRuntimeOrchestrator(
     bundle,
   };
 
-  logger.info("[V4] Runtime orchestrator completed", {
+  logger.info("[V4] runtimeOrchestrator exited", {
     jobId: input.jobContext.request.jobId,
     chunkId: input.jobContext.request.chunkId,
   });
