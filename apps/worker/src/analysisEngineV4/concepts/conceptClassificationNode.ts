@@ -2,6 +2,7 @@ import type { SceneAnalysisConcept, SceneAnalysisState } from "../sceneAnalysisS
 import { freezeSceneAnalysisState } from "../sceneAnalysisState.js";
 import { buildConceptCollection, buildLegacyConceptsFromCollection } from "./conceptBuilder.js";
 import type { ConceptCollection } from "./conceptTypes.js";
+import { createEvidenceCollectionFromVerifiedEvidence } from "../evidence/evidenceTypes.js";
 
 export type ConceptClassificationNodeOutput = Readonly<{
   conceptCollection: ConceptCollection;
@@ -9,7 +10,10 @@ export type ConceptClassificationNodeOutput = Readonly<{
 }>;
 
 export function classifyConceptCollection(state: SceneAnalysisState): ConceptClassificationNodeOutput {
-  const conceptCollection = buildConceptCollection(state.evidenceCollection, state.sceneId);
+  const evidenceCollection = state.verifiedEvidence
+    ? createEvidenceCollectionFromVerifiedEvidence(state.sceneId, state.verifiedEvidence)
+    : null;
+  const conceptCollection = buildConceptCollection(evidenceCollection, state.sceneId);
   const detectedConcepts = buildLegacyConceptsFromCollection(conceptCollection);
 
   return Object.freeze({

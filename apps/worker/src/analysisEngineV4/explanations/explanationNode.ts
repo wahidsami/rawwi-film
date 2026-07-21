@@ -5,6 +5,7 @@ import type { SceneAnalysisConcept, SceneAnalysisState } from "../sceneAnalysisS
 import { freezeSceneAnalysisState } from "../sceneAnalysisState.js";
 import { buildExplanationCollection, buildLegacyExplanation } from "./explanationBuilder.js";
 import type { ExplanationEngineInput } from "./explanationTypes.js";
+import { createEvidenceCollectionFromVerifiedEvidence } from "../evidence/evidenceTypes.js";
 
 function normalizeText(value: string): string {
   return value.normalize("NFC").replace(/\s+/g, " ").trim();
@@ -40,7 +41,7 @@ function synthesizeConceptCollection(state: SceneAnalysisState): ConceptCollecti
     return null;
   }
 
-  const evidenceId = state.primaryEvidenceSpanId ?? state.evidenceSpans[0]?.spanId ?? "legacy-evidence";
+  const evidenceId = state.verifiedEvidence?.evidenceId ?? state.primaryEvidenceSpanId ?? "legacy-evidence";
   const concepts = state.detectedConcepts.map((concept, index) => toConceptRecord(concept, evidenceId, index));
 
   return Object.freeze({
@@ -56,6 +57,10 @@ function synthesizeConceptCollection(state: SceneAnalysisState): ConceptCollecti
 }
 
 function synthesizeEvidenceCollection(state: SceneAnalysisState): EvidenceCollection | null {
+  if (state.verifiedEvidence) {
+    return createEvidenceCollectionFromVerifiedEvidence(state.sceneId, state.verifiedEvidence);
+  }
+
   if (state.evidenceCollection && state.evidenceCollection.evidence.length > 0) {
     return state.evidenceCollection;
   }
@@ -133,6 +138,7 @@ function buildExplanationInput(state: SceneAnalysisState): ExplanationEngineInpu
     sceneId: state.sceneId,
     sceneSummary: state.sceneModel?.summary ?? state.normalizedSceneText ?? state.sceneText,
     evidenceCollection,
+    verifiedEvidence: state.verifiedEvidence,
     conceptCollection,
     legalDecisionCollection,
   };

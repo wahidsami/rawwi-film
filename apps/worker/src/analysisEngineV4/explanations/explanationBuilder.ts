@@ -13,26 +13,6 @@ function pickConcept(conceptCollection: ConceptCollection | null, conceptId: str
   return conceptCollection?.concepts.find((concept) => concept.conceptId === conceptId) ?? null;
 }
 
-function pickEvidence(
-  evidenceCollection: EvidenceCollection | null,
-  concept: ConceptRecord | null,
-  decision: LegalDecision,
-): Evidence | null {
-  const evidenceIds = new Set<string>([
-    ...(concept?.evidenceSpanIds ?? []),
-    ...(decision.candidateArticles.flatMap((candidate) => candidate.evidenceSpanIds)),
-  ]);
-
-  for (const evidenceId of evidenceIds) {
-    const evidence = evidenceCollection?.evidence.find((entry) => entry.id === evidenceId || entry.spanId === evidenceId) ?? null;
-    if (evidence) {
-      return evidence;
-    }
-  }
-
-  return evidenceCollection?.evidence[0] ?? null;
-}
-
 function recommendedActionForConcept(concept: ConceptRecord | null): ExplanationRecommendedAction {
   switch (concept?.severity ?? "low") {
     case "critical":
@@ -49,7 +29,32 @@ function recommendedActionForConcept(concept: ConceptRecord | null): Explanation
 
 export function buildExplanationRecord(input: ExplanationEngineInput, decision: LegalDecision, index: number): ExplanationRecord {
   const concept = pickConcept(input.conceptCollection, decision.conceptId);
-  const evidence = pickEvidence(input.evidenceCollection, concept, decision);
+  const evidence = input.verifiedEvidence
+    ? Object.freeze({
+        spanId: input.verifiedEvidence.evidenceId,
+        id: input.verifiedEvidence.evidenceId,
+        startOffset: input.verifiedEvidence.offsets.startOffset,
+        endOffset: input.verifiedEvidence.offsets.endOffset,
+        text: input.verifiedEvidence.text,
+        scene: input.verifiedEvidence.scene,
+        page: input.verifiedEvidence.page,
+        rawText: input.verifiedEvidence.text,
+        normalizedText: input.verifiedEvidence.text.normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase(),
+        confidence: 1,
+        sourceType: "Narration" as const,
+        lineId: null,
+        sentenceIndex: 0,
+        pageReferences: Object.freeze([
+          Object.freeze({
+            pageNumber: input.verifiedEvidence.page,
+            startOffsetPage: input.verifiedEvidence.offsets.startOffset,
+            endOffsetPage: input.verifiedEvidence.offsets.endOffset,
+          }),
+        ]),
+        conceptIds: Object.freeze([]),
+        rationale: Object.freeze(["Verified evidence provided by the V4 evidence-ranking stage."]),
+      } as Evidence)
+    : null;
   const article = decision.primaryArticle;
   const evidenceText = normalizeText(evidence?.text ?? evidence?.rawText ?? "");
   const conceptLabel = concept?.label ?? decision.conceptId;

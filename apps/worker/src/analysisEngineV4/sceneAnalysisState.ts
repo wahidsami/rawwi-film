@@ -2,6 +2,7 @@ import type {
   Evidence,
   EvidenceCollection,
   EvidencePageReference,
+  VerifiedEvidence,
 } from "./evidence/evidenceTypes.js";
 import type { ConceptCollection } from "./concepts/conceptTypes.js";
 import type { LegalDecisionCollection } from "./legal/legalDecision.js";
@@ -265,6 +266,7 @@ export type SceneAnalysisTraceNodeView = Readonly<{
   sceneSummary: string;
   evidence: readonly SceneAnalysisEvidenceSpan[];
   evidenceCollection: SceneAnalysisEvidenceCollection | null;
+  verifiedEvidence: VerifiedEvidence | null;
   conceptCollection: SceneAnalysisConceptCollection | null;
   legalDecisionCollection: SceneAnalysisLegalDecisionCollection | null;
   explanationCollection: SceneAnalysisExplanationCollection | null;
@@ -325,6 +327,7 @@ export type SceneAnalysisState = Readonly<{
   normalizedSceneText: string;
   sentences: readonly SceneAnalysisSentence[];
   evidenceCollection: SceneAnalysisEvidenceCollection | null;
+  verifiedEvidence: VerifiedEvidence | null;
   conceptCollection: SceneAnalysisConceptCollection | null;
   legalDecisionCollection: SceneAnalysisLegalDecisionCollection | null;
   explanationCollection: SceneAnalysisExplanationCollection | null;
@@ -393,11 +396,12 @@ export function createSceneAnalysisState(input: Readonly<{
     normalizedSceneText: "",
     sentences: freezeReadonlyArray([]),
     evidenceCollection: null,
+    verifiedEvidence: null,
     conceptCollection: null,
-  legalDecisionCollection: null,
-  explanationCollection: null,
-  verifiedFindingCollection: null,
-  evidenceSpans: freezeReadonlyArray([]),
+    legalDecisionCollection: null,
+    explanationCollection: null,
+    verifiedFindingCollection: null,
+    evidenceSpans: freezeReadonlyArray([]),
     primaryEvidenceSpanId: null,
     primaryEvidenceText: null,
     primaryEvidenceReason: null,
@@ -441,6 +445,12 @@ export function freezeSceneAnalysisState(state: SceneAnalysisState | Readonly<Re
           evidence: freezeReadonlyArray((state as SceneAnalysisState).evidenceCollection?.evidence ?? []),
           dedupDecisions: freezeReadonlyArray((state as SceneAnalysisState).evidenceCollection?.dedupDecisions ?? []),
         }) as SceneAnalysisEvidenceCollection
+      : null,
+    verifiedEvidence: (state as SceneAnalysisState).verifiedEvidence
+      ? deepFreeze({
+          ...(state as SceneAnalysisState).verifiedEvidence,
+          offsets: Object.freeze({ ...((state as SceneAnalysisState).verifiedEvidence?.offsets ?? { startOffset: 0, endOffset: 0 }) }),
+        }) as VerifiedEvidence
       : null,
     conceptCollection: (state as SceneAnalysisState).conceptCollection
       ? deepFreeze({

@@ -9,10 +9,13 @@ import { buildDecisionProvenanceCollection } from "../analysisEngineV4/provenanc
 import { buildV4ReportAdapter } from "../analysisEngineV4/report/reportAdapter.js";
 import { createLegalDecision, createLegalFinding } from "../analysisEngineV3/legal/legalResult.js";
 import { mapLegalDecisionToFindings, evaluateRuntimeGcamMapping } from "../analysisEngineV3/runtime/findingMapper.js";
+import type { LegalEvidenceResult } from "../analysisEngineV3/legal/legalTypes.js";
+import type { V3RuntimeFinding } from "../analysisEngineV3/runtime/runtimeTypes.js";
 import type { IntelligenceContext } from "../analysisEngineV3/intelligence/intelligenceContext.js";
 import { normalizeConceptContext } from "../analysisEngineV3/concepts/conceptNormalizer.js";
 import type { Concept } from "../analysisEngineV3/concepts/conceptTypes.js";
 import { createEmptyConceptContext } from "../analysisEngineV3/concepts/conceptNormalizer.js";
+import type { VerifiedEvidence } from "../analysisEngineV4/evidence/evidenceTypes.js";
 
 function normalizeText(value: string): string {
   return value.normalize("NFC").replace(/\s+/g, " ").trim();
@@ -63,6 +66,7 @@ function toLegacyEvidenceType(sourceType: unknown): "unknown" | "dialogue" | "sc
 }
 
 function buildConceptContext(state: SceneAnalysisState): ReturnType<typeof normalizeConceptContext> {
+  const verifiedEvidence = state.verifiedEvidence ?? null;
   const concepts: Concept[] = state.detectedConcepts.map((concept, index) => freeze({
     id: concept.conceptId,
     label: concept.label,
@@ -79,13 +83,13 @@ function buildConceptContext(state: SceneAnalysisState): ReturnType<typeof norma
       freeze({
         sourceType: "evidence" as const,
         sourceText: concept.rationale[0] ?? concept.label,
-        originatingSentence: state.primaryEvidenceText ?? state.normalizedSceneText ?? state.sceneText,
+        originatingSentence: verifiedEvidence?.text ?? state.primaryEvidenceText ?? state.normalizedSceneText ?? state.sceneText,
         entityId: null,
         glossaryTerm: null,
         confidence: toConfidence(concept.confidence),
       }),
     ]),
-    originatingSentences: freeze([state.primaryEvidenceText ?? state.normalizedSceneText ?? `concept-${index + 1}`]),
+    originatingSentences: freeze([verifiedEvidence?.text ?? state.primaryEvidenceText ?? state.normalizedSceneText ?? `concept-${index + 1}`]),
     entityReferences: freeze([]),
     glossaryReferences: freeze([]),
   }));
@@ -103,9 +107,88 @@ function buildConceptContext(state: SceneAnalysisState): ReturnType<typeof norma
   }));
 }
 
+function buildLegalEvidenceCandidateFromVerifiedEvidence(verifiedEvidence: VerifiedEvidence): Readonly<{
+  text: string;
+  startOffset: number;
+  endOffset: number;
+  confidence: number;
+  source: "chunk";
+  notes: readonly string[];
+}> {
+  return freeze({
+    text: verifiedEvidence.text,
+    startOffset: verifiedEvidence.offsets.startOffset,
+    endOffset: verifiedEvidence.offsets.endOffset,
+    confidence: 1,
+    source: "chunk" as const,
+    notes: freeze(["Canonical verified evidence selected by the V4 evidence-ranking stage."]),
+  });
+}
+
+function assertSingleEvidenceIdentity(input: Readonly<{
+  verifiedEvidence: VerifiedEvidence | null;
+  legalDecision: ReturnType<typeof createLegalDecision>;
+  findings: readonly V3RuntimeFinding[];
+  explanationSummary: string | null;
+  explanationEvidenceId: string | null;
+  verifiedFindingEvidenceId: string | null;
+}>): void {
+  const { verifiedEvidence, legalDecision, findings, explanationSummary, explanationEvidenceId, verifiedFindingEvidenceId } = input;
+  if (!verifiedEvidence) {
+    return;
+  }
+
+  const candidate = legalDecision.finding?.evidence ?? null;
+  const mismatches: string[] = [];
+
+  if (candidate) {
+    if (candidate.text !== verifiedEvidence.text) mismatches.push("legalDecision.finding.evidence.text");
+    if (candidate.startOffset !== verifiedEvidence.offsets.startOffset) mismatches.push("legalDecision.finding.evidence.startOffset");
+    if (candidate.endOffset !== verifiedEvidence.offsets.endOffset) mismatches.push("legalDecision.finding.evidence.endOffset");
+  }
+
+  if (explanationSummary && !explanationSummary.includes(verifiedEvidence.text)) {
+    mismatches.push("explanation.summary");
+  }
+
+  if (explanationEvidenceId && explanationEvidenceId !== verifiedEvidence.evidenceId) {
+    mismatches.push("explanation.evidenceId");
+  }
+
+  if (verifiedFindingEvidenceId && verifiedFindingEvidenceId !== verifiedEvidence.evidenceId) {
+    mismatches.push("verifiedFinding.evidenceId");
+  }
+
+  for (const finding of findings) {
+    if (finding.evidence_snippet !== verifiedEvidence.text) {
+      mismatches.push(`finding:${finding.canonical_finding_id ?? finding.lineage_id ?? finding.article_id}:evidence_snippet`);
+    }
+    if (finding.start_offset_global !== verifiedEvidence.offsets.startOffset) {
+      mismatches.push(`finding:${finding.canonical_finding_id ?? finding.lineage_id ?? finding.article_id}:start_offset_global`);
+    }
+    if (finding.end_offset_global !== verifiedEvidence.offsets.endOffset) {
+      mismatches.push(`finding:${finding.canonical_finding_id ?? finding.lineage_id ?? finding.article_id}:end_offset_global`);
+    }
+  }
+
+  if (mismatches.length > 0) {
+    throw new Error(`[V4] Evidence identity divergence detected: ${mismatches.join(", ")}`);
+  }
+}
+
 function buildAnalysisResponse(state: SceneAnalysisState, request: AnalysisJobContext["request"]): AnalysisResult {
   const selectedArticle = state.primaryArticle ?? state.legalPrimaryArticle ?? null;
-  const primaryEvidence = state.evidenceSpans[0] ?? null;
+  const verifiedEvidence = state.verifiedEvidence ?? null;
+  const primaryEvidence = verifiedEvidence
+    ? {
+        text: verifiedEvidence.text,
+        startOffset: verifiedEvidence.offsets.startOffset,
+        endOffset: verifiedEvidence.offsets.endOffset,
+        confidence: 1,
+        source: "chunk" as const,
+        notes: freeze(["Canonical verified evidence selected by the V4 evidence-ranking stage."]),
+      }
+    : null;
   const conceptContext = buildConceptContext(state);
   const narrative = freeze({
     speaker: state.sceneModel?.characters[0] ?? null,
@@ -136,24 +219,17 @@ function buildAnalysisResponse(state: SceneAnalysisState, request: AnalysisJobCo
     notes: freeze(["Synthesized from the V4 scene analysis state."]),
   });
   const evidence = freeze({
-    candidates: freeze(state.evidenceSpans.map((span) => freeze({
-      text: span.text,
-      startOffset: span.startOffset,
-      endOffset: span.endOffset,
-      confidence: span.confidence,
-      source: "chunk" as const,
-      notes: span.rationale,
-    }))),
-    primaryCandidateIndex: state.evidenceSpans.length > 0 ? 0 : null,
-    admissible: state.evidenceSpans.length > 0,
-    confidence: state.evidenceSpans.length > 0 ? 1 : 0,
+    candidates: freeze(primaryEvidence ? [primaryEvidence] : []),
+    primaryCandidateIndex: primaryEvidence ? 0 : null,
+    admissible: Boolean(primaryEvidence),
+    confidence: primaryEvidence ? 1 : 0,
     quote: primaryEvidence?.text ?? null,
     scene: state.sceneModel?.summary ?? state.normalizedSceneText ?? request.chunkText,
-    page: primaryEvidence?.pageReferences[0]?.pageNumber ?? null,
-    evidenceType: toLegacyEvidenceType(primaryEvidence?.sourceType),
-    observedFacts: freeze(state.evidenceSpans.map((span) => span.text)),
+    page: verifiedEvidence?.page ?? null,
+    evidenceType: "story_context" as const,
+    observedFacts: freeze(primaryEvidence ? [primaryEvidence.text] : []),
     notes: freeze(["Derived from the V4 grounded evidence span(s)."]),
-  });
+  }) as LegalEvidenceResult;
   const semantic = freeze({
     semanticMeaning: state.detectedConcepts[0]?.label ?? state.sceneModel?.summary ?? request.chunkText,
     narrativeIntent: state.qualityJudgment?.status === "reject" ? "condemnation" : "neutral",
@@ -203,14 +279,16 @@ function buildAnalysisResponse(state: SceneAnalysisState, request: AnalysisJobCo
           confidence: toConfidence(selectedArticle.score / 200),
           semantic,
           narrative,
-          evidence: evidence.candidates[evidence.primaryCandidateIndex ?? 0] ?? {
+          evidence: primaryEvidence ?? buildLegalEvidenceCandidateFromVerifiedEvidence({
+            evidenceId: request.chunkId,
             text: request.chunkText,
-            startOffset: request.chunkStart,
-            endOffset: request.chunkEnd,
-            confidence: 1,
-            source: "chunk",
-            notes: [],
-          },
+            offsets: {
+              startOffset: request.chunkStart,
+              endOffset: request.chunkEnd,
+            },
+            page: 1,
+            scene: state.sceneModel?.summary ?? request.chunkText,
+          }),
           context,
           exceptionCodes: [],
         })
@@ -387,6 +465,15 @@ function buildAnalysisResponse(state: SceneAnalysisState, request: AnalysisJobCo
     endLine: request.endLine ?? null,
     diagnostics: diagnostics as unknown as Parameters<typeof mapLegalDecisionToFindings>[0]["diagnostics"],
     gcamMapping,
+  });
+
+  assertSingleEvidenceIdentity({
+    verifiedEvidence,
+    legalDecision,
+    findings: findings as readonly V3RuntimeFinding[],
+    explanationSummary: state.explanation?.summary ?? null,
+    explanationEvidenceId: state.explanationCollection?.primaryExplanation?.evidenceId ?? null,
+    verifiedFindingEvidenceId: state.verifiedFindingCollection?.primaryVerifiedFinding?.evidenceId ?? null,
   });
 
   const analysisResponse = freeze({

@@ -16,6 +16,7 @@ import {
   type SceneAnalysisLegalDecisionCollection,
   type SceneModel,
 } from "./index.js";
+import { createEvidenceCollectionFromVerifiedEvidence, createVerifiedEvidenceFromEvidence } from "./evidence/evidenceTypes.js";
 
 function buildEvidenceSpan(text: string): SceneAnalysisEvidenceSpan {
   const pageReferences = Object.freeze([
@@ -148,10 +149,13 @@ function buildExplanation(overrides: Partial<SceneAnalysisExplanation> = {}): Sc
 }
 
 function testQualityJudgePassesCleanExplanation(): void {
+  const evidence = buildEvidenceSpan("يا كلب");
   const state = freezeSceneAnalysisState({
     ...createSceneAnalysisState({ sceneId: "scene-quality-pass", sceneText: "يا كلب" }),
     sceneModel: buildSceneModel("Scene contains 1 line(s), 1 dialogue line(s), 0 action line(s), and 1 character hint(s).", ["فهد"]),
-    evidenceSpans: Object.freeze([buildEvidenceSpan("يا كلب")]),
+    evidenceSpans: Object.freeze([evidence]),
+    evidenceCollection: createEvidenceCollectionFromVerifiedEvidence("scene-quality-pass", createVerifiedEvidenceFromEvidence(evidence)),
+    verifiedEvidence: createVerifiedEvidenceFromEvidence(evidence),
     primaryEvidenceSpanId: "evidence-1",
     primaryEvidenceText: "يا كلب",
     primaryEvidenceReason: "primary evidence",
@@ -171,10 +175,13 @@ function testQualityJudgePassesCleanExplanation(): void {
 }
 
 function testQualityJudgeRejectsHallucination(): void {
+  const evidence = buildEvidenceSpan("يا كلب");
   const state = freezeSceneAnalysisState({
     ...createSceneAnalysisState({ sceneId: "scene-quality-reject", sceneText: "يا كلب" }),
     sceneModel: buildSceneModel("Scene contains 1 line(s), 1 dialogue line(s), 0 action line(s), and 1 character hint(s).", ["فهد"]),
-    evidenceSpans: Object.freeze([buildEvidenceSpan("يا كلب")]),
+    evidenceSpans: Object.freeze([evidence]),
+    evidenceCollection: createEvidenceCollectionFromVerifiedEvidence("scene-quality-reject", createVerifiedEvidenceFromEvidence(evidence)),
+    verifiedEvidence: createVerifiedEvidenceFromEvidence(evidence),
     primaryEvidenceSpanId: "evidence-1",
     primaryEvidenceText: "يا كلب",
     primaryEvidenceReason: "primary evidence",

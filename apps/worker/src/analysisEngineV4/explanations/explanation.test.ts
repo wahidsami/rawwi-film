@@ -7,7 +7,7 @@ import { strict as assert } from "node:assert";
 import { getPolicyArticle } from "../../policyMap.js";
 import { createSceneAnalysisState, freezeSceneAnalysisState } from "../sceneAnalysisState.js";
 import type { ConceptCollection, ConceptRecord } from "../concepts/conceptTypes.js";
-import type { Evidence, EvidenceCollection } from "../evidence/evidenceTypes.js";
+import { createVerifiedEvidenceFromEvidence, type Evidence, type EvidenceCollection } from "../evidence/evidenceTypes.js";
 import type { LegalDecision, LegalDecisionCollection } from "../legal/legalDecision.js";
 import { buildExplanationCollection, createExplanationNode, validateExplanationCollection } from "./index.js";
 import type { ExplanationRecord } from "./explanationTypes.js";
@@ -150,6 +150,7 @@ function buildState(): ReturnType<typeof createSceneAnalysisState> {
   const evidenceCollection = buildEvidenceCollection([evidence]);
   const conceptCollection = buildConceptCollection([concept]);
   const legalDecisionCollection = buildLegalDecisionCollection([legalDecision]);
+  const verifiedEvidence = createVerifiedEvidenceFromEvidence(evidence);
 
   return freezeSceneAnalysisState({
     ...createSceneAnalysisState({ sceneId: "scene-explanation", sceneText: "يا كلب" }),
@@ -166,6 +167,7 @@ function buildState(): ReturnType<typeof createSceneAnalysisState> {
       summary: "Grounded scene summary.",
     }),
     evidenceCollection,
+    verifiedEvidence,
     evidenceSpans: Object.freeze([evidence]),
     primaryEvidenceSpanId: evidence.id,
     primaryEvidenceText: evidence.text,
@@ -193,12 +195,15 @@ function buildState(): ReturnType<typeof createSceneAnalysisState> {
 
 function testExplanationCollectionIsGrounded(): void {
   const state = buildState();
+  const evidence = state.evidenceSpans[0] ?? null;
   const next = createExplanationNode()(state);
   const explanationCollection = next.explanationCollection;
 
+  assert.ok(evidence);
   assert.ok(explanationCollection);
   assert.equal(explanationCollection?.explanations.length, 1);
   assert.equal(explanationCollection?.validationResult.status, "pass");
+  assert.equal(explanationCollection?.primaryExplanation?.evidenceId, evidence?.id ?? null);
   assert.equal(explanationCollection?.primaryExplanation?.summary.includes("يا كلب"), true);
   assert.equal(explanationCollection?.primaryExplanation?.summary.includes("Profanity"), true);
   assert.equal(explanationCollection?.primaryExplanation?.summary.includes(getPolicyArticle(4)?.title_ar ?? "الألفاظ النابية"), true);
@@ -220,6 +225,7 @@ function testExplanationCollectionHandlesMultipleDecisions(): void {
     sceneId: "scene-multi",
     sceneSummary: "Grounded scene summary.",
     evidenceCollection: buildEvidenceCollection([evidence]),
+    verifiedEvidence: createVerifiedEvidenceFromEvidence(evidence),
     conceptCollection: concepts,
     legalDecisionCollection: legalDecisions,
   });
@@ -227,6 +233,7 @@ function testExplanationCollectionHandlesMultipleDecisions(): void {
   assert.equal(collection.explanations.length, 2);
   assert.equal(collection.primaryExplanationId !== null, true);
   assert.equal(collection.validationResult.status, "pass");
+  assert.equal(collection.explanations.every((explanation) => explanation.evidenceId === evidence.id), true);
 }
 
 function testValidatorRejectsHallucination(): void {

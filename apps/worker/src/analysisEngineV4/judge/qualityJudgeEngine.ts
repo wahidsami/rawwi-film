@@ -1,9 +1,10 @@
 import type { ExplanationRecord, ExplanationCollection } from "../explanations/explanationTypes.js";
-import type { SceneAnalysisConcept, SceneAnalysisConceptCollection, SceneAnalysisEvidenceCollection, SceneAnalysisEvidenceSpan, SceneAnalysisLegalDecisionCollection, SceneAnalysisQualityJudgment, SceneAnalysisState } from "../sceneAnalysisState.js";
+import type { SceneAnalysisConcept, SceneAnalysisConceptCollection, SceneAnalysisEvidenceCollection, SceneAnalysisLegalDecisionCollection, SceneAnalysisQualityJudgment, SceneAnalysisState } from "../sceneAnalysisState.js";
 import { freezeSceneAnalysisState } from "../sceneAnalysisState.js";
 import { buildQualityJudgeReport } from "./qualityJudgeReport.js";
 import type { QualityJudgeEngineInput, VerifiedFinding, VerifiedFindingCollection } from "./qualityJudgeTypes.js";
 import { mergeQualityJudgeCandidates, validateQualityJudgeCandidates } from "./qualityJudgeValidator.js";
+import { createEvidenceCollectionFromVerifiedEvidence } from "../evidence/evidenceTypes.js";
 
 function normalizeText(value: string): string {
   return value.normalize("NFC").replace(/\s+/g, " ").trim();
@@ -14,26 +15,15 @@ function uniqueStrings(values: readonly string[]): readonly string[] {
 }
 
 function synthesizeEvidenceCollection(state: SceneAnalysisState): SceneAnalysisEvidenceCollection | null {
+  if (state.verifiedEvidence) {
+    return createEvidenceCollectionFromVerifiedEvidence(state.sceneId, state.verifiedEvidence);
+  }
+
   if (state.evidenceCollection && state.evidenceCollection.evidence.length > 0) {
     return state.evidenceCollection;
   }
 
-  if (state.evidenceSpans.length === 0) {
-    return null;
-  }
-
-  return Object.freeze({
-    sceneId: state.sceneId,
-    evidence: Object.freeze([...state.evidenceSpans]),
-    primaryEvidenceId: state.primaryEvidenceSpanId ?? state.evidenceSpans[0]?.id ?? null,
-    dedupDecisions: Object.freeze([]),
-    grounding: Object.freeze({
-      totalCandidates: state.evidenceSpans.length,
-      groundedCount: state.evidenceSpans.length,
-      unmatchedCount: 0,
-    }),
-    executionTimeMs: 0,
-  });
+  return null;
 }
 
 function synthesizeConceptCollection(state: SceneAnalysisState): SceneAnalysisConceptCollection | null {
@@ -45,7 +35,7 @@ function synthesizeConceptCollection(state: SceneAnalysisState): SceneAnalysisCo
     return null;
   }
 
-  const evidenceId = state.primaryEvidenceSpanId ?? state.evidenceSpans[0]?.spanId ?? "legacy-evidence";
+  const evidenceId = state.verifiedEvidence?.evidenceId ?? state.primaryEvidenceSpanId ?? "legacy-evidence";
   const concepts = state.detectedConcepts.map((concept, index) => Object.freeze({
     id: `legacy-concept-${index + 1}`,
     evidenceId,
@@ -137,7 +127,7 @@ function synthesizeExplanationCollection(state: SceneAnalysisState): Explanation
     id: "legacy-explanation-1",
     legalDecisionId: decision?.id ?? "legacy-legal",
     conceptId: state.detectedConcepts[0]?.conceptId ?? "legacy-concept",
-    evidenceId: state.evidenceSpans[0]?.id ?? "legacy-evidence",
+    evidenceId: state.verifiedEvidence?.evidenceId ?? "legacy-evidence",
     title: state.explanation.primaryArticleTitleAr ?? "Legacy explanation",
     summary: state.explanation.summary,
     reasoning: Object.freeze([...state.explanation.rationale]),

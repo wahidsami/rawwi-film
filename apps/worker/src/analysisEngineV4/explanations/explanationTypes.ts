@@ -1,6 +1,7 @@
 import type { ConceptCollection } from "../concepts/conceptTypes.js";
 import type { EvidenceCollection } from "../evidence/evidenceTypes.js";
 import type { LegalDecisionCollection } from "../legal/legalDecision.js";
+import type { VerifiedEvidence } from "../evidence/evidenceTypes.js";
 
 export type ExplanationRecommendedAction =
   | "Delete"
@@ -43,6 +44,7 @@ export type ExplanationEngineInput = Readonly<{
   sceneId: string;
   sceneSummary: string;
   evidenceCollection: EvidenceCollection | null;
+  verifiedEvidence: VerifiedEvidence | null;
   conceptCollection: ConceptCollection | null;
   legalDecisionCollection: LegalDecisionCollection | null;
 }>;
