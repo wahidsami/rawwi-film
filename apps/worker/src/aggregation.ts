@@ -219,6 +219,11 @@ type AggregationReportStore = {
   insertReportOnce(jobId: string, reportRow: AggregationReportRow): Promise<string | null>;
 };
 
+export type ReviewFindingMaterializationStore = Readonly<{
+  deleteCurrentReviewFindings(reportId: string): Promise<void>;
+  upsertCurrentReviewFindings(reportId: string, rows: ReviewFindingInsertRow[]): Promise<void>;
+}>;
+
 export function createAggregationReportStore(client = supabase): AggregationReportStore {
   return {
     async findReportIdByJobId(jobId: string): Promise<string | null> {
@@ -769,7 +774,7 @@ async function buildManualReviewRowsForJob(
     report_id: reportId,
     script_id: summary.script_id,
     version_id: versionId,
-    canonical_finding_id: null,
+    canonical_finding_id: `manual:${String(finding.id ?? "unknown")}`,
     source_kind: "manual",
     primary_article_id: Number(finding.article_id ?? 4),
     primary_atom_id: (finding.atom_id as string | null | undefined) ?? null,
@@ -799,11 +804,39 @@ async function buildManualReviewRowsForJob(
   }));
 }
 
-async function materializeReviewFindings(
+function createReviewFindingMaterializationStore(client = supabase): ReviewFindingMaterializationStore {
+  return {
+    async deleteCurrentReviewFindings(reportId: string): Promise<void> {
+      const { error: deleteErr } = await client
+        .from("analysis_review_findings")
+        .delete()
+        .eq("report_id", reportId)
+        .eq("is_manual", false);
+      if (deleteErr) throw deleteErr;
+
+      const { error: deleteCarriedManualErr } = await client
+        .from("analysis_review_findings")
+        .delete()
+        .eq("report_id", reportId)
+        .eq("source_kind", "manual")
+        .not("supersedes_review_finding_id", "is", null);
+      if (deleteCarriedManualErr) throw deleteCarriedManualErr;
+    },
+    async upsertCurrentReviewFindings(reportId: string, rows: ReviewFindingInsertRow[]): Promise<void> {
+      const { error } = await client
+        .from("analysis_review_findings")
+        .upsert(rows, { onConflict: "report_id,canonical_finding_id", ignoreDuplicates: true });
+      if (error) throw error;
+    },
+  };
+}
+
+export async function materializeReviewFindings(
   reportId: string,
   summary: SummaryJson,
   versionId: string,
   fullScriptText: string | null = null,
+  store: ReviewFindingMaterializationStore = createReviewFindingMaterializationStore(),
 ): Promise<void> {
   const priorRows = await loadPriorReviewFindingRows(reportId, summary.script_id, versionId);
   const baseRows = buildReviewFindingRows(reportId, summary, versionId)
@@ -823,60 +856,37 @@ async function materializeReviewFindings(
     manualRows: manualRows.length,
   });
 
+  await persistReviewFindingRows(reportId, summary.job_id, rows, store);
+}
+
+export async function persistReviewFindingRows(
+  reportId: string,
+  jobId: string,
+  rows: ReviewFindingInsertRow[],
+  store: ReviewFindingMaterializationStore = createReviewFindingMaterializationStore(),
+): Promise<void> {
   if (rows.length === 0) {
-    await supabase
-      .from("analysis_review_findings")
-      .delete()
-      .eq("report_id", reportId)
-      .eq("is_manual", false);
-    await supabase
-      .from("analysis_review_findings")
-      .delete()
-      .eq("report_id", reportId)
-      .eq("source_kind", "manual")
-      .not("supersedes_review_finding_id", "is", null);
+    await store.deleteCurrentReviewFindings(reportId);
     return;
   }
 
-  const { error: deleteErr } = await supabase
-    .from("analysis_review_findings")
-    .delete()
-    .eq("report_id", reportId)
-    .eq("is_manual", false);
-
-  if (deleteErr) {
+  try {
+    await store.deleteCurrentReviewFindings(reportId);
+  } catch (error) {
     logger.error("Materialize analysis_review_findings delete FAILED", {
       reportId,
-      jobId: summary.job_id,
-      error: deleteErr,
+      jobId,
+      error,
     });
-    throw deleteErr;
+    throw error;
   }
 
-  const { error: deleteCarriedManualErr } = await supabase
-    .from("analysis_review_findings")
-    .delete()
-    .eq("report_id", reportId)
-    .eq("source_kind", "manual")
-    .not("supersedes_review_finding_id", "is", null);
-
-  if (deleteCarriedManualErr) {
-    logger.error("Materialize carried manual review findings delete FAILED", {
-      reportId,
-      jobId: summary.job_id,
-      error: deleteCarriedManualErr,
-    });
-    throw deleteCarriedManualErr;
-  }
-
-  const { error } = await supabase
-    .from("analysis_review_findings")
-    .insert(rows);
-
-  if (error) {
+  try {
+    await store.upsertCurrentReviewFindings(reportId, rows);
+  } catch (error) {
     logger.error("Materialize analysis_review_findings FAILED", {
       reportId,
-      jobId: summary.job_id,
+      jobId,
       error,
     });
     throw error;

@@ -36,14 +36,65 @@ function prefix(): string {
   return parts.length ? `[${parts.join(" ")}] ` : "";
 }
 
+function isErrorLike(value: unknown): value is Error | (Record<string, unknown> & { name?: unknown; message?: unknown; stack?: unknown; cause?: unknown; code?: unknown }) {
+  if (!value || typeof value !== "object") return false;
+  if (value instanceof Error) return true;
+  const record = value as Record<string, unknown>;
+  return "message" in record || "stack" in record || "cause" in record || "code" in record || "name" in record;
+}
+
+function serializeErrorLike(error: Error | (Record<string, unknown> & { name?: unknown; message?: unknown; stack?: unknown; cause?: unknown; code?: unknown }), seen: WeakSet<object>): Record<string, unknown> {
+  const errorObject = error as Record<string, unknown>;
+  const serializedError: Record<string, unknown> = {};
+  for (const key of Object.keys(errorObject)) {
+    if (key === "name" || key === "message" || key === "stack" || key === "cause" || key === "code") continue;
+    serializedError[key] = normalizeLogValue(errorObject[key], seen);
+  }
+
+  const code = typeof errorObject.code === "string" ? errorObject.code : null;
+  return {
+    name: typeof errorObject.name === "string" && errorObject.name.length > 0 ? errorObject.name : "Error",
+    message: typeof errorObject.message === "string" ? errorObject.message : String(errorObject.message ?? ""),
+    stack: typeof errorObject.stack === "string" && errorObject.stack.length > 0 ? errorObject.stack : null,
+    code,
+    cause: "cause" in errorObject ? normalizeLogValue(errorObject.cause, seen) : null,
+    serializedError,
+  };
+}
+
+function normalizeLogValue(value: unknown, seen = new WeakSet<object>()): unknown {
+  if (value === null || value === undefined) return value;
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean" || typeof value === "bigint") {
+    return value;
+  }
+  if (typeof value === "function") return "[Function]";
+  if (typeof value === "symbol") return value.toString();
+  if (isErrorLike(value)) {
+    return serializeErrorLike(value, seen);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeLogValue(item, seen));
+  }
+  if (typeof value === "object") {
+    if (seen.has(value)) return "[Circular]";
+    seen.add(value);
+    const record: Record<string, unknown> = {};
+    for (const [key, entry] of Object.entries(value)) {
+      record[key] = normalizeLogValue(entry, seen);
+    }
+    return record;
+  }
+  return String(value);
+}
+
 export const logger = {
   info(msg: string, ...args: unknown[]) {
-    console.log(prefix() + msg, ...args);
+    console.log(prefix() + msg, ...args.map((arg) => normalizeLogValue(arg)));
   },
   warn(msg: string, ...args: unknown[]) {
-    console.warn(prefix() + msg, ...args);
+    console.warn(prefix() + msg, ...args.map((arg) => normalizeLogValue(arg)));
   },
   error(msg: string, ...args: unknown[]) {
-    console.error(prefix() + msg, ...args);
+    console.error(prefix() + msg, ...args.map((arg) => normalizeLogValue(arg)));
   },
 };
