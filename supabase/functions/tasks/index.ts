@@ -28,6 +28,7 @@ import { logAuditCanonical } from "../_shared/audit.ts";
 import { isUserAdmin } from "../_shared/roleCheck.ts";
 import { offsetRangeToPageMinMax, type ScriptPageRow } from "../_shared/offsetToPage.ts";
 import { traceEdgeStep } from "../_shared/trace.ts";
+import { resolveRequestedAnalysisEngine, resolveRequestedPipelineVersion } from "./analysisEngineSelection.ts";
 
 
 import {
@@ -56,7 +57,7 @@ type JobRow = {
   config_snapshot?: {
     pipeline_version?: "v1" | "v2";
     analysis_profile?: "quality" | "balanced" | "turbo";
-    analysis_engine?: "v2" | "v3" | "hybrid" | "policy_v1";
+    analysis_engine?: "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1";
     hybrid_mode?: "off" | "shadow" | "enforce";
     policy_v1_mode?: "shadow" | "enforce";
     analysis_signature?: {
@@ -658,20 +659,7 @@ Deno.serve(async (req: Request) => {
   const versionId = body?.versionId;
   const forceFresh = body?.forceFresh === true;
   const analysisMemoryMode = await loadAnalysisMemoryMode(supabase);
-  const envDefaultEngine = (() => {
-    const raw = String(Deno.env.get("ANALYSIS_ENGINE") ?? "v2").toLowerCase();
-    if (raw === "v3") return "v3" as const;
-    if (raw === "policy_v1") return "policy_v1" as const;
-    if (raw === "hybrid") return "hybrid" as const;
-    return "v2" as const;
-  })();
-  const requestedAnalysisEngine = (() => {
-    const raw = String(body?.analysisEngine ?? envDefaultEngine).toLowerCase();
-    if (raw === "v3") return "v3" as const;
-    if (raw === "policy_v1") return "policy_v1" as const;
-    if (raw === "hybrid") return "hybrid" as const;
-    return "v2" as const;
-  })();
+  const requestedAnalysisEngine = resolveRequestedAnalysisEngine(body?.analysisEngine, Deno.env.get("ANALYSIS_ENGINE"));
   const requestedPolicyV1Mode = (() => {
     const envMode = String(Deno.env.get("ANALYSIS_POLICY_V1_MODE") ?? "shadow").toLowerCase();
     const raw = String(body?.policyV1Mode ?? envMode).toLowerCase();
@@ -684,12 +672,12 @@ Deno.serve(async (req: Request) => {
     if (raw === "off") return "off" as const;
     return "shadow" as const;
   })();
-  const envDefaultPipelineVersion = (Deno.env.get("ANALYSIS_PIPELINE_VERSION") ?? "v2").toLowerCase() === "v1" ? "v1" : "v2";
-  const engineDefaultPipelineVersion = requestedAnalysisEngine === "policy_v1" ? "v1" : envDefaultPipelineVersion;
-  const defaultPipelineVersion = analysisMemoryMode === "memory2" ? "v2" : engineDefaultPipelineVersion;
-  const requestedPipelineVersion = body?.pipelineVersion === "v2" || body?.pipelineVersion === "v1"
-    ? body.pipelineVersion
-    : defaultPipelineVersion;
+  const requestedPipelineVersion = resolveRequestedPipelineVersion(
+    body?.pipelineVersion,
+    analysisMemoryMode,
+    requestedAnalysisEngine,
+    Deno.env.get("ANALYSIS_PIPELINE_VERSION"),
+  );
   const requestedAnalysisProfile =
     body?.analysisProfile === "quality" || body?.analysisProfile === "turbo" || body?.analysisProfile === "balanced"
       ? body.analysisProfile

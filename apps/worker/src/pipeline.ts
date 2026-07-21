@@ -506,7 +506,7 @@ function compareFindingsStable(a: FindingWithGlobal, b: FindingWithGlobal): numb
   );
 }
 
-function resolveAnalysisEngineForJob(
+export function resolveAnalysisEngineForJob(
   jobConfig: Record<string, unknown>,
   pipelineVersion: "v1" | "v2",
 ): AnalysisEngineMode {
@@ -520,6 +520,10 @@ function resolveAnalysisEngineForJob(
     if (requested === "v2") return "v2";
   }
   return config.ANALYSIS_ENGINE;
+}
+
+export function shouldRunV4ShadowMode(analysisEngine: AnalysisEngineMode): boolean {
+  return analysisEngine === "shadow";
 }
 
 function resolveHybridModeForJob(
@@ -2176,7 +2180,7 @@ export async function processChunkJudge(
             runKey,
             durationMs: Date.now() - runtimeAdapterStartedAt,
           });
-          if (config.V4_SHADOW_MODE || analysisEngine === "shadow") {
+          if (config.V4_SHADOW_MODE || shouldRunV4ShadowMode(analysisEngine)) {
             logger.info("[V4] V4 shadow mode scheduled", {
               jobId,
               chunkId: chunk.id,
