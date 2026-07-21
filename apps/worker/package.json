@@ -15,6 +15,7 @@
     "test:atom-precision": "tsx src/atomPrecision.test.ts",
     "test:lexicon": "tsx src/lexiconCache.test.ts",
     "test:pass-gating": "tsx src/passGating.test.ts",
+    "v4:shadow-report": "tsx src/analysisEngineV4/dev/v4ShadowReportCLI.ts",
     "test:auditor-v3": "tsx src/methodology-v3/auditorV3.test.ts",
     "test:auditor-v4": "tsx src/methodology-v3/auditorV4.test.ts",
     "test:review-consistency": "tsx src/reviewFindingConsistency.test.ts",
