@@ -12,10 +12,23 @@ import type {
 import type { DecisionProvenanceCollection } from "./provenance/decisionProvenanceTypes.js";
 import { buildDecisionProvenanceCollection } from "./provenance/decisionProvenanceBuilder.js";
 import { normalizeDecisionProvenanceCollectionForDocument } from "./provenance/decisionProvenanceSerializer.js";
+import { createTruthVerificationSummary, type FindingTruth, type FindingTruthNodeVerification, type TruthVerificationSummary } from "./truthVerification.js";
 
 function freezeTraceNodeView(view: SceneAnalysisTraceNodeView): SceneAnalysisTraceNodeView {
   return Object.freeze({
     ...view,
+  });
+}
+
+function freezeFindingTruth(truth: FindingTruth | null): FindingTruth | null {
+  return truth ? Object.freeze({ ...truth }) : null;
+}
+
+function freezeTruthVerification(verification: FindingTruthNodeVerification): FindingTruthNodeVerification {
+  return Object.freeze({
+    ...verification,
+    input: Object.freeze({ ...verification.input }),
+    output: Object.freeze({ ...verification.output }),
   });
 }
 
@@ -123,6 +136,8 @@ function createDecisionProvenanceCollectionFromState(state: SceneAnalysisState):
 function normalizeTraceNodeViewForDocument(view: SceneAnalysisTraceNodeView): SceneAnalysisTraceNodeView {
   return freezeTraceNodeView({
     ...view,
+    findingTruth: freezeFindingTruth(view.findingTruth),
+    verificationTrail: Object.freeze([...view.verificationTrail]),
     evidenceCollection: normalizeEvidenceCollectionForDocument(view.evidenceCollection),
     conceptCollection: normalizeConceptCollectionForDocument(view.conceptCollection),
     legalDecisionCollection: normalizeLegalDecisionCollectionForDocument(view.legalDecisionCollection),
@@ -149,6 +164,8 @@ export function createSceneAnalysisTraceNodeView(state: SceneAnalysisState): Sce
     semanticSceneModel: state.semanticSceneModel,
     semanticSceneResponse: state.semanticSceneResponse,
     semanticSceneDurationMs: null,
+    findingTruth: state.findingTruth,
+    verificationTrail: state.verificationTrail,
     explanation: state.explanation,
     judgeResult: state.qualityJudgment,
   });
@@ -156,6 +173,7 @@ export function createSceneAnalysisTraceNodeView(state: SceneAnalysisState): Sce
 
 export function buildSceneAnalysisTrace(state: SceneAnalysisState): SceneAnalysisTraceWithProvenance {
   const steps = freezeTraceEntries(state.trace);
+  const verificationSummary = createTruthVerificationSummary(steps.map((entry) => entry.verification));
   const nodeTimings = Object.freeze(steps.map((entry) => Object.freeze({
     node: entry.node,
     startedAt: entry.startedAt,
@@ -180,8 +198,11 @@ export function buildSceneAnalysisTrace(state: SceneAnalysisState): SceneAnalysi
     selectedArticle: state.primaryArticle,
     semanticSceneModel: state.semanticSceneModel,
     semanticSceneResponse: state.semanticSceneResponse,
+    findingTruth: state.findingTruth,
     explanation: state.explanation,
     judgeResult: state.qualityJudgment,
+    verificationTrail: state.verificationTrail,
+    verificationSummary,
     timing: Object.freeze({
       totalMs: steps.reduce((total, entry) => total + entry.durationMs, 0),
       nodeTimings,
@@ -197,6 +218,7 @@ export type SceneAnalysisTraceDocumentStep = Readonly<{
   changedKeys: readonly string[];
   before: SceneAnalysisTraceNodeView;
   after: SceneAnalysisTraceNodeView;
+  verification: FindingTruthNodeVerification;
 }>;
 
 export type SceneAnalysisTraceDocument = Readonly<{
@@ -216,8 +238,11 @@ export type SceneAnalysisTraceDocument = Readonly<{
   selectedArticle: SceneAnalysisTraceNodeView["selectedArticle"];
   semanticSceneModel: SceneAnalysisTraceNodeView["semanticSceneModel"];
   semanticSceneResponse: SceneAnalysisTraceNodeView["semanticSceneResponse"];
+  findingTruth: FindingTruth | null;
+  verificationTrail: readonly FindingTruthNodeVerification[];
   explanation: SceneAnalysisTraceNodeView["explanation"];
   judgeResult: SceneAnalysisTraceNodeView["judgeResult"];
+  verificationSummary: TruthVerificationSummary | null;
   timing: Readonly<{
     totalMs: number;
     nodeTimings: ReadonlyArray<Readonly<{
@@ -277,6 +302,9 @@ export function replaySceneAnalysisTrace(trace: SceneAnalysisTrace, fromNode: st
         semanticSceneModel: trace.semanticSceneModel,
         semanticSceneResponse: trace.semanticSceneResponse,
         semanticSceneDurationMs: null,
+        findingTruth: trace.findingTruth ?? null,
+        verificationTrail: trace.verificationTrail,
+        verificationSummary: trace.verificationSummary,
         explanation: trace.explanation,
         qualityJudgment: trace.judgeResult,
         trace: [],
@@ -312,6 +340,9 @@ export function replaySceneAnalysisTrace(trace: SceneAnalysisTrace, fromNode: st
         semanticSceneModel: trace.semanticSceneModel,
         semanticSceneResponse: trace.semanticSceneResponse,
         semanticSceneDurationMs: null,
+        findingTruth: trace.findingTruth ?? null,
+        verificationTrail: trace.verificationTrail,
+        verificationSummary: trace.verificationSummary,
         explanation: trace.explanation,
         qualityJudgment: trace.judgeResult,
         trace: [],
@@ -344,6 +375,7 @@ export function createSceneAnalysisTraceDocument(trace: SceneAnalysisTraceWithPr
     changedKeys: entry.changedKeys,
     before: normalizeTraceNodeViewForDocument(entry.beforeView),
     after: normalizeTraceNodeViewForDocument(entry.afterView),
+    verification: freezeTruthVerification(entry.verification),
   }));
   return Object.freeze({
     sceneId: trace.sceneId,
@@ -362,8 +394,11 @@ export function createSceneAnalysisTraceDocument(trace: SceneAnalysisTraceWithPr
     selectedArticle: trace.selectedArticle,
     semanticSceneModel: trace.semanticSceneModel,
     semanticSceneResponse: trace.semanticSceneResponse,
+    findingTruth: freezeFindingTruth(trace.findingTruth),
+    verificationTrail: Object.freeze([...trace.verificationTrail]),
     explanation: trace.explanation,
     judgeResult: trace.judgeResult,
+    verificationSummary: trace.verificationSummary,
     timing: Object.freeze({
       totalMs: steps.length,
       nodeTimings: Object.freeze(nodeTimings),
@@ -375,5 +410,43 @@ export function createSceneAnalysisTraceDocument(trace: SceneAnalysisTraceWithPr
 
 export function serializeSceneAnalysisTraceDocument(document: SceneAnalysisTraceDocument): string {
   return `${JSON.stringify(document, null, 2)}\n`;
+}
+
+export type SceneAnalysisTruthDivergence = Readonly<{
+  node: string;
+  stepIndex: number;
+  reason: string;
+  expectedTruth: FindingTruth | null;
+  actualTruth: FindingTruth | null;
+}>;
+
+export function findFirstTruthDivergence(trace: SceneAnalysisTrace | SceneAnalysisTraceDocument): SceneAnalysisTruthDivergence | null {
+  for (const [index, step] of trace.steps.entries()) {
+    const verification = "verification" in step ? step.verification : null;
+    const beforeTruth = "beforeView" in step ? step.beforeView.findingTruth : step.before.findingTruth;
+    const afterTruth = "afterView" in step ? step.afterView.findingTruth : step.after.findingTruth;
+
+    if (verification?.verificationResult === "reject") {
+      return Object.freeze({
+        node: step.node,
+        stepIndex: index,
+        reason: verification.reason,
+        expectedTruth: verification.expectedTruth,
+        actualTruth: verification.actualTruth,
+      });
+    }
+
+    if (beforeTruth?.truthId !== afterTruth?.truthId) {
+      return Object.freeze({
+        node: step.node,
+        stepIndex: index,
+        reason: "finding_truth_changed",
+        expectedTruth: beforeTruth,
+        actualTruth: afterTruth,
+      });
+    }
+  }
+
+  return null;
 }
 

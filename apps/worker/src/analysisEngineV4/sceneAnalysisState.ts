@@ -6,6 +6,7 @@ import type {
 import type { ConceptCollection } from "./concepts/conceptTypes.js";
 import type { LegalDecisionCollection } from "./legal/legalDecision.js";
 import type { QualityJudgeStatus, VerifiedFindingCollection } from "./judge/qualityJudgeTypes.js";
+import type { FindingTruth, FindingTruthNodeVerification, FindingTruthSnapshot, TruthVerificationSummary } from "./truthVerification.js";
 
 export type SceneAnalysisStatus = "pending" | "running" | "complete" | "failed";
 
@@ -242,6 +243,8 @@ export type SceneAnalysisTraceSnapshot = Readonly<{
   qualityJudgmentStatus: SceneAnalysisQualityJudgment["status"] | null;
   qualityJudgmentRejectionReasons: readonly string[];
   traceLength: number;
+  findingTruth: FindingTruthSnapshot;
+  verificationSummary: TruthVerificationSummary | null;
 }>;
 
 export type SceneAnalysisTraceEntry = Readonly<{
@@ -254,6 +257,7 @@ export type SceneAnalysisTraceEntry = Readonly<{
   after: SceneAnalysisTraceSnapshot;
   beforeView: SceneAnalysisTraceNodeView;
   afterView: SceneAnalysisTraceNodeView;
+  verification: FindingTruthNodeVerification;
 }>;
 
 export type SceneAnalysisTraceNodeView = Readonly<{
@@ -275,6 +279,8 @@ export type SceneAnalysisTraceNodeView = Readonly<{
   semanticSceneModel: SemanticSceneModel | null;
   semanticSceneResponse: string | null;
   semanticSceneDurationMs: number | null;
+  findingTruth: FindingTruth | null;
+  verificationTrail: readonly FindingTruthNodeVerification[];
 }>;
 
 export type SceneAnalysisTrace = Readonly<{
@@ -293,6 +299,9 @@ export type SceneAnalysisTrace = Readonly<{
   selectedArticle: SceneAnalysisArticleCandidate | null;
   explanation: SceneAnalysisExplanation | null;
   judgeResult: SceneAnalysisQualityJudgment | null;
+  findingTruth: FindingTruth | null;
+  verificationSummary: TruthVerificationSummary | null;
+  verificationTrail: readonly FindingTruthNodeVerification[];
   semanticSceneModel: SemanticSceneModel | null;
   semanticSceneResponse: string | null;
   timing: Readonly<{
@@ -339,6 +348,9 @@ export type SceneAnalysisState = Readonly<{
   semanticSceneModel: SemanticSceneModel | null;
   semanticSceneResponse: string | null;
   semanticSceneDurationMs: number | null;
+  findingTruth: FindingTruth | null;
+  verificationTrail: readonly FindingTruthNodeVerification[];
+  verificationSummary: TruthVerificationSummary | null;
   explanation: SceneAnalysisExplanation | null;
   qualityJudgment: SceneAnalysisQualityJudgment | null;
   trace: readonly SceneAnalysisTraceEntry[];
@@ -404,6 +416,9 @@ export function createSceneAnalysisState(input: Readonly<{
     semanticSceneModel: null,
     semanticSceneResponse: null,
     semanticSceneDurationMs: null,
+    findingTruth: null,
+    verificationTrail: freezeReadonlyArray([]),
+    verificationSummary: null,
     explanation: null,
     qualityJudgment: null,
     trace: freezeReadonlyArray([]),
@@ -480,6 +495,9 @@ export function freezeSceneAnalysisState(state: SceneAnalysisState | Readonly<Re
     semanticSceneModel: (state as SceneAnalysisState).semanticSceneModel ?? null,
     semanticSceneResponse: (state as SceneAnalysisState).semanticSceneResponse ?? null,
     semanticSceneDurationMs: (state as SceneAnalysisState).semanticSceneDurationMs ?? null,
+    findingTruth: (state as SceneAnalysisState).findingTruth ?? null,
+    verificationTrail: freezeReadonlyArray((state as SceneAnalysisState).verificationTrail ?? []),
+    verificationSummary: (state as SceneAnalysisState).verificationSummary ?? null,
     trace: freezeReadonlyArray((state as SceneAnalysisState).trace ?? []),
     explanation: (state as SceneAnalysisState).explanation ?? null,
     qualityJudgment: (state as SceneAnalysisState).qualityJudgment ?? null,
@@ -547,6 +565,18 @@ export function snapshotSceneAnalysisState(state: SceneAnalysisState): SceneAnal
     semanticSceneResponseLength: state.semanticSceneResponse?.length ?? null,
     qualityJudgmentStatus: state.qualityJudgment?.status ?? null,
     qualityJudgmentRejectionReasons: freezeReadonlyArray(state.qualityJudgment?.rejectionReasons ?? []),
+    findingTruth: Object.freeze({
+      truthId: state.findingTruth?.truthId ?? null,
+      sceneId: state.findingTruth?.sceneId ?? null,
+      evidenceId: state.findingTruth?.evidenceId ?? null,
+      evidenceSpanId: state.findingTruth?.evidenceSpanId ?? null,
+      page: state.findingTruth?.page ?? null,
+      scene: state.findingTruth?.scene ?? null,
+      startOffset: state.findingTruth?.startOffset ?? null,
+      endOffset: state.findingTruth?.endOffset ?? null,
+      rawEvidenceText: state.findingTruth?.rawEvidenceText ?? null,
+    }),
+    verificationSummary: state.verificationSummary ?? null,
     traceLength: state.trace.length,
   } satisfies SceneAnalysisTraceSnapshot);
 }

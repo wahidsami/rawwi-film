@@ -157,8 +157,11 @@ function createFallbackTraceDocument(caseItem: BenchmarkScreenplay): SceneAnalys
     selectedArticle: null,
     semanticSceneModel: null,
     semanticSceneResponse: null,
+    findingTruth: null,
+    verificationTrail: Object.freeze([]),
     explanation: null,
     judgeResult: null,
+    verificationSummary: null,
     timing: Object.freeze({
       totalMs: 0,
       nodeTimings: Object.freeze([]),

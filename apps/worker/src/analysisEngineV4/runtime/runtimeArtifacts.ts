@@ -137,8 +137,11 @@ function createEmptyTraceDocument(jobContext: AnalysisJobContext): SceneAnalysis
     selectedArticle: null,
     semanticSceneModel: null,
     semanticSceneResponse: null,
+    findingTruth: null,
+    verificationTrail: freeze([]),
     explanation: null,
     judgeResult: null,
+    verificationSummary: null,
     timing: freeze({
       totalMs: 0,
       nodeTimings: freeze([]),
@@ -211,8 +214,11 @@ export function normalizeSceneAnalysisTraceDocument(trace: SceneAnalysisTraceDoc
     selectedArticle: trace.selectedArticle ?? base.selectedArticle,
     semanticSceneModel: trace.semanticSceneModel ?? base.semanticSceneModel,
     semanticSceneResponse: trace.semanticSceneResponse ?? base.semanticSceneResponse,
+    findingTruth: trace.findingTruth ?? base.findingTruth,
+    verificationTrail: freeze(trace.verificationTrail ?? base.verificationTrail),
     explanation: trace.explanation ?? base.explanation,
     judgeResult: trace.judgeResult ?? base.judgeResult,
+    verificationSummary: trace.verificationSummary ?? base.verificationSummary,
     timing: freeze({
       totalMs: timing.totalMs ?? base.timing.totalMs,
       nodeTimings: timing.nodeTimings ?? base.timing.nodeTimings,

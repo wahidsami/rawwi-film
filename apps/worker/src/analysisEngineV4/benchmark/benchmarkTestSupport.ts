@@ -56,8 +56,11 @@ export function createBenchmarkTraceDocument(sceneId: string, sceneSummary: stri
     selectedArticle: null,
     semanticSceneModel: null,
     semanticSceneResponse: null,
+    findingTruth: null,
+    verificationTrail: Object.freeze([]),
     explanation: null,
     judgeResult: null,
+    verificationSummary: null,
     timing: Object.freeze({
       totalMs: 1,
       nodeTimings: Object.freeze([]),
