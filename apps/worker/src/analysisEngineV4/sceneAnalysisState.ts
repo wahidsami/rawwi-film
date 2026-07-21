@@ -94,6 +94,43 @@ export type SceneAnalysisExplanation = Readonly<{
   rationale: readonly string[];
 }>;
 
+export type SceneAnalysisExplanationRecommendedAction =
+  | "Delete"
+  | "Modify"
+  | "Requires Approval"
+  | "Refer to Authority"
+  | "Requires Verification"
+  | "No Action";
+
+export type SceneAnalysisExplanationRecord = Readonly<{
+  id: string;
+  legalDecisionId: string;
+  conceptId: string;
+  evidenceId: string;
+  title: string;
+  summary: string;
+  reasoning: readonly string[];
+  recommendedAction: SceneAnalysisExplanationRecommendedAction;
+  confidence: number;
+}>;
+
+export type SceneAnalysisExplanationValidationResult = Readonly<{
+  status: "pass" | "reject";
+  rejectedReasons: readonly string[];
+}>;
+
+export type SceneAnalysisExplanationCollection = Readonly<{
+  sceneId: string;
+  explanations: readonly SceneAnalysisExplanationRecord[];
+  primaryExplanationId: string | null;
+  primaryExplanation: SceneAnalysisExplanationRecord | null;
+  prompt: string;
+  response: string;
+  validationResult: SceneAnalysisExplanationValidationResult;
+  confidence: number;
+  executionTimeMs: number;
+}>;
+
 export type SemanticSceneRelationship = Readonly<{
   subject: string;
   relation: string;
@@ -173,6 +210,11 @@ export type SceneAnalysisTraceSnapshot = Readonly<{
   legalDecisionCollectionKnowledgeSource: string | null;
   legalDecisionCollectionConfidence: number | null;
   legalDecisionCollectionExecutionTimeMs: number | null;
+  explanationCollectionCount: number;
+  explanationCollectionPrimaryExplanationId: string | null;
+  explanationCollectionRecommendedAction: SceneAnalysisExplanationRecommendedAction | null;
+  explanationCollectionConfidence: number | null;
+  explanationCollectionExecutionTimeMs: number | null;
   detectedConceptIds: readonly string[];
   knowledgeDomains: readonly string[];
   legalCandidateArticleIds: readonly number[];
@@ -211,6 +253,7 @@ export type SceneAnalysisTraceNodeView = Readonly<{
   evidenceCollection: SceneAnalysisEvidenceCollection | null;
   conceptCollection: SceneAnalysisConceptCollection | null;
   legalDecisionCollection: SceneAnalysisLegalDecisionCollection | null;
+  explanationCollection: SceneAnalysisExplanationCollection | null;
   concepts: readonly SceneAnalysisConcept[];
   knowledgeDomains: readonly string[];
   candidateArticles: readonly SceneAnalysisArticleCandidate[];
@@ -230,6 +273,7 @@ export type SceneAnalysisTrace = Readonly<{
   evidenceCollection: SceneAnalysisEvidenceCollection | null;
   conceptCollection: SceneAnalysisConceptCollection | null;
   legalDecisionCollection: SceneAnalysisLegalDecisionCollection | null;
+  explanationCollection: SceneAnalysisExplanationCollection | null;
   concepts: readonly SceneAnalysisConcept[];
   knowledgeDomains: readonly string[];
   candidateArticles: readonly SceneAnalysisArticleCandidate[];
@@ -262,6 +306,7 @@ export type SceneAnalysisState = Readonly<{
   evidenceCollection: SceneAnalysisEvidenceCollection | null;
   conceptCollection: SceneAnalysisConceptCollection | null;
   legalDecisionCollection: SceneAnalysisLegalDecisionCollection | null;
+  explanationCollection: SceneAnalysisExplanationCollection | null;
   evidenceSpans: readonly SceneAnalysisEvidenceSpan[];
   primaryEvidenceSpanId: string | null;
   primaryEvidenceText: string | null;
@@ -324,8 +369,9 @@ export function createSceneAnalysisState(input: Readonly<{
     sentences: freezeReadonlyArray([]),
     evidenceCollection: null,
     conceptCollection: null,
-    legalDecisionCollection: null,
-    evidenceSpans: freezeReadonlyArray([]),
+  legalDecisionCollection: null,
+  explanationCollection: null,
+  evidenceSpans: freezeReadonlyArray([]),
     primaryEvidenceSpanId: null,
     primaryEvidenceText: null,
     primaryEvidenceReason: null,
@@ -387,6 +433,12 @@ export function freezeSceneAnalysisState(state: SceneAnalysisState | Readonly<Re
           supportingArticles: freezeReadonlyArray((state as SceneAnalysisState).legalDecisionCollection?.supportingArticles ?? []),
         }) as SceneAnalysisLegalDecisionCollection
       : null,
+    explanationCollection: (state as SceneAnalysisState).explanationCollection
+      ? deepFreeze({
+          ...(state as SceneAnalysisState).explanationCollection,
+          explanations: freezeReadonlyArray((state as SceneAnalysisState).explanationCollection?.explanations ?? []),
+        }) as SceneAnalysisExplanationCollection
+      : null,
     evidenceSpans: freezeReadonlyArray((state as SceneAnalysisState).evidenceSpans ?? []),
     detectedConcepts: freezeReadonlyArray((state as SceneAnalysisState).detectedConcepts ?? []),
     knowledgeDomains: freezeReadonlyArray((state as SceneAnalysisState).knowledgeDomains ?? []),
@@ -443,6 +495,11 @@ export function snapshotSceneAnalysisState(state: SceneAnalysisState): SceneAnal
     legalDecisionCollectionKnowledgeSource: state.legalDecisionCollection?.knowledgeSource ?? null,
     legalDecisionCollectionConfidence: state.legalDecisionCollection?.confidence ?? null,
     legalDecisionCollectionExecutionTimeMs: state.legalDecisionCollection?.executionTimeMs ?? null,
+    explanationCollectionCount: state.explanationCollection?.explanations.length ?? 0,
+    explanationCollectionPrimaryExplanationId: state.explanationCollection?.primaryExplanationId ?? null,
+    explanationCollectionRecommendedAction: state.explanationCollection?.primaryExplanation?.recommendedAction ?? null,
+    explanationCollectionConfidence: state.explanationCollection?.confidence ?? null,
+    explanationCollectionExecutionTimeMs: state.explanationCollection?.executionTimeMs ?? null,
     detectedConceptIds: freezeReadonlyArray(state.detectedConcepts.map((concept) => concept.conceptId)),
     knowledgeDomains: freezeReadonlyArray(state.knowledgeDomains),
     legalCandidateArticleIds: freezeReadonlyArray(state.legalCandidateArticles.map((candidate) => candidate.articleId)),

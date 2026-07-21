@@ -1,5 +1,6 @@
 import type {
   SceneAnalysisConceptCollection,
+  SceneAnalysisExplanationCollection,
   SceneAnalysisLegalDecisionCollection,
   SceneAnalysisState,
   SceneAnalysisEvidenceCollection,
@@ -66,12 +67,25 @@ function normalizeLegalDecisionCollectionForDocument(collection: SceneAnalysisLe
   });
 }
 
+function normalizeExplanationCollectionForDocument(collection: SceneAnalysisExplanationCollection | null): SceneAnalysisExplanationCollection | null {
+  if (!collection) {
+    return null;
+  }
+
+  return Object.freeze({
+    ...collection,
+    executionTimeMs: 0,
+    explanations: Object.freeze([...collection.explanations]),
+  });
+}
+
 function normalizeTraceNodeViewForDocument(view: SceneAnalysisTraceNodeView): SceneAnalysisTraceNodeView {
   return freezeTraceNodeView({
     ...view,
     evidenceCollection: normalizeEvidenceCollectionForDocument(view.evidenceCollection),
     conceptCollection: normalizeConceptCollectionForDocument(view.conceptCollection),
     legalDecisionCollection: normalizeLegalDecisionCollectionForDocument(view.legalDecisionCollection),
+    explanationCollection: normalizeExplanationCollectionForDocument(view.explanationCollection),
   });
 }
 
@@ -83,6 +97,7 @@ export function createSceneAnalysisTraceNodeView(state: SceneAnalysisState): Sce
     evidenceCollection: state.evidenceCollection,
     conceptCollection: state.conceptCollection,
     legalDecisionCollection: state.legalDecisionCollection,
+    explanationCollection: state.explanationCollection,
     concepts: state.detectedConcepts,
     knowledgeDomains: state.knowledgeDomains,
     candidateArticles: state.candidateArticles,
@@ -111,6 +126,7 @@ export function buildSceneAnalysisTrace(state: SceneAnalysisState): SceneAnalysi
     evidenceCollection: state.evidenceCollection,
     conceptCollection: state.conceptCollection,
     legalDecisionCollection: state.legalDecisionCollection,
+    explanationCollection: state.explanationCollection,
     concepts: state.detectedConcepts,
     knowledgeDomains: state.knowledgeDomains,
     candidateArticles: state.candidateArticles,
@@ -144,6 +160,7 @@ export type SceneAnalysisTraceDocument = Readonly<{
   evidenceCollection: SceneAnalysisEvidenceCollection | null;
   conceptCollection: SceneAnalysisConceptCollection | null;
   legalDecisionCollection: SceneAnalysisLegalDecisionCollection | null;
+  explanationCollection: SceneAnalysisExplanationCollection | null;
   concepts: SceneAnalysisTraceNodeView["concepts"];
   knowledgeDomains: readonly string[];
   candidateArticles: SceneAnalysisTraceNodeView["candidateArticles"];
@@ -192,6 +209,7 @@ export function replaySceneAnalysisTrace(trace: SceneAnalysisTrace, fromNode: st
         evidenceCollection: trace.evidenceCollection,
         conceptCollection: trace.conceptCollection,
         legalDecisionCollection: trace.legalDecisionCollection,
+        explanationCollection: trace.explanationCollection,
         primaryEvidenceSpanId: null,
         primaryEvidenceText: null,
         primaryEvidenceReason: null,
@@ -225,6 +243,7 @@ export function replaySceneAnalysisTrace(trace: SceneAnalysisTrace, fromNode: st
         evidenceCollection: trace.evidenceCollection,
         conceptCollection: trace.conceptCollection,
         legalDecisionCollection: trace.legalDecisionCollection,
+        explanationCollection: trace.explanationCollection,
         primaryEvidenceSpanId: null,
         primaryEvidenceText: null,
         primaryEvidenceReason: null,
@@ -283,6 +302,7 @@ export function createSceneAnalysisTraceDocument(trace: SceneAnalysisTrace): Sce
     evidenceCollection: normalizeEvidenceCollectionForDocument(trace.evidenceCollection),
     conceptCollection: normalizeConceptCollectionForDocument(trace.conceptCollection),
     legalDecisionCollection: normalizeLegalDecisionCollectionForDocument(trace.legalDecisionCollection),
+    explanationCollection: normalizeExplanationCollectionForDocument(trace.explanationCollection),
     concepts: trace.concepts,
     knowledgeDomains: trace.knowledgeDomains,
     candidateArticles: trace.candidateArticles,

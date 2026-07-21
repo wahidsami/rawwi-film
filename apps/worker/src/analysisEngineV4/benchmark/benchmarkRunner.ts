@@ -65,7 +65,7 @@ function extractActualFinding(state: SceneAnalysisState, screenplayId: string): 
     knowledgeDomain: state.knowledgeDomains[0] ?? null,
     gcamArticleId: primaryArticle?.articleId ?? null,
     gcamArticleTitleAr: primaryArticle?.titleAr ?? null,
-    explanation: state.explanation?.summary ?? "",
+    explanation: state.explanationCollection?.primaryExplanation?.summary ?? state.explanation?.summary ?? "",
     action: (state.qualityJudgment?.status ?? "reject") === "pass" ? "accept" : "reject",
   });
 }
