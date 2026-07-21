@@ -9,6 +9,9 @@ import type {
   SceneAnalysisTraceEntry,
   SceneAnalysisTraceNodeView,
 } from "./sceneAnalysisState.js";
+import type { DecisionProvenanceCollection } from "./provenance/decisionProvenanceTypes.js";
+import { buildDecisionProvenanceCollection } from "./provenance/decisionProvenanceBuilder.js";
+import { normalizeDecisionProvenanceCollectionForDocument } from "./provenance/decisionProvenanceSerializer.js";
 
 function freezeTraceNodeView(view: SceneAnalysisTraceNodeView): SceneAnalysisTraceNodeView {
   return Object.freeze({
@@ -98,6 +101,25 @@ function normalizeVerifiedFindingCollectionForDocument(collection: SceneAnalysis
   });
 }
 
+export type SceneAnalysisTraceWithProvenance = SceneAnalysisTrace & Readonly<{
+  decisionProvenanceCollection: DecisionProvenanceCollection | null;
+}>;
+
+function createDecisionProvenanceCollectionFromState(state: SceneAnalysisState): DecisionProvenanceCollection | null {
+  if (!state.verifiedFindingCollection || state.verifiedFindingCollection.verifiedFindings.length === 0) {
+    return null;
+  }
+
+  return buildDecisionProvenanceCollection({
+    sceneId: state.sceneId,
+    evidenceCollection: state.evidenceCollection,
+    conceptCollection: state.conceptCollection,
+    legalDecisionCollection: state.legalDecisionCollection,
+    explanationCollection: state.explanationCollection,
+    verifiedFindingCollection: state.verifiedFindingCollection,
+  });
+}
+
 function normalizeTraceNodeViewForDocument(view: SceneAnalysisTraceNodeView): SceneAnalysisTraceNodeView {
   return freezeTraceNodeView({
     ...view,
@@ -132,7 +154,7 @@ export function createSceneAnalysisTraceNodeView(state: SceneAnalysisState): Sce
   });
 }
 
-export function buildSceneAnalysisTrace(state: SceneAnalysisState): SceneAnalysisTrace {
+export function buildSceneAnalysisTrace(state: SceneAnalysisState): SceneAnalysisTraceWithProvenance {
   const steps = freezeTraceEntries(state.trace);
   const nodeTimings = Object.freeze(steps.map((entry) => Object.freeze({
     node: entry.node,
@@ -140,6 +162,7 @@ export function buildSceneAnalysisTrace(state: SceneAnalysisState): SceneAnalysi
     finishedAt: entry.finishedAt,
     durationMs: entry.durationMs,
   })));
+  const decisionProvenanceCollection = createDecisionProvenanceCollectionFromState(state);
   return Object.freeze({
     sceneId: state.sceneId,
     sceneSummary: state.sceneModel?.summary ?? state.normalizedSceneText ?? state.sceneText,
@@ -149,6 +172,7 @@ export function buildSceneAnalysisTrace(state: SceneAnalysisState): SceneAnalysi
     legalDecisionCollection: state.legalDecisionCollection,
     explanationCollection: state.explanationCollection,
     verifiedFindingCollection: state.verifiedFindingCollection,
+    decisionProvenanceCollection,
     concepts: state.detectedConcepts,
     knowledgeDomains: state.knowledgeDomains,
     candidateArticles: state.candidateArticles,
@@ -184,6 +208,7 @@ export type SceneAnalysisTraceDocument = Readonly<{
   legalDecisionCollection: SceneAnalysisLegalDecisionCollection | null;
   explanationCollection: SceneAnalysisExplanationCollection | null;
   verifiedFindingCollection: SceneAnalysisVerifiedFindingCollection | null;
+  decisionProvenanceCollection: DecisionProvenanceCollection | null;
   concepts: SceneAnalysisTraceNodeView["concepts"];
   knowledgeDomains: readonly string[];
   candidateArticles: SceneAnalysisTraceNodeView["candidateArticles"];
@@ -308,7 +333,7 @@ export function serializeSceneAnalysisTrace(trace: SceneAnalysisTrace): string {
   return `${JSON.stringify(trace, null, 2)}\n`;
 }
 
-export function createSceneAnalysisTraceDocument(trace: SceneAnalysisTrace): SceneAnalysisTraceDocument {
+export function createSceneAnalysisTraceDocument(trace: SceneAnalysisTraceWithProvenance): SceneAnalysisTraceDocument {
   const nodeTimings = trace.timing.nodeTimings.map((entry, index) => Object.freeze({
     node: entry.node,
     durationMs: index + 1,
@@ -329,6 +354,7 @@ export function createSceneAnalysisTraceDocument(trace: SceneAnalysisTrace): Sce
     legalDecisionCollection: normalizeLegalDecisionCollectionForDocument(trace.legalDecisionCollection),
     explanationCollection: normalizeExplanationCollectionForDocument(trace.explanationCollection),
     verifiedFindingCollection: normalizeVerifiedFindingCollectionForDocument(trace.verifiedFindingCollection),
+    decisionProvenanceCollection: normalizeDecisionProvenanceCollectionForDocument(trace.decisionProvenanceCollection),
     concepts: trace.concepts,
     knowledgeDomains: trace.knowledgeDomains,
     candidateArticles: trace.candidateArticles,

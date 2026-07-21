@@ -29,6 +29,7 @@ async function testTraceDocumentsAreDeterministic(): Promise<void> {
   assert.equal(JSON.stringify(firstTrace), JSON.stringify(secondTrace));
   assert.equal(firstTrace.nodeExecutionOrder[0], "understand_scene");
   assert.equal(firstTrace.steps.at(-1)?.after.selectedArticle?.articleId, 4);
+  assert.equal((firstTrace.decisionProvenanceCollection?.provenance.length ?? 0) > 0, true);
 }
 
 async function testTraceReplayStartsFromRequestedNode(): Promise<void> {
