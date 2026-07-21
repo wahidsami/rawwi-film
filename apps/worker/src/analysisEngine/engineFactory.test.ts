@@ -4,8 +4,6 @@
  */
 import { strict as assert } from "node:assert";
 
-import { createAnalysisEngineV3Adapter } from "./analysisEngineV3Adapter.js";
-import { createAnalysisEngineV4Adapter } from "./analysisEngineV4Adapter.js";
 import { create } from "./engineFactory.js";
 import type { AnalysisEngine, AnalysisResult } from "./types.js";
 
@@ -105,6 +103,11 @@ async function testEngineFactorySelection(): Promise<void> {
     v3Adapter: createStubEngine("v3"),
     v4Adapter: createStubEngine("v4"),
   });
+  const shadowEngine = create({
+    env: { ANALYSIS_ENGINE: "shadow" },
+    v3Adapter: createStubEngine("v3"),
+    v4Adapter: createStubEngine("v4"),
+  });
   const fallbackEngine = create({
     env: { ANALYSIS_ENGINE: "banana" },
     v3Adapter: createStubEngine("v3"),
@@ -113,11 +116,15 @@ async function testEngineFactorySelection(): Promise<void> {
 
   assert.equal((await v3Engine.execute(buildJobContext())).truthLayerMeta.engine, "v3");
   assert.equal((await v4Engine.execute(buildJobContext())).truthLayerMeta.engine, "v4");
+  assert.equal((await shadowEngine.execute(buildJobContext())).truthLayerMeta.engine, "v3");
   assert.equal((await fallbackEngine.execute(buildJobContext())).truthLayerMeta.engine, "v3");
 }
 
 async function testV3AdapterDelegates(): Promise<void> {
   let called = 0;
+  if (!process.env.SUPABASE_URL) process.env.SUPABASE_URL = "https://example.supabase.co";
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
+  const { createAnalysisEngineV3Adapter } = await import("./analysisEngineV3Adapter.js");
   const adapter = createAnalysisEngineV3Adapter({
     runV3RuntimeAdapter: (async (input: any, options: any) => {
       called += 1;
@@ -185,6 +192,9 @@ async function testV3AdapterDelegates(): Promise<void> {
 }
 
 async function testV4AdapterContract(): Promise<void> {
+  if (!process.env.SUPABASE_URL) process.env.SUPABASE_URL = "https://example.supabase.co";
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
+  const { createAnalysisEngineV4Adapter } = await import("./analysisEngineV4Adapter.js");
   const adapter = createAnalysisEngineV4Adapter();
   const result = await adapter.execute(buildJobContext());
 
@@ -198,7 +208,7 @@ async function testV4AdapterContract(): Promise<void> {
 
 async function main(): Promise<void> {
   await testEngineFactorySelection();
-  console.log("✓ engineFactory selects V3/V4 and falls back to V3");
+  console.log("✓ engineFactory selects V3/V4, supports shadow, and falls back to V3");
   await testV3AdapterDelegates();
   console.log("✓ V3 adapter delegates correctly");
   await testV4AdapterContract();

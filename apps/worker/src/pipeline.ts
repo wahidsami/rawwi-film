@@ -83,7 +83,7 @@ export type PersistenceFilterRejection = Readonly<{
   source: string | null;
 }>;
 
-type AnalysisEngineMode = "v2" | "v3" | "hybrid" | "policy_v1";
+type AnalysisEngineMode = "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1";
 type HybridRunMode = "off" | "shadow" | "enforce";
 type PolicyV1RunMode = "shadow" | "enforce";
 
@@ -513,6 +513,8 @@ function resolveAnalysisEngineForJob(
   if (pipelineVersion === "v2") {
     const requested = jobConfig.analysis_engine;
     if (requested === "v3") return "v3";
+    if (requested === "v4") return "v4";
+    if (requested === "shadow") return "shadow";
     if (requested === "hybrid") return "hybrid";
     if (requested === "policy_v1") return "policy_v1";
     if (requested === "v2") return "v2";
@@ -2088,7 +2090,7 @@ export async function processChunkJudge(
       logger.info("Idempotency MISS: Executing AI pipeline", { chunkId: chunk.id, runKey });
     }
 
-    if (analysisEngine === "v3") {
+    if (analysisEngine === "v3" || analysisEngine === "v4" || analysisEngine === "shadow") {
       const v3BranchStartedAt = Date.now();
       logger.info("V3 instrumentation ENTER: pipeline V3 branch", {
         jobId,
@@ -2174,7 +2176,7 @@ export async function processChunkJudge(
             runKey,
             durationMs: Date.now() - runtimeAdapterStartedAt,
           });
-          if (config.V4_SHADOW_MODE) {
+          if (config.V4_SHADOW_MODE || analysisEngine === "shadow") {
             logger.info("V4 shadow mode scheduled", {
               jobId,
               chunkId: chunk.id,

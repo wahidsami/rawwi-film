@@ -35,7 +35,7 @@ export type SummaryJson = {
   analysis_meta?: {
     auditor_layer_version: "v2" | "v3" | "v4";
     violation_system_version: "v2" | "v3" | "v4";
-    analysis_engine: "v2" | "hybrid" | "policy_v1";
+    analysis_engine: "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1";
     analysis_pipeline_version: "v1" | "v2";
     deep_auditor_enabled: boolean;
     generated_by: "worker";
@@ -295,10 +295,14 @@ type JobConfigMeta = {
   deep_auditor_enabled?: boolean;
 };
 
-function pickAnalysisEngine(value: unknown): "v2" | "hybrid" | "policy_v1" {
+function pickAnalysisEngine(value: unknown): "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1" {
+  if (value === "v2") return "v2";
+  if (value === "v3") return "v3";
+  if (value === "v4") return "v4";
+  if (value === "shadow") return "shadow";
   if (value === "hybrid") return "hybrid";
   if (value === "policy_v1") return "policy_v1";
-  return "v2";
+  return "v3";
 }
 
 function pickPipelineVersion(value: unknown): "v1" | "v2" {

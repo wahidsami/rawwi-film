@@ -70,19 +70,18 @@ export const config = {
    * - false: propagate V3 exceptions normally
    */
   V3_ENABLE_AUTOMATIC_FALLBACK: (process.env.V3_ENABLE_AUTOMATIC_FALLBACK ?? "true").toLowerCase() !== "false",
-   /**
-    * Analysis engine:
-    * - v2: existing detector-only behavior
-    * - v3: new reasoning-engine scaffold
-    * - hybrid: detector + context arbiter + policy reasoner
-    * - policy_v1: scene-event extraction + deterministic legal policy mapping
-    */
-   ANALYSIS_ENGINE: ((): "v2" | "v3" | "hybrid" | "policy_v1" => {
-     const value = (process.env.ANALYSIS_ENGINE ?? "v2").toLowerCase();
-     if (value === "v3") return "v3";
-     if (value === "hybrid") return "hybrid";
-     if (value === "policy_v1") return "policy_v1";
-     return "v2";
+  /**
+   * Analysis engine selection for the worker runtime.
+   * - v3: default visible engine
+   * - v4: experimental V4 adapter
+   * - shadow: V3-visible run with V4 shadow collection enabled separately
+   * Legacy V2 job configs are still handled downstream by the pipeline.
+   */
+   ANALYSIS_ENGINE: ((): "v3" | "v4" | "shadow" => {
+     const value = (process.env.ANALYSIS_ENGINE ?? "v3").toLowerCase();
+     if (value === "v4") return "v4";
+     if (value === "shadow") return "shadow";
+     return "v3";
    })(),
   /**
    * Violation prompt pack:
