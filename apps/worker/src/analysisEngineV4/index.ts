@@ -18,6 +18,7 @@ export * from "./provenance/decisionProvenanceTypes.js";
 export * from "./report/reportAdapter.js";
 export * from "./report/reportBuilder.js";
 export * from "./report/reportSerializer.js";
+export * from "./dashboard/index.js";
 export * from "./stateGraph.js";
 export * from "./sceneAnalysisEngine.js";
 export * from "./benchmark/index.js";
