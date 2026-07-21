@@ -30,7 +30,7 @@ async function testGraphProducesTraceAndEvidenceFirstState(): Promise<void> {
   const result = await engine.run("scene-trace", initialText);
 
   assert.equal(result.status, "complete");
-  assert.equal(result.trace.length, 12);
+  assert.equal(result.trace.length, 8);
   assert.equal(result.sentences.length > 0, true);
   assert.equal(result.evidenceSpans.length > 0, true);
   assert.equal(result.primaryEvidenceText?.includes("يا كلب"), true);
@@ -43,8 +43,8 @@ async function testGraphProducesTraceAndEvidenceFirstState(): Promise<void> {
   assert.equal(result.candidateArticles.length > 0, true);
   assert.equal(result.rankedCandidateArticles.length > 0, true);
   assert.equal(result.primaryArticle?.articleId, 4);
-  assert.equal(result.candidateAtoms.length > 0, true);
-  assert.equal(result.rankedCandidateAtoms.length > 0, true);
+  assert.equal(result.candidateAtoms.length, 0);
+  assert.equal(result.rankedCandidateAtoms.length, 0);
   assert.equal(result.sceneModel !== null, true);
   assert.equal(result.trace[0]?.node, "understand_scene");
   assert.equal(result.trace[0]?.changedKeys.includes("sceneModel"), true);
@@ -55,10 +55,12 @@ async function testGraphProducesTraceAndEvidenceFirstState(): Promise<void> {
   assert.equal(result.trace[3]?.node, "concept_classification");
   assert.equal(result.trace[3]?.changedKeys.includes("detectedConceptIds"), true);
   assert.equal(result.trace[3]?.changedKeys.includes("conceptCollectionCount"), true);
-  assert.equal(result.trace[9]?.node, "explanation");
-  assert.equal(result.trace[9]?.changedKeys.includes("explanationSummary"), true);
-  assert.equal(result.trace[10]?.node, "quality_judge");
-  assert.equal(result.trace[10]?.changedKeys.includes("qualityJudgmentStatus"), true);
+  assert.equal(result.trace[4]?.node, "legal_mapping");
+  assert.equal(result.trace[4]?.changedKeys.includes("legalDecisionCollectionCount"), true);
+  assert.equal(result.trace[5]?.node, "explanation");
+  assert.equal(result.trace[5]?.changedKeys.includes("explanationSummary"), true);
+  assert.equal(result.trace[6]?.node, "quality_judge");
+  assert.equal(result.trace[6]?.changedKeys.includes("qualityJudgmentStatus"), true);
   assert.equal(result.trace.at(-1)?.node, "finalize");
   assert.equal(result.trace.some((entry) => entry.changedKeys.length > 0), true);
   assert.equal(Object.isFrozen(result), true);

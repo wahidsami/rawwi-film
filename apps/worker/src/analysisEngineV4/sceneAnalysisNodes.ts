@@ -13,6 +13,7 @@ import { createSceneUnderstandingNode, buildSceneUnderstandingPrompt, understand
 import { createInterpretSceneNode } from "./interpretSceneNode.js";
 import { createCandidateEvidenceNode } from "./candidateEvidenceNode.js";
 import { createConceptClassificationNode } from "./conceptClassificationNode.js";
+import { createLegalMappingNode } from "./legalMappingNode.js";
 import { createExplanationNode } from "./explanationNode.js";
 import { createQualityJudgeNode } from "./qualityJudgeNode.js";
 
@@ -435,11 +436,7 @@ export function createDefaultSceneAnalysisNodeSequence(): readonly {
     { name: "interpret_scene", node: createInterpretSceneNode() },
     { name: "candidate_evidence", node: createCandidateEvidenceNode() },
     { name: "concept_classification", node: createConceptClassificationNode() },
-    { name: "normalize_scene", node: createNormalizeSceneStateNode() },
-    { name: "resolve_domains", node: createResolveKnowledgeDomainsNode() },
-    { name: "resolve_articles", node: createResolveCandidateArticlesNode() },
-    { name: "rank_articles", node: createRankCandidateArticlesNode() },
-    { name: "resolve_atoms", node: createResolveCandidateAtomsNode() },
+    { name: "legal_mapping", node: createLegalMappingNode() },
     { name: "explanation", node: createExplanationNode() },
     { name: "quality_judge", node: createQualityJudgeNode() },
     { name: "finalize", node: createFinalizeSceneAnalysisNode() },

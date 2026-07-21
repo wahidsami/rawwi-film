@@ -55,7 +55,7 @@ function createEvidenceSnapshot(evidence: SceneAnalysisEvidenceSpan | null): Ben
 function extractActualFinding(state: SceneAnalysisState, screenplayId: string): BenchmarkActualFinding {
   const primaryEvidence = state.evidenceSpans.find((span) => span.spanId === state.primaryEvidenceSpanId) ?? state.evidenceSpans[0] ?? null;
   const primaryConcept = state.conceptCollection?.concepts[0] ?? state.detectedConcepts[0] ?? null;
-  const primaryArticle = state.primaryArticle ?? state.legalPrimaryArticle ?? null;
+  const primaryArticle = state.legalDecisionCollection?.primaryArticle ?? state.primaryArticle ?? state.legalPrimaryArticle ?? null;
 
   return Object.freeze({
     findingId: `${screenplayId}:finding-1`,

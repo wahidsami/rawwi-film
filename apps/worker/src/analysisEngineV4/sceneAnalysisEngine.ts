@@ -4,16 +4,12 @@ import { createSceneAnalysisState } from "./sceneAnalysisState.js";
 import {
   createDefaultSceneAnalysisNodeSequence,
   createFinalizeSceneAnalysisNode,
-  createNormalizeSceneStateNode,
   createInterpretSceneNode,
   createSceneUnderstandingNode,
-  createRankCandidateArticlesNode,
-  createResolveCandidateArticlesNode,
-  createResolveCandidateAtomsNode,
-  createResolveKnowledgeDomainsNode,
 } from "./sceneAnalysisNodes.js";
 import { createCandidateEvidenceNode } from "./candidateEvidenceNode.js";
 import { createConceptClassificationNode } from "./conceptClassificationNode.js";
+import { createLegalMappingNode } from "./legalMappingNode.js";
 import { createExplanationNode } from "./explanationNode.js";
 import { createQualityJudgeNode } from "./qualityJudgeNode.js";
 
@@ -32,11 +28,7 @@ function buildDefaultGraph(): StateGraph {
   const interpretScene = createInterpretSceneNode();
   const candidateEvidence = createCandidateEvidenceNode();
   const conceptClassification = createConceptClassificationNode();
-  const normalize = createNormalizeSceneStateNode();
-  const resolveDomains = createResolveKnowledgeDomainsNode();
-  const resolveArticles = createResolveCandidateArticlesNode();
-  const rankArticles = createRankCandidateArticlesNode();
-  const resolveAtoms = createResolveCandidateAtomsNode();
+  const legalMapping = createLegalMappingNode();
   const explanation = createExplanationNode();
   const qualityJudge = createQualityJudgeNode();
   const finalize = createFinalizeSceneAnalysisNode();
@@ -46,11 +38,7 @@ function buildDefaultGraph(): StateGraph {
     .addNode("interpret_scene", interpretScene)
     .addNode("candidate_evidence", candidateEvidence)
     .addNode("concept_classification", conceptClassification)
-    .addNode("normalize_scene", normalize)
-    .addNode("resolve_domains", resolveDomains)
-    .addNode("resolve_articles", resolveArticles)
-    .addNode("rank_articles", rankArticles)
-    .addNode("resolve_atoms", resolveAtoms)
+    .addNode("legal_mapping", legalMapping)
     .addNode("explanation", explanation)
     .addNode("quality_judge", qualityJudge)
     .addNode("finalize", finalize)
@@ -58,12 +46,8 @@ function buildDefaultGraph(): StateGraph {
     .addEdge("understand_scene", "interpret_scene")
     .addEdge("interpret_scene", "candidate_evidence")
     .addEdge("candidate_evidence", "concept_classification")
-    .addEdge("concept_classification", "normalize_scene")
-    .addEdge("normalize_scene", "resolve_domains")
-    .addEdge("resolve_domains", "resolve_articles")
-    .addEdge("resolve_articles", "rank_articles")
-    .addEdge("rank_articles", "resolve_atoms")
-    .addEdge("resolve_atoms", "explanation")
+    .addEdge("concept_classification", "legal_mapping")
+    .addEdge("legal_mapping", "explanation")
     .addEdge("explanation", "quality_judge")
     .addEdge("quality_judge", "finalize");
 
@@ -93,10 +77,5 @@ export async function runSceneAnalysis(sceneId: string, sceneText: string, optio
 
 export {
   createFinalizeSceneAnalysisNode,
-  createNormalizeSceneStateNode,
-  createRankCandidateArticlesNode,
-  createResolveCandidateArticlesNode,
-  createResolveCandidateAtomsNode,
-  createResolveKnowledgeDomainsNode,
   createDefaultSceneAnalysisNodeSequence,
 };

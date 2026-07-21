@@ -1,5 +1,6 @@
 import type {
   SceneAnalysisConceptCollection,
+  SceneAnalysisLegalDecisionCollection,
   SceneAnalysisState,
   SceneAnalysisEvidenceCollection,
   SceneAnalysisTrace,
@@ -48,11 +49,29 @@ function normalizeConceptCollectionForDocument(collection: SceneAnalysisConceptC
   });
 }
 
+function normalizeLegalDecisionCollectionForDocument(collection: SceneAnalysisLegalDecisionCollection | null): SceneAnalysisLegalDecisionCollection | null {
+  if (!collection) {
+    return null;
+  }
+
+  return Object.freeze({
+    ...collection,
+    executionTimeMs: 0,
+    conceptIds: Object.freeze([...collection.conceptIds]),
+    decisions: Object.freeze([...collection.decisions]),
+    candidateArticles: Object.freeze([...collection.candidateArticles]),
+    rankedCandidateArticles: Object.freeze([...collection.rankedCandidateArticles]),
+    secondaryArticles: Object.freeze([...collection.secondaryArticles]),
+    supportingArticles: Object.freeze([...collection.supportingArticles]),
+  });
+}
+
 function normalizeTraceNodeViewForDocument(view: SceneAnalysisTraceNodeView): SceneAnalysisTraceNodeView {
   return freezeTraceNodeView({
     ...view,
     evidenceCollection: normalizeEvidenceCollectionForDocument(view.evidenceCollection),
     conceptCollection: normalizeConceptCollectionForDocument(view.conceptCollection),
+    legalDecisionCollection: normalizeLegalDecisionCollectionForDocument(view.legalDecisionCollection),
   });
 }
 
@@ -63,6 +82,7 @@ export function createSceneAnalysisTraceNodeView(state: SceneAnalysisState): Sce
     evidence: state.evidenceSpans,
     evidenceCollection: state.evidenceCollection,
     conceptCollection: state.conceptCollection,
+    legalDecisionCollection: state.legalDecisionCollection,
     concepts: state.detectedConcepts,
     knowledgeDomains: state.knowledgeDomains,
     candidateArticles: state.candidateArticles,
@@ -90,6 +110,7 @@ export function buildSceneAnalysisTrace(state: SceneAnalysisState): SceneAnalysi
     evidence: state.evidenceSpans,
     evidenceCollection: state.evidenceCollection,
     conceptCollection: state.conceptCollection,
+    legalDecisionCollection: state.legalDecisionCollection,
     concepts: state.detectedConcepts,
     knowledgeDomains: state.knowledgeDomains,
     candidateArticles: state.candidateArticles,
@@ -122,6 +143,7 @@ export type SceneAnalysisTraceDocument = Readonly<{
   evidence: SceneAnalysisTraceNodeView["evidence"];
   evidenceCollection: SceneAnalysisEvidenceCollection | null;
   conceptCollection: SceneAnalysisConceptCollection | null;
+  legalDecisionCollection: SceneAnalysisLegalDecisionCollection | null;
   concepts: SceneAnalysisTraceNodeView["concepts"];
   knowledgeDomains: readonly string[];
   candidateArticles: SceneAnalysisTraceNodeView["candidateArticles"];
@@ -169,6 +191,7 @@ export function replaySceneAnalysisTrace(trace: SceneAnalysisTrace, fromNode: st
         evidenceSpans: trace.evidence,
         evidenceCollection: trace.evidenceCollection,
         conceptCollection: trace.conceptCollection,
+        legalDecisionCollection: trace.legalDecisionCollection,
         primaryEvidenceSpanId: null,
         primaryEvidenceText: null,
         primaryEvidenceReason: null,
@@ -201,6 +224,7 @@ export function replaySceneAnalysisTrace(trace: SceneAnalysisTrace, fromNode: st
         evidenceSpans: trace.evidence,
         evidenceCollection: trace.evidenceCollection,
         conceptCollection: trace.conceptCollection,
+        legalDecisionCollection: trace.legalDecisionCollection,
         primaryEvidenceSpanId: null,
         primaryEvidenceText: null,
         primaryEvidenceReason: null,
@@ -258,6 +282,7 @@ export function createSceneAnalysisTraceDocument(trace: SceneAnalysisTrace): Sce
     evidence: trace.evidence,
     evidenceCollection: normalizeEvidenceCollectionForDocument(trace.evidenceCollection),
     conceptCollection: normalizeConceptCollectionForDocument(trace.conceptCollection),
+    legalDecisionCollection: normalizeLegalDecisionCollectionForDocument(trace.legalDecisionCollection),
     concepts: trace.concepts,
     knowledgeDomains: trace.knowledgeDomains,
     candidateArticles: trace.candidateArticles,

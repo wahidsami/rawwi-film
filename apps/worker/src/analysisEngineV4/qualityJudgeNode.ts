@@ -53,7 +53,10 @@ function pickPrimaryConcept(state: SceneAnalysisState): SceneAnalysisConcept | n
 }
 
 function pickPrimaryArticleTitle(state: SceneAnalysisState): string | null {
-  return state.legalPrimaryArticle?.titleAr ?? state.primaryArticle?.titleAr ?? null;
+  return state.legalDecisionCollection?.primaryArticle?.titleAr
+    ?? state.legalPrimaryArticle?.titleAr
+    ?? state.primaryArticle?.titleAr
+    ?? null;
 }
 
 function buildJudgment(state: SceneAnalysisState): SceneAnalysisQualityJudgment {
@@ -71,10 +74,10 @@ function buildJudgment(state: SceneAnalysisState): SceneAnalysisQualityJudgment 
   const explanationReferencesQuote = quoteExists && includesNormalized(explanationText, evidenceText);
 
   const articleMatchesConcept = Boolean(
-    explanation?.primaryArticleId != null
-      && state.legalCandidateArticles.some((candidate) => candidate.articleId === explanation.primaryArticleId)
+      explanation?.primaryArticleId != null
+      && (state.legalDecisionCollection?.candidateArticles ?? state.legalCandidateArticles).some((candidate) => candidate.articleId === explanation.primaryArticleId)
       && (state.detectedConcepts.length === 0 || Boolean(concept))
-      && (state.legalPrimaryArticle?.articleId ?? state.primaryArticle?.articleId ?? null) === explanation.primaryArticleId,
+      && (state.legalDecisionCollection?.primaryArticle?.articleId ?? state.legalPrimaryArticle?.articleId ?? state.primaryArticle?.articleId ?? null) === explanation.primaryArticleId,
   );
 
   const sceneSummarySupportsExplanation = Boolean(

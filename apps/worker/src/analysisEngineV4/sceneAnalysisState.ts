@@ -4,6 +4,7 @@ import type {
   EvidencePageReference,
 } from "./evidence/evidenceTypes.js";
 import type { ConceptCollection } from "./concepts/conceptTypes.js";
+import type { LegalDecisionCollection } from "./legal/legalDecision.js";
 
 export type SceneAnalysisStatus = "pending" | "running" | "complete" | "failed";
 
@@ -59,6 +60,8 @@ export type SceneAnalysisConcept = Readonly<{
 }>;
 
 export type SceneAnalysisConceptCollection = ConceptCollection;
+
+export type SceneAnalysisLegalDecisionCollection = LegalDecisionCollection;
 
 export type SceneAnalysisArticleCandidate = Readonly<{
   articleId: number;
@@ -163,6 +166,13 @@ export type SceneAnalysisTraceSnapshot = Readonly<{
   conceptCollectionDedupedCount: number;
   conceptCollectionConfidence: number | null;
   conceptCollectionExecutionTimeMs: number | null;
+  legalDecisionCollectionCount: number;
+  legalDecisionCollectionPrimaryArticleId: number | null;
+  legalDecisionCollectionSecondaryArticleIds: readonly number[];
+  legalDecisionCollectionSupportingArticleIds: readonly number[];
+  legalDecisionCollectionKnowledgeSource: string | null;
+  legalDecisionCollectionConfidence: number | null;
+  legalDecisionCollectionExecutionTimeMs: number | null;
   detectedConceptIds: readonly string[];
   knowledgeDomains: readonly string[];
   legalCandidateArticleIds: readonly number[];
@@ -200,6 +210,7 @@ export type SceneAnalysisTraceNodeView = Readonly<{
   evidence: readonly SceneAnalysisEvidenceSpan[];
   evidenceCollection: SceneAnalysisEvidenceCollection | null;
   conceptCollection: SceneAnalysisConceptCollection | null;
+  legalDecisionCollection: SceneAnalysisLegalDecisionCollection | null;
   concepts: readonly SceneAnalysisConcept[];
   knowledgeDomains: readonly string[];
   candidateArticles: readonly SceneAnalysisArticleCandidate[];
@@ -218,6 +229,7 @@ export type SceneAnalysisTrace = Readonly<{
   evidence: readonly SceneAnalysisEvidenceSpan[];
   evidenceCollection: SceneAnalysisEvidenceCollection | null;
   conceptCollection: SceneAnalysisConceptCollection | null;
+  legalDecisionCollection: SceneAnalysisLegalDecisionCollection | null;
   concepts: readonly SceneAnalysisConcept[];
   knowledgeDomains: readonly string[];
   candidateArticles: readonly SceneAnalysisArticleCandidate[];
@@ -249,6 +261,7 @@ export type SceneAnalysisState = Readonly<{
   sentences: readonly SceneAnalysisSentence[];
   evidenceCollection: SceneAnalysisEvidenceCollection | null;
   conceptCollection: SceneAnalysisConceptCollection | null;
+  legalDecisionCollection: SceneAnalysisLegalDecisionCollection | null;
   evidenceSpans: readonly SceneAnalysisEvidenceSpan[];
   primaryEvidenceSpanId: string | null;
   primaryEvidenceText: string | null;
@@ -311,6 +324,7 @@ export function createSceneAnalysisState(input: Readonly<{
     sentences: freezeReadonlyArray([]),
     evidenceCollection: null,
     conceptCollection: null,
+    legalDecisionCollection: null,
     evidenceSpans: freezeReadonlyArray([]),
     primaryEvidenceSpanId: null,
     primaryEvidenceText: null,
@@ -362,6 +376,17 @@ export function freezeSceneAnalysisState(state: SceneAnalysisState | Readonly<Re
           classificationOutput: freezeReadonlyArray((state as SceneAnalysisState).conceptCollection?.classificationOutput ?? []),
         }) as SceneAnalysisConceptCollection
       : null,
+    legalDecisionCollection: (state as SceneAnalysisState).legalDecisionCollection
+      ? deepFreeze({
+          ...(state as SceneAnalysisState).legalDecisionCollection,
+          conceptIds: freezeReadonlyArray((state as SceneAnalysisState).legalDecisionCollection?.conceptIds ?? []),
+          decisions: freezeReadonlyArray((state as SceneAnalysisState).legalDecisionCollection?.decisions ?? []),
+          candidateArticles: freezeReadonlyArray((state as SceneAnalysisState).legalDecisionCollection?.candidateArticles ?? []),
+          rankedCandidateArticles: freezeReadonlyArray((state as SceneAnalysisState).legalDecisionCollection?.rankedCandidateArticles ?? []),
+          secondaryArticles: freezeReadonlyArray((state as SceneAnalysisState).legalDecisionCollection?.secondaryArticles ?? []),
+          supportingArticles: freezeReadonlyArray((state as SceneAnalysisState).legalDecisionCollection?.supportingArticles ?? []),
+        }) as SceneAnalysisLegalDecisionCollection
+      : null,
     evidenceSpans: freezeReadonlyArray((state as SceneAnalysisState).evidenceSpans ?? []),
     detectedConcepts: freezeReadonlyArray((state as SceneAnalysisState).detectedConcepts ?? []),
     knowledgeDomains: freezeReadonlyArray((state as SceneAnalysisState).knowledgeDomains ?? []),
@@ -411,6 +436,13 @@ export function snapshotSceneAnalysisState(state: SceneAnalysisState): SceneAnal
     conceptCollectionDedupedCount: state.conceptCollection?.dedupDecisions.length ?? 0,
     conceptCollectionConfidence: state.conceptCollection?.confidence ?? null,
     conceptCollectionExecutionTimeMs: state.conceptCollection?.executionTimeMs ?? null,
+    legalDecisionCollectionCount: state.legalDecisionCollection?.decisions.length ?? 0,
+    legalDecisionCollectionPrimaryArticleId: state.legalDecisionCollection?.primaryArticle?.articleId ?? null,
+    legalDecisionCollectionSecondaryArticleIds: freezeReadonlyArray(state.legalDecisionCollection?.secondaryArticles.map((candidate) => candidate.articleId) ?? []),
+    legalDecisionCollectionSupportingArticleIds: freezeReadonlyArray(state.legalDecisionCollection?.supportingArticles.map((candidate) => candidate.articleId) ?? []),
+    legalDecisionCollectionKnowledgeSource: state.legalDecisionCollection?.knowledgeSource ?? null,
+    legalDecisionCollectionConfidence: state.legalDecisionCollection?.confidence ?? null,
+    legalDecisionCollectionExecutionTimeMs: state.legalDecisionCollection?.executionTimeMs ?? null,
     detectedConceptIds: freezeReadonlyArray(state.detectedConcepts.map((concept) => concept.conceptId)),
     knowledgeDomains: freezeReadonlyArray(state.knowledgeDomains),
     legalCandidateArticleIds: freezeReadonlyArray(state.legalCandidateArticles.map((candidate) => candidate.articleId)),

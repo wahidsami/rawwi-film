@@ -16,7 +16,11 @@ function pickPrimaryConcept(state: SceneAnalysisState): SceneAnalysisConcept | n
 }
 
 function pickPrimaryArticle(state: SceneAnalysisState): SceneAnalysisArticleCandidate | null {
-  return state.legalPrimaryArticle ?? state.primaryArticle ?? state.legalCandidateArticles[0] ?? null;
+  return state.legalDecisionCollection?.primaryArticle
+    ?? state.legalPrimaryArticle
+    ?? state.primaryArticle
+    ?? state.legalCandidateArticles[0]
+    ?? null;
 }
 
 function buildExplanation(
