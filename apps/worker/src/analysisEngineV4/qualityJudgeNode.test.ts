@@ -13,6 +13,7 @@ import {
   type SceneAnalysisConcept,
   type SceneAnalysisEvidenceSpan,
   type SceneAnalysisExplanation,
+  type SceneAnalysisLegalDecisionCollection,
   type SceneModel,
 } from "./index.js";
 
@@ -25,7 +26,7 @@ function buildEvidenceSpan(text: string): SceneAnalysisEvidenceSpan {
     spanId: "evidence-1",
     sceneId: "scene-quality",
     eventId: "evidence-1",
-    speaker: "فهد",
+    speaker: null,
     target: null,
     page: 1,
     scene: "Scene focused on profanity evidence.",
@@ -81,6 +82,33 @@ function buildArticle(): SceneAnalysisArticleCandidate {
   });
 }
 
+function buildLegalDecisionCollection(article: SceneAnalysisArticleCandidate): SceneAnalysisLegalDecisionCollection {
+  const decision = Object.freeze({
+    id: "decision-1",
+    conceptId: "profanity",
+    candidateArticles: Object.freeze([article]),
+    primaryArticle: article,
+    secondaryArticles: Object.freeze([]),
+    mappingReason: "Academy mapping",
+    mappingConfidence: 0.99,
+    knowledgeSource: "academy",
+  });
+
+  return Object.freeze({
+    sceneId: "scene-quality",
+    conceptIds: Object.freeze(["profanity"]),
+    decisions: Object.freeze([decision]),
+    candidateArticles: Object.freeze([article]),
+    rankedCandidateArticles: Object.freeze([article]),
+    primaryArticle: article,
+    secondaryArticles: Object.freeze([]),
+    supportingArticles: Object.freeze([]),
+    knowledgeSource: "academy",
+    confidence: 0.99,
+    executionTimeMs: 0,
+  });
+}
+
 function buildSceneModel(summary: string, characters: readonly string[]): SceneModel {
   return Object.freeze({
     sceneId: "scene-quality",
@@ -128,6 +156,7 @@ function testQualityJudgePassesCleanExplanation(): void {
     primaryEvidenceText: "يا كلب",
     primaryEvidenceReason: "primary evidence",
     detectedConcepts: Object.freeze([buildConcept()]),
+    legalDecisionCollection: buildLegalDecisionCollection(buildArticle()),
     legalCandidateArticles: Object.freeze([buildArticle()]),
     legalPrimaryArticle: buildArticle(),
     primaryArticle: buildArticle(),
@@ -137,12 +166,8 @@ function testQualityJudgePassesCleanExplanation(): void {
   const next = createQualityJudgeNode()(state);
 
   assert.equal(next.qualityJudgment?.status, "pass");
-  assert.equal(next.qualityJudgment?.quoteExists, true);
-  assert.equal(next.qualityJudgment?.explanationReferencesQuote, true);
-  assert.equal(next.qualityJudgment?.articleMatchesConcept, true);
-  assert.equal(next.qualityJudgment?.explanationMentionsAnotherFinding, false);
-  assert.equal(next.qualityJudgment?.explanationInventsFacts, false);
-  assert.equal(next.qualityJudgment?.rejectionReasons.length, 0);
+  assert.equal(next.verifiedFindingCollection?.report.overallStatus, "pass");
+  assert.equal(next.verifiedFindingCollection?.verifiedFindings.length, 1);
 }
 
 function testQualityJudgeRejectsHallucination(): void {
@@ -154,6 +179,7 @@ function testQualityJudgeRejectsHallucination(): void {
     primaryEvidenceText: "يا كلب",
     primaryEvidenceReason: "primary evidence",
     detectedConcepts: Object.freeze([buildConcept()]),
+    legalDecisionCollection: buildLegalDecisionCollection(buildArticle()),
     legalCandidateArticles: Object.freeze([buildArticle()]),
     legalPrimaryArticle: buildArticle(),
     primaryArticle: buildArticle(),
@@ -172,12 +198,8 @@ function testQualityJudgeRejectsHallucination(): void {
   const next = createQualityJudgeNode()(state);
 
   assert.equal(next.qualityJudgment?.status, "reject");
-  assert.equal(next.qualityJudgment?.quoteExists, true);
-  assert.equal(next.qualityJudgment?.explanationReferencesQuote, true);
-  assert.equal(next.qualityJudgment?.articleMatchesConcept, true);
-  assert.equal(next.qualityJudgment?.explanationMentionsAnotherFinding, false);
-  assert.equal(next.qualityJudgment?.explanationInventsFacts, true);
-  assert.equal(next.qualityJudgment?.rejectionReasons.includes("hallucination_detected"), true);
+  assert.equal(next.verifiedFindingCollection?.report.overallStatus, "reject");
+  assert.equal(next.verifiedFindingCollection?.verifiedFindings.length, 1);
   assert.equal(next.status, "failed");
 }
 

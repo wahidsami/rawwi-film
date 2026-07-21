@@ -2,6 +2,7 @@ import type {
   SceneAnalysisConceptCollection,
   SceneAnalysisExplanationCollection,
   SceneAnalysisLegalDecisionCollection,
+  SceneAnalysisVerifiedFindingCollection,
   SceneAnalysisState,
   SceneAnalysisEvidenceCollection,
   SceneAnalysisTrace,
@@ -79,6 +80,24 @@ function normalizeExplanationCollectionForDocument(collection: SceneAnalysisExpl
   });
 }
 
+function normalizeVerifiedFindingCollectionForDocument(collection: SceneAnalysisVerifiedFindingCollection | null): SceneAnalysisVerifiedFindingCollection | null {
+  if (!collection) {
+    return null;
+  }
+
+  return Object.freeze({
+    ...collection,
+    executionTimeMs: 0,
+    verifiedFindings: Object.freeze([...collection.verifiedFindings]),
+    ruleEvaluations: Object.freeze([...collection.ruleEvaluations]),
+    report: Object.freeze({
+      ...collection.report,
+      ruleEvaluations: Object.freeze([...collection.report.ruleEvaluations]),
+      rejectionReasons: Object.freeze([...collection.report.rejectionReasons]),
+    }),
+  });
+}
+
 function normalizeTraceNodeViewForDocument(view: SceneAnalysisTraceNodeView): SceneAnalysisTraceNodeView {
   return freezeTraceNodeView({
     ...view,
@@ -86,6 +105,7 @@ function normalizeTraceNodeViewForDocument(view: SceneAnalysisTraceNodeView): Sc
     conceptCollection: normalizeConceptCollectionForDocument(view.conceptCollection),
     legalDecisionCollection: normalizeLegalDecisionCollectionForDocument(view.legalDecisionCollection),
     explanationCollection: normalizeExplanationCollectionForDocument(view.explanationCollection),
+    verifiedFindingCollection: normalizeVerifiedFindingCollectionForDocument(view.verifiedFindingCollection),
   });
 }
 
@@ -98,6 +118,7 @@ export function createSceneAnalysisTraceNodeView(state: SceneAnalysisState): Sce
     conceptCollection: state.conceptCollection,
     legalDecisionCollection: state.legalDecisionCollection,
     explanationCollection: state.explanationCollection,
+    verifiedFindingCollection: state.verifiedFindingCollection,
     concepts: state.detectedConcepts,
     knowledgeDomains: state.knowledgeDomains,
     candidateArticles: state.candidateArticles,
@@ -127,6 +148,7 @@ export function buildSceneAnalysisTrace(state: SceneAnalysisState): SceneAnalysi
     conceptCollection: state.conceptCollection,
     legalDecisionCollection: state.legalDecisionCollection,
     explanationCollection: state.explanationCollection,
+    verifiedFindingCollection: state.verifiedFindingCollection,
     concepts: state.detectedConcepts,
     knowledgeDomains: state.knowledgeDomains,
     candidateArticles: state.candidateArticles,
@@ -161,6 +183,7 @@ export type SceneAnalysisTraceDocument = Readonly<{
   conceptCollection: SceneAnalysisConceptCollection | null;
   legalDecisionCollection: SceneAnalysisLegalDecisionCollection | null;
   explanationCollection: SceneAnalysisExplanationCollection | null;
+  verifiedFindingCollection: SceneAnalysisVerifiedFindingCollection | null;
   concepts: SceneAnalysisTraceNodeView["concepts"];
   knowledgeDomains: readonly string[];
   candidateArticles: SceneAnalysisTraceNodeView["candidateArticles"];
@@ -210,6 +233,7 @@ export function replaySceneAnalysisTrace(trace: SceneAnalysisTrace, fromNode: st
         conceptCollection: trace.conceptCollection,
         legalDecisionCollection: trace.legalDecisionCollection,
         explanationCollection: trace.explanationCollection,
+        verifiedFindingCollection: trace.verifiedFindingCollection,
         primaryEvidenceSpanId: null,
         primaryEvidenceText: null,
         primaryEvidenceReason: null,
@@ -244,6 +268,7 @@ export function replaySceneAnalysisTrace(trace: SceneAnalysisTrace, fromNode: st
         conceptCollection: trace.conceptCollection,
         legalDecisionCollection: trace.legalDecisionCollection,
         explanationCollection: trace.explanationCollection,
+        verifiedFindingCollection: trace.verifiedFindingCollection,
         primaryEvidenceSpanId: null,
         primaryEvidenceText: null,
         primaryEvidenceReason: null,
@@ -303,6 +328,7 @@ export function createSceneAnalysisTraceDocument(trace: SceneAnalysisTrace): Sce
     conceptCollection: normalizeConceptCollectionForDocument(trace.conceptCollection),
     legalDecisionCollection: normalizeLegalDecisionCollectionForDocument(trace.legalDecisionCollection),
     explanationCollection: normalizeExplanationCollectionForDocument(trace.explanationCollection),
+    verifiedFindingCollection: normalizeVerifiedFindingCollectionForDocument(trace.verifiedFindingCollection),
     concepts: trace.concepts,
     knowledgeDomains: trace.knowledgeDomains,
     candidateArticles: trace.candidateArticles,

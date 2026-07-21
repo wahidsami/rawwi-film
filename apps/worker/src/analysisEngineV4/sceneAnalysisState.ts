@@ -5,6 +5,7 @@ import type {
 } from "./evidence/evidenceTypes.js";
 import type { ConceptCollection } from "./concepts/conceptTypes.js";
 import type { LegalDecisionCollection } from "./legal/legalDecision.js";
+import type { QualityJudgeStatus, VerifiedFindingCollection } from "./judge/qualityJudgeTypes.js";
 
 export type SceneAnalysisStatus = "pending" | "running" | "complete" | "failed";
 
@@ -131,6 +132,10 @@ export type SceneAnalysisExplanationCollection = Readonly<{
   executionTimeMs: number;
 }>;
 
+export type SceneAnalysisVerifiedFindingStatus = QualityJudgeStatus;
+
+export type SceneAnalysisVerifiedFindingCollection = VerifiedFindingCollection;
+
 export type SemanticSceneRelationship = Readonly<{
   subject: string;
   relation: string;
@@ -215,6 +220,11 @@ export type SceneAnalysisTraceSnapshot = Readonly<{
   explanationCollectionRecommendedAction: SceneAnalysisExplanationRecommendedAction | null;
   explanationCollectionConfidence: number | null;
   explanationCollectionExecutionTimeMs: number | null;
+  verifiedFindingCollectionCount: number;
+  verifiedFindingCollectionPrimaryFindingId: string | null;
+  verifiedFindingCollectionStatus: SceneAnalysisVerifiedFindingStatus | null;
+  verifiedFindingCollectionConfidence: number | null;
+  verifiedFindingCollectionExecutionTimeMs: number | null;
   detectedConceptIds: readonly string[];
   knowledgeDomains: readonly string[];
   legalCandidateArticleIds: readonly number[];
@@ -254,6 +264,7 @@ export type SceneAnalysisTraceNodeView = Readonly<{
   conceptCollection: SceneAnalysisConceptCollection | null;
   legalDecisionCollection: SceneAnalysisLegalDecisionCollection | null;
   explanationCollection: SceneAnalysisExplanationCollection | null;
+  verifiedFindingCollection: SceneAnalysisVerifiedFindingCollection | null;
   concepts: readonly SceneAnalysisConcept[];
   knowledgeDomains: readonly string[];
   candidateArticles: readonly SceneAnalysisArticleCandidate[];
@@ -274,6 +285,7 @@ export type SceneAnalysisTrace = Readonly<{
   conceptCollection: SceneAnalysisConceptCollection | null;
   legalDecisionCollection: SceneAnalysisLegalDecisionCollection | null;
   explanationCollection: SceneAnalysisExplanationCollection | null;
+  verifiedFindingCollection: SceneAnalysisVerifiedFindingCollection | null;
   concepts: readonly SceneAnalysisConcept[];
   knowledgeDomains: readonly string[];
   candidateArticles: readonly SceneAnalysisArticleCandidate[];
@@ -307,6 +319,7 @@ export type SceneAnalysisState = Readonly<{
   conceptCollection: SceneAnalysisConceptCollection | null;
   legalDecisionCollection: SceneAnalysisLegalDecisionCollection | null;
   explanationCollection: SceneAnalysisExplanationCollection | null;
+  verifiedFindingCollection: SceneAnalysisVerifiedFindingCollection | null;
   evidenceSpans: readonly SceneAnalysisEvidenceSpan[];
   primaryEvidenceSpanId: string | null;
   primaryEvidenceText: string | null;
@@ -371,6 +384,7 @@ export function createSceneAnalysisState(input: Readonly<{
     conceptCollection: null,
   legalDecisionCollection: null,
   explanationCollection: null,
+  verifiedFindingCollection: null,
   evidenceSpans: freezeReadonlyArray([]),
     primaryEvidenceSpanId: null,
     primaryEvidenceText: null,
@@ -439,6 +453,18 @@ export function freezeSceneAnalysisState(state: SceneAnalysisState | Readonly<Re
           explanations: freezeReadonlyArray((state as SceneAnalysisState).explanationCollection?.explanations ?? []),
         }) as SceneAnalysisExplanationCollection
       : null,
+    verifiedFindingCollection: (state as SceneAnalysisState).verifiedFindingCollection
+      ? deepFreeze({
+          ...(state as SceneAnalysisState).verifiedFindingCollection,
+          verifiedFindings: freezeReadonlyArray((state as SceneAnalysisState).verifiedFindingCollection?.verifiedFindings ?? []),
+          ruleEvaluations: freezeReadonlyArray((state as SceneAnalysisState).verifiedFindingCollection?.ruleEvaluations ?? []),
+          report: deepFreeze({
+            ...(state as SceneAnalysisState).verifiedFindingCollection?.report,
+            ruleEvaluations: freezeReadonlyArray((state as SceneAnalysisState).verifiedFindingCollection?.report.ruleEvaluations ?? []),
+            rejectionReasons: freezeReadonlyArray((state as SceneAnalysisState).verifiedFindingCollection?.report.rejectionReasons ?? []),
+          }),
+        }) as SceneAnalysisVerifiedFindingCollection
+      : null,
     evidenceSpans: freezeReadonlyArray((state as SceneAnalysisState).evidenceSpans ?? []),
     detectedConcepts: freezeReadonlyArray((state as SceneAnalysisState).detectedConcepts ?? []),
     knowledgeDomains: freezeReadonlyArray((state as SceneAnalysisState).knowledgeDomains ?? []),
@@ -500,6 +526,11 @@ export function snapshotSceneAnalysisState(state: SceneAnalysisState): SceneAnal
     explanationCollectionRecommendedAction: state.explanationCollection?.primaryExplanation?.recommendedAction ?? null,
     explanationCollectionConfidence: state.explanationCollection?.confidence ?? null,
     explanationCollectionExecutionTimeMs: state.explanationCollection?.executionTimeMs ?? null,
+    verifiedFindingCollectionCount: state.verifiedFindingCollection?.verifiedFindings.length ?? 0,
+    verifiedFindingCollectionPrimaryFindingId: state.verifiedFindingCollection?.primaryVerifiedFindingId ?? null,
+    verifiedFindingCollectionStatus: state.verifiedFindingCollection?.report.overallStatus ?? null,
+    verifiedFindingCollectionConfidence: state.verifiedFindingCollection?.confidence ?? null,
+    verifiedFindingCollectionExecutionTimeMs: state.verifiedFindingCollection?.executionTimeMs ?? null,
     detectedConceptIds: freezeReadonlyArray(state.detectedConcepts.map((concept) => concept.conceptId)),
     knowledgeDomains: freezeReadonlyArray(state.knowledgeDomains),
     legalCandidateArticleIds: freezeReadonlyArray(state.legalCandidateArticles.map((candidate) => candidate.articleId)),
