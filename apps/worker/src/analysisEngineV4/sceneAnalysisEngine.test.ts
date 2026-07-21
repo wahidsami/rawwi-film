@@ -35,6 +35,7 @@ async function testGraphProducesTraceAndEvidenceFirstState(): Promise<void> {
   assert.equal(result.evidenceSpans.length > 0, true);
   assert.equal(result.primaryEvidenceText?.includes("يا كلب"), true);
   assert.equal(result.explanation?.groundedEvidence?.includes("يا كلب"), true);
+  assert.equal(result.conceptCollection?.concepts.some((concept) => concept.conceptId === "profanity"), true);
   assert.equal(result.detectedConcepts.some((concept) => concept.conceptId === "profanity"), true);
   assert.equal(result.knowledgeDomains.includes("profanity"), true);
   assert.equal(result.semanticSceneModel?.summary, result.sceneModel?.summary);
@@ -53,6 +54,7 @@ async function testGraphProducesTraceAndEvidenceFirstState(): Promise<void> {
   assert.equal(result.trace[2]?.changedKeys.includes("evidenceSpanCount"), true);
   assert.equal(result.trace[3]?.node, "concept_classification");
   assert.equal(result.trace[3]?.changedKeys.includes("detectedConceptIds"), true);
+  assert.equal(result.trace[3]?.changedKeys.includes("conceptCollectionCount"), true);
   assert.equal(result.trace[9]?.node, "explanation");
   assert.equal(result.trace[9]?.changedKeys.includes("explanationSummary"), true);
   assert.equal(result.trace[10]?.node, "quality_judge");

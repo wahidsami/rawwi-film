@@ -1,4 +1,5 @@
 import type {
+  SceneAnalysisConceptCollection,
   SceneAnalysisState,
   SceneAnalysisEvidenceCollection,
   SceneAnalysisTrace,
@@ -32,10 +33,26 @@ function normalizeEvidenceCollectionForDocument(collection: SceneAnalysisEvidenc
   });
 }
 
+function normalizeConceptCollectionForDocument(collection: SceneAnalysisConceptCollection | null): SceneAnalysisConceptCollection | null {
+  if (!collection) {
+    return null;
+  }
+
+  return Object.freeze({
+    ...collection,
+    executionTimeMs: 0,
+    concepts: Object.freeze([...collection.concepts]),
+    dedupDecisions: Object.freeze([...collection.dedupDecisions]),
+    normalization: Object.freeze([...collection.normalization]),
+    classificationOutput: Object.freeze([...collection.classificationOutput]),
+  });
+}
+
 function normalizeTraceNodeViewForDocument(view: SceneAnalysisTraceNodeView): SceneAnalysisTraceNodeView {
   return freezeTraceNodeView({
     ...view,
     evidenceCollection: normalizeEvidenceCollectionForDocument(view.evidenceCollection),
+    conceptCollection: normalizeConceptCollectionForDocument(view.conceptCollection),
   });
 }
 
@@ -45,6 +62,7 @@ export function createSceneAnalysisTraceNodeView(state: SceneAnalysisState): Sce
     sceneSummary: state.sceneModel?.summary ?? state.normalizedSceneText ?? state.sceneText,
     evidence: state.evidenceSpans,
     evidenceCollection: state.evidenceCollection,
+    conceptCollection: state.conceptCollection,
     concepts: state.detectedConcepts,
     knowledgeDomains: state.knowledgeDomains,
     candidateArticles: state.candidateArticles,
@@ -71,6 +89,7 @@ export function buildSceneAnalysisTrace(state: SceneAnalysisState): SceneAnalysi
     sceneSummary: state.sceneModel?.summary ?? state.normalizedSceneText ?? state.sceneText,
     evidence: state.evidenceSpans,
     evidenceCollection: state.evidenceCollection,
+    conceptCollection: state.conceptCollection,
     concepts: state.detectedConcepts,
     knowledgeDomains: state.knowledgeDomains,
     candidateArticles: state.candidateArticles,
@@ -102,6 +121,7 @@ export type SceneAnalysisTraceDocument = Readonly<{
   sceneSummary: string;
   evidence: SceneAnalysisTraceNodeView["evidence"];
   evidenceCollection: SceneAnalysisEvidenceCollection | null;
+  conceptCollection: SceneAnalysisConceptCollection | null;
   concepts: SceneAnalysisTraceNodeView["concepts"];
   knowledgeDomains: readonly string[];
   candidateArticles: SceneAnalysisTraceNodeView["candidateArticles"];
@@ -146,9 +166,10 @@ export function replaySceneAnalysisTrace(trace: SceneAnalysisTrace, fromNode: st
         sceneModel: null,
         normalizedSceneText: trace.sceneSummary,
         sentences: [],
-      evidenceSpans: trace.evidence,
-      evidenceCollection: trace.evidenceCollection,
-      primaryEvidenceSpanId: null,
+        evidenceSpans: trace.evidence,
+        evidenceCollection: trace.evidenceCollection,
+        conceptCollection: trace.conceptCollection,
+        primaryEvidenceSpanId: null,
         primaryEvidenceText: null,
         primaryEvidenceReason: null,
         detectedConcepts: trace.concepts,
@@ -177,9 +198,10 @@ export function replaySceneAnalysisTrace(trace: SceneAnalysisTrace, fromNode: st
         sceneModel: null,
         normalizedSceneText: trace.sceneSummary,
         sentences: [],
-      evidenceSpans: trace.evidence,
-      evidenceCollection: trace.evidenceCollection,
-      primaryEvidenceSpanId: null,
+        evidenceSpans: trace.evidence,
+        evidenceCollection: trace.evidenceCollection,
+        conceptCollection: trace.conceptCollection,
+        primaryEvidenceSpanId: null,
         primaryEvidenceText: null,
         primaryEvidenceReason: null,
         detectedConcepts: trace.concepts,
@@ -235,6 +257,7 @@ export function createSceneAnalysisTraceDocument(trace: SceneAnalysisTrace): Sce
     sceneSummary: trace.sceneSummary,
     evidence: trace.evidence,
     evidenceCollection: normalizeEvidenceCollectionForDocument(trace.evidenceCollection),
+    conceptCollection: normalizeConceptCollectionForDocument(trace.conceptCollection),
     concepts: trace.concepts,
     knowledgeDomains: trace.knowledgeDomains,
     candidateArticles: trace.candidateArticles,

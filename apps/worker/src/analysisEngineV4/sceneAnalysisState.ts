@@ -3,6 +3,7 @@ import type {
   EvidenceCollection,
   EvidencePageReference,
 } from "./evidence/evidenceTypes.js";
+import type { ConceptCollection } from "./concepts/conceptTypes.js";
 
 export type SceneAnalysisStatus = "pending" | "running" | "complete" | "failed";
 
@@ -56,6 +57,8 @@ export type SceneAnalysisConcept = Readonly<{
   confidence: number;
   rationale: readonly string[];
 }>;
+
+export type SceneAnalysisConceptCollection = ConceptCollection;
 
 export type SceneAnalysisArticleCandidate = Readonly<{
   articleId: number;
@@ -155,6 +158,11 @@ export type SceneAnalysisTraceSnapshot = Readonly<{
   evidenceCollectionPrimaryEvidenceId: string | null;
   evidenceCollectionDedupedCount: number;
   evidenceCollectionExecutionTimeMs: number | null;
+  conceptCollectionCount: number;
+  conceptCollectionPrimaryConceptId: string | null;
+  conceptCollectionDedupedCount: number;
+  conceptCollectionConfidence: number | null;
+  conceptCollectionExecutionTimeMs: number | null;
   detectedConceptIds: readonly string[];
   knowledgeDomains: readonly string[];
   legalCandidateArticleIds: readonly number[];
@@ -191,6 +199,7 @@ export type SceneAnalysisTraceNodeView = Readonly<{
   sceneSummary: string;
   evidence: readonly SceneAnalysisEvidenceSpan[];
   evidenceCollection: SceneAnalysisEvidenceCollection | null;
+  conceptCollection: SceneAnalysisConceptCollection | null;
   concepts: readonly SceneAnalysisConcept[];
   knowledgeDomains: readonly string[];
   candidateArticles: readonly SceneAnalysisArticleCandidate[];
@@ -208,6 +217,7 @@ export type SceneAnalysisTrace = Readonly<{
   sceneSummary: string;
   evidence: readonly SceneAnalysisEvidenceSpan[];
   evidenceCollection: SceneAnalysisEvidenceCollection | null;
+  conceptCollection: SceneAnalysisConceptCollection | null;
   concepts: readonly SceneAnalysisConcept[];
   knowledgeDomains: readonly string[];
   candidateArticles: readonly SceneAnalysisArticleCandidate[];
@@ -238,6 +248,7 @@ export type SceneAnalysisState = Readonly<{
   normalizedSceneText: string;
   sentences: readonly SceneAnalysisSentence[];
   evidenceCollection: SceneAnalysisEvidenceCollection | null;
+  conceptCollection: SceneAnalysisConceptCollection | null;
   evidenceSpans: readonly SceneAnalysisEvidenceSpan[];
   primaryEvidenceSpanId: string | null;
   primaryEvidenceText: string | null;
@@ -299,6 +310,7 @@ export function createSceneAnalysisState(input: Readonly<{
     normalizedSceneText: "",
     sentences: freezeReadonlyArray([]),
     evidenceCollection: null,
+    conceptCollection: null,
     evidenceSpans: freezeReadonlyArray([]),
     primaryEvidenceSpanId: null,
     primaryEvidenceText: null,
@@ -340,6 +352,15 @@ export function freezeSceneAnalysisState(state: SceneAnalysisState | Readonly<Re
           evidence: freezeReadonlyArray((state as SceneAnalysisState).evidenceCollection?.evidence ?? []),
           dedupDecisions: freezeReadonlyArray((state as SceneAnalysisState).evidenceCollection?.dedupDecisions ?? []),
         }) as SceneAnalysisEvidenceCollection
+      : null,
+    conceptCollection: (state as SceneAnalysisState).conceptCollection
+      ? deepFreeze({
+          ...(state as SceneAnalysisState).conceptCollection,
+          concepts: freezeReadonlyArray((state as SceneAnalysisState).conceptCollection?.concepts ?? []),
+          dedupDecisions: freezeReadonlyArray((state as SceneAnalysisState).conceptCollection?.dedupDecisions ?? []),
+          normalization: freezeReadonlyArray((state as SceneAnalysisState).conceptCollection?.normalization ?? []),
+          classificationOutput: freezeReadonlyArray((state as SceneAnalysisState).conceptCollection?.classificationOutput ?? []),
+        }) as SceneAnalysisConceptCollection
       : null,
     evidenceSpans: freezeReadonlyArray((state as SceneAnalysisState).evidenceSpans ?? []),
     detectedConcepts: freezeReadonlyArray((state as SceneAnalysisState).detectedConcepts ?? []),
@@ -385,6 +406,11 @@ export function snapshotSceneAnalysisState(state: SceneAnalysisState): SceneAnal
     evidenceCollectionPrimaryEvidenceId: state.evidenceCollection?.primaryEvidenceId ?? null,
     evidenceCollectionDedupedCount: state.evidenceCollection?.dedupDecisions.length ?? 0,
     evidenceCollectionExecutionTimeMs: state.evidenceCollection?.executionTimeMs ?? null,
+    conceptCollectionCount: state.conceptCollection?.concepts.length ?? 0,
+    conceptCollectionPrimaryConceptId: state.conceptCollection?.concepts[0]?.conceptId ?? null,
+    conceptCollectionDedupedCount: state.conceptCollection?.dedupDecisions.length ?? 0,
+    conceptCollectionConfidence: state.conceptCollection?.confidence ?? null,
+    conceptCollectionExecutionTimeMs: state.conceptCollection?.executionTimeMs ?? null,
     detectedConceptIds: freezeReadonlyArray(state.detectedConcepts.map((concept) => concept.conceptId)),
     knowledgeDomains: freezeReadonlyArray(state.knowledgeDomains),
     legalCandidateArticleIds: freezeReadonlyArray(state.legalCandidateArticles.map((candidate) => candidate.articleId)),
