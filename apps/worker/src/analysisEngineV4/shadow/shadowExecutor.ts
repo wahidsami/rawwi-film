@@ -3,13 +3,16 @@ import type { AnalysisEngine, AnalysisJobContext, AnalysisResult } from "../../a
 import { logger } from "../../logger.js";
 import type { SceneAnalysisTraceDocument } from "../sceneAnalysisTraceViewer.js";
 import { compareShadowResults, type ShadowComparisonReport } from "./shadowComparator.js";
-import { persistShadowMode, type ShadowPersistenceResult } from "./shadowPersistence.js";
+import { runRuntimeOrchestrator, type RuntimeOrchestratorDependencies } from "../runtime/runtimeOrchestrator.js";
+import { persistRuntimeArtifacts, type RuntimePersistenceResult } from "../runtime/runtimePersistence.js";
+import type { RuntimeOrchestrationResult } from "../runtime/runtimeArtifacts.js";
 
 export type ShadowExecutionResult = Readonly<{
   comparison: ShadowComparisonReport;
-  persistence: ShadowPersistenceResult;
+  persistence: RuntimePersistenceResult;
   shadowResult: AnalysisResult;
   traceDocument: SceneAnalysisTraceDocument | null;
+  runtime: RuntimeOrchestrationResult | null;
   executionTimeMs: number;
   promptTokenEstimate: number;
   completionTokenEstimate: number;
@@ -19,7 +22,11 @@ export type ShadowExecutionResult = Readonly<{
 export type ShadowExecutionDependencies = Readonly<{
   shadowEngine?: AnalysisEngine;
   comparator?: typeof compareShadowResults;
-  persist?: typeof persistShadowMode;
+  orchestrator?: typeof runRuntimeOrchestrator;
+  persist?: typeof persistRuntimeArtifacts;
+  benchmarkEngines?: RuntimeOrchestratorDependencies["benchmarkEngines"];
+  dashboardBuilder?: RuntimeOrchestratorDependencies["dashboardBuilder"];
+  benchmarkRunner?: RuntimeOrchestratorDependencies["benchmarkRunner"];
 }>;
 
 function estimateTokens(text: string): number {
@@ -42,7 +49,8 @@ export async function runV4ShadowMode(input: Readonly<{
   const startedAt = Date.now();
   const shadowEngine = dependencies.shadowEngine ?? createAnalysisEngineV4Adapter();
   const comparator = dependencies.comparator ?? compareShadowResults;
-  const persist = dependencies.persist ?? persistShadowMode;
+  const orchestrator = dependencies.orchestrator ?? runRuntimeOrchestrator;
+  const persist = dependencies.persist ?? persistRuntimeArtifacts;
 
   try {
     const shadowResult = await shadowEngine.execute(input.jobContext);
@@ -62,10 +70,8 @@ export async function runV4ShadowMode(input: Readonly<{
     ].join("\n"));
     const estimatedCostUsd = Number(((promptTokenEstimate * 0.00001) + (completionTokenEstimate * 0.00003)).toFixed(6));
 
-    const persistence = await persist({
-      jobId: input.jobContext.request.jobId,
-      chunkId: input.jobContext.request.chunkId,
-      runKey: input.runKey,
+    const runtime = await orchestrator({
+      jobContext: input.jobContext,
       visibleResult: input.visibleResult,
       shadowResult,
       comparison,
@@ -74,13 +80,33 @@ export async function runV4ShadowMode(input: Readonly<{
       promptTokenEstimate,
       completionTokenEstimate,
       estimatedCostUsd,
+    }, {
+      benchmarkEngines: dependencies.benchmarkEngines,
+      dashboardBuilder: dependencies.dashboardBuilder,
+      benchmarkRunner: dependencies.benchmarkRunner,
+    });
+
+    const persistence = await persist({
+      jobId: input.jobContext.request.jobId,
+      chunkId: input.jobContext.request.chunkId,
+      runKey: input.runKey,
+      visibleResult: input.visibleResult,
+      shadowResult,
+      comparison,
+      traceDocument: runtime.trace,
+      executionTimeMs,
+      promptTokenEstimate,
+      completionTokenEstimate,
+      estimatedCostUsd,
+      runtime,
     });
 
     return Object.freeze({
       comparison,
       persistence,
       shadowResult,
-      traceDocument,
+      traceDocument: runtime.trace,
+      runtime,
       executionTimeMs,
       promptTokenEstimate,
       completionTokenEstimate,

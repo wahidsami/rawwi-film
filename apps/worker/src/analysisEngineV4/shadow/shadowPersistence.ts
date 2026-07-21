@@ -2,6 +2,7 @@ import { logger } from "../../logger.js";
 import type { AnalysisResult } from "../../analysisEngine/types.js";
 import type { SceneAnalysisTraceDocument } from "../sceneAnalysisTraceViewer.js";
 import type { ShadowComparisonReport } from "./shadowComparator.js";
+import type { RuntimeOrchestrationResult } from "../runtime/runtimeArtifacts.js";
 
 export type ShadowPersistenceInput = Readonly<{
   jobId: string;
@@ -15,6 +16,7 @@ export type ShadowPersistenceInput = Readonly<{
   promptTokenEstimate: number | null;
   completionTokenEstimate: number | null;
   estimatedCostUsd: number | null;
+  runtimeArtifacts?: RuntimeOrchestrationResult | null;
 }>;
 
 export type ShadowPersistenceResult = Readonly<{
@@ -32,6 +34,7 @@ function buildShadowRunKey(runKey: string, chunkId: string): string {
 }
 
 function buildShadowTruthLayerMeta(input: ShadowPersistenceInput): Readonly<Record<string, unknown>> {
+  const runtimeArtifacts = input.runtimeArtifacts ?? null;
   return freeze({
     architecture: "analysis_engine_v4_shadow_mode",
     mode: "shadow",
@@ -48,13 +51,21 @@ function buildShadowTruthLayerMeta(input: ShadowPersistenceInput): Readonly<Reco
     visible_findings_count: input.visibleResult.findings.length,
     shadow_findings_count: input.shadowResult.findings.length,
     comparison: input.comparison,
-    benchmark: input.comparison.benchmark,
+    comparison_benchmark: input.comparison.benchmark,
     visible_diagnostics: input.visibleResult.diagnostics,
     shadow_diagnostics: input.shadowResult.diagnostics,
     visible_truth_layer_meta: input.visibleResult.truthLayerMeta,
     shadow_truth_layer_meta: input.shadowResult.truthLayerMeta,
     trace_document: input.traceDocument,
     shadow_findings: input.shadowResult.findings,
+    runtime_orchestrator: runtimeArtifacts,
+    investigation_bundle: runtimeArtifacts?.bundle ?? null,
+    runtime: runtimeArtifacts?.runtime ?? null,
+    benchmark: runtimeArtifacts?.benchmark ?? input.comparison.benchmark,
+    dashboard: runtimeArtifacts?.dashboard ?? null,
+    report: runtimeArtifacts?.report ?? null,
+    provenance: runtimeArtifacts?.provenance ?? null,
+    metrics: runtimeArtifacts?.metrics ?? null,
   });
 }
 

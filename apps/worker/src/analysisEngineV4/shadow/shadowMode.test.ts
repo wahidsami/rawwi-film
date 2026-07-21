@@ -145,13 +145,17 @@ async function testShadowExecutorPersistsSeparatedPayload(): Promise<void> {
   }, {
     shadowEngine,
     persist: async (input) => {
-      const chunkRunRecord = buildShadowChunkRunRecord(input);
+      const chunkRunRecord = buildShadowChunkRunRecord({
+        ...input,
+        runtimeArtifacts: input.runtime,
+      });
       const evaluationRecord = buildShadowEngineEvaluationRecord(input);
       calls.push(chunkRunRecord, evaluationRecord);
       return {
         shadowRunKey: `${input.runKey}:${input.chunkId}`,
         evaluationPersisted: true,
         chunkRunPersisted: true,
+        runtimeBundleId: "bundle-1",
       };
     },
   });
@@ -164,6 +168,8 @@ async function testShadowExecutorPersistsSeparatedPayload(): Promise<void> {
   const evaluationRecord = calls[1] as Record<string, unknown>;
   assert.equal(String(chunkRunRecord.run_key), "shadow:run-1:chunk-1");
   assert.equal(Array.isArray((chunkRunRecord.truth_layer_meta as Record<string, unknown>).shadow_findings), true);
+  assert.equal(Boolean((chunkRunRecord.truth_layer_meta as Record<string, unknown>).runtime_orchestrator), true);
+  assert.equal(Boolean((chunkRunRecord.truth_layer_meta as Record<string, unknown>).investigation_bundle), true);
   assert.equal(String(evaluationRecord.engine), "v4");
   assert.equal(String(evaluationRecord.mode), "shadow");
 }
