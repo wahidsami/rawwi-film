@@ -2,6 +2,7 @@ import { canonicalStringify } from "../canonicalJson.js";
 import { sha256 } from "../hash.js";
 import { createSceneAnalysisEngine, type SceneAnalysisEngine } from "../analysisEngineV4/sceneAnalysisEngine.js";
 import type { SceneAnalysisState } from "../analysisEngineV4/sceneAnalysisState.js";
+import { buildSceneAnalysisTrace, createSceneAnalysisTraceDocument } from "../analysisEngineV4/sceneAnalysisTraceViewer.js";
 import type { AnalysisEngine, AnalysisJobContext, AnalysisDiagnostics, AnalysisResult } from "./types.js";
 import { buildDecisionProvenanceCollection } from "../analysisEngineV4/provenance/decisionProvenanceBuilder.js";
 import { buildV4ReportAdapter } from "../analysisEngineV4/report/reportAdapter.js";
@@ -442,6 +443,7 @@ function buildAnalysisResponse(state: SceneAnalysisState, request: AnalysisJobCo
     analysis_report: reportBundle.analysisReport,
     decision_provenance: decisionProvenanceCollection?.report ?? null,
     report_adapter: reportBundle.truthLayerMeta.report_adapter,
+    scene_analysis_trace: createSceneAnalysisTraceDocument(buildSceneAnalysisTrace(state)),
   });
 
   return {

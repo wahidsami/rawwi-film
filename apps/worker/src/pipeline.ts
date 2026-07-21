@@ -51,6 +51,7 @@ import { v3InspectionRecorder } from "./analysisEngineV3/inspection/index.js";
 import { buildV3InspectionChunkFindingKey } from "./analysisEngineV3/inspection/inspectionKeys.js";
 import { buildV3PersistenceInspectionRecord } from "./analysisEngineV3/inspection/inspectionStageBuilders.js";
 import { buildV3ProviderFailureDiagnosticReport } from "./analysisEngineV3/runtime/v3DiagnosticReport.js";
+import { runV4ShadowMode } from "./analysisEngineV4/shadow/shadowExecutor.js";
 import { processChunkJudgeV2 } from "./pipelineV2.js";
 import { create as createAnalysisEngine } from "./analysisEngine/engineFactory.js";
 
@@ -2145,7 +2146,7 @@ export async function processChunkJudge(
             chunkId: chunk.id,
             runKey,
           });
-          const runtimeResult = await createAnalysisEngine().execute({
+          const analysisJobContext = {
             request: {
               jobId,
               chunkId: chunk.id,
@@ -2165,13 +2166,33 @@ export async function processChunkJudge(
               analysisSignatureContext: analysisSignatureBase,
               diagnosticsEnabled: config.ENABLE_AI_DIAGNOSTICS,
             },
-          });
+          } as const;
+          const runtimeResult = await createAnalysisEngine().execute(analysisJobContext);
           logger.info("V3 instrumentation EXIT: analysisEngine.execute", {
             jobId,
             chunkId: chunk.id,
             runKey,
             durationMs: Date.now() - runtimeAdapterStartedAt,
           });
+          if (config.V4_SHADOW_MODE) {
+            logger.info("V4 shadow mode scheduled", {
+              jobId,
+              chunkId: chunk.id,
+              runKey,
+            });
+            void runV4ShadowMode({
+              jobContext: analysisJobContext,
+              visibleResult: runtimeResult,
+              runKey,
+            }).catch((error) => {
+              logger.warn("V4 shadow mode execution rejected by promise chain", {
+                jobId,
+                chunkId: chunk.id,
+                runKey,
+                error: error instanceof Error ? error.message : String(error),
+              });
+            });
+          }
           allFindings = sortFindingsStable(runtimeResult.findings as FindingWithGlobal[]);
           const runtimeTruthLayer = runtimeResult.truthLayerMeta as Record<string, unknown> | null | undefined;
           const runtimeGcamMapping = runtimeTruthLayer && typeof runtimeTruthLayer.gcam_mapping === "object"
