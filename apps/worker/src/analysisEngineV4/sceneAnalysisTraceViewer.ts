@@ -25,6 +25,9 @@ export function createSceneAnalysisTraceNodeView(state: SceneAnalysisState): Sce
     candidateArticles: state.candidateArticles,
     rankedArticles: state.rankedCandidateArticles,
     selectedArticle: state.primaryArticle,
+    semanticSceneModel: state.semanticSceneModel,
+    semanticSceneResponse: state.semanticSceneResponse,
+    semanticSceneDurationMs: null,
     explanation: state.explanation,
     judgeResult: state.qualityJudgment,
   });
@@ -47,6 +50,8 @@ export function buildSceneAnalysisTrace(state: SceneAnalysisState): SceneAnalysi
     candidateArticles: state.candidateArticles,
     rankedArticles: state.rankedCandidateArticles,
     selectedArticle: state.primaryArticle,
+    semanticSceneModel: state.semanticSceneModel,
+    semanticSceneResponse: state.semanticSceneResponse,
     explanation: state.explanation,
     judgeResult: state.qualityJudgment,
     timing: Object.freeze({
@@ -75,6 +80,8 @@ export type SceneAnalysisTraceDocument = Readonly<{
   candidateArticles: SceneAnalysisTraceNodeView["candidateArticles"];
   rankedArticles: SceneAnalysisTraceNodeView["rankedArticles"];
   selectedArticle: SceneAnalysisTraceNodeView["selectedArticle"];
+  semanticSceneModel: SceneAnalysisTraceNodeView["semanticSceneModel"];
+  semanticSceneResponse: SceneAnalysisTraceNodeView["semanticSceneResponse"];
   explanation: SceneAnalysisTraceNodeView["explanation"];
   judgeResult: SceneAnalysisTraceNodeView["judgeResult"];
   timing: Readonly<{
@@ -128,6 +135,9 @@ export function replaySceneAnalysisTrace(trace: SceneAnalysisTrace, fromNode: st
         secondaryArticles: [],
         candidateAtoms: [],
         rankedCandidateAtoms: [],
+        semanticSceneModel: trace.semanticSceneModel,
+        semanticSceneResponse: trace.semanticSceneResponse,
+        semanticSceneDurationMs: null,
         explanation: trace.explanation,
         qualityJudgment: trace.judgeResult,
         trace: [],
@@ -155,6 +165,9 @@ export function replaySceneAnalysisTrace(trace: SceneAnalysisTrace, fromNode: st
         secondaryArticles: [],
         candidateAtoms: [],
         rankedCandidateAtoms: [],
+        semanticSceneModel: trace.semanticSceneModel,
+        semanticSceneResponse: trace.semanticSceneResponse,
+        semanticSceneDurationMs: null,
         explanation: trace.explanation,
         qualityJudgment: trace.judgeResult,
         trace: [],
@@ -197,6 +210,8 @@ export function createSceneAnalysisTraceDocument(trace: SceneAnalysisTrace): Sce
     candidateArticles: trace.candidateArticles,
     rankedArticles: trace.rankedArticles,
     selectedArticle: trace.selectedArticle,
+    semanticSceneModel: trace.semanticSceneModel,
+    semanticSceneResponse: trace.semanticSceneResponse,
     explanation: trace.explanation,
     judgeResult: trace.judgeResult,
     timing: Object.freeze({

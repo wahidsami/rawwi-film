@@ -10,6 +10,7 @@ import type {
 } from "./sceneAnalysisState.js";
 import { freezeSceneAnalysisState } from "./sceneAnalysisState.js";
 import { createSceneUnderstandingNode, buildSceneUnderstandingPrompt, understandScene } from "./sceneUnderstandingNode.js";
+import { createInterpretSceneNode } from "./interpretSceneNode.js";
 import { createCandidateEvidenceNode } from "./candidateEvidenceNode.js";
 import { createConceptClassificationNode } from "./conceptClassificationNode.js";
 import { createExplanationNode } from "./explanationNode.js";
@@ -396,10 +397,11 @@ export function createFinalizeSceneAnalysisNode() {
 
 export function createDefaultSceneAnalysisNodeSequence(): readonly {
   name: string;
-  node: (state: SceneAnalysisState) => SceneAnalysisState;
+  node: (state: SceneAnalysisState) => SceneAnalysisState | Promise<SceneAnalysisState>;
 }[] {
   return Object.freeze([
     { name: "understand_scene", node: createSceneUnderstandingNode() },
+    { name: "interpret_scene", node: createInterpretSceneNode() },
     { name: "candidate_evidence", node: createCandidateEvidenceNode() },
     { name: "concept_classification", node: createConceptClassificationNode() },
     { name: "normalize_scene", node: createNormalizeSceneStateNode() },
@@ -417,6 +419,7 @@ export {
   buildSceneUnderstandingPrompt,
   createCandidateEvidenceNode,
   createExplanationNode,
+  createInterpretSceneNode,
   createQualityJudgeNode,
   createSceneUnderstandingNode,
   understandScene,

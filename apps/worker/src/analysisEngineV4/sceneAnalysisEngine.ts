@@ -5,6 +5,7 @@ import {
   createDefaultSceneAnalysisNodeSequence,
   createFinalizeSceneAnalysisNode,
   createNormalizeSceneStateNode,
+  createInterpretSceneNode,
   createSceneUnderstandingNode,
   createRankCandidateArticlesNode,
   createResolveCandidateArticlesNode,
@@ -28,6 +29,7 @@ export type SceneAnalysisEngine = Readonly<{
 function buildDefaultGraph(): StateGraph {
   const graph = new StateGraph();
   const understandScene = createSceneUnderstandingNode();
+  const interpretScene = createInterpretSceneNode();
   const candidateEvidence = createCandidateEvidenceNode();
   const conceptClassification = createConceptClassificationNode();
   const normalize = createNormalizeSceneStateNode();
@@ -41,6 +43,7 @@ function buildDefaultGraph(): StateGraph {
 
   graph
     .addNode("understand_scene", understandScene)
+    .addNode("interpret_scene", interpretScene)
     .addNode("candidate_evidence", candidateEvidence)
     .addNode("concept_classification", conceptClassification)
     .addNode("normalize_scene", normalize)
@@ -52,7 +55,8 @@ function buildDefaultGraph(): StateGraph {
     .addNode("quality_judge", qualityJudge)
     .addNode("finalize", finalize)
     .setEntryPoint("understand_scene")
-    .addEdge("understand_scene", "candidate_evidence")
+    .addEdge("understand_scene", "interpret_scene")
+    .addEdge("interpret_scene", "candidate_evidence")
     .addEdge("candidate_evidence", "concept_classification")
     .addEdge("concept_classification", "normalize_scene")
     .addEdge("normalize_scene", "resolve_domains")

@@ -96,6 +96,43 @@ export type SceneAnalysisExplanation = Readonly<{
   rationale: readonly string[];
 }>;
 
+export type SemanticSceneRelationship = Readonly<{
+  subject: string;
+  relation: string;
+  object: string;
+  evidence: string | null;
+}>;
+
+export type SemanticSceneEvent = Readonly<{
+  eventType: string;
+  description: string;
+  evidence: string;
+  participants: readonly string[];
+}>;
+
+export type SemanticSceneTimelineEntry = Readonly<{
+  order: number;
+  description: string;
+  evidence: string | null;
+}>;
+
+export type SemanticSceneModel = Readonly<{
+  summary: string;
+  participants: readonly string[];
+  relationships: readonly SemanticSceneRelationship[];
+  events: readonly SemanticSceneEvent[];
+  timeline: readonly SemanticSceneTimelineEntry[];
+  speakerIntent: string;
+  emotionalState: string;
+  victims: readonly string[];
+  aggressors: readonly string[];
+  targets: readonly string[];
+  sensitiveConcepts: readonly string[];
+  scenePurpose: string;
+  sceneOutcome: string;
+  confidence: number;
+}>;
+
 export type SceneAnalysisQualityJudgment = Readonly<{
   status: "pass" | "reject";
   quoteExists: boolean;
@@ -133,6 +170,9 @@ export type SceneAnalysisTraceSnapshot = Readonly<{
   rankedSecondaryArticleIds: readonly number[];
   candidateAtomIds: readonly string[];
   explanationSummary: string | null;
+  semanticSceneSummary: string | null;
+  semanticSceneConfidence: number | null;
+  semanticSceneResponseLength: number | null;
   qualityJudgmentStatus: SceneAnalysisQualityJudgment["status"] | null;
   qualityJudgmentRejectionReasons: readonly string[];
   traceLength: number;
@@ -161,6 +201,9 @@ export type SceneAnalysisTraceNodeView = Readonly<{
   selectedArticle: SceneAnalysisArticleCandidate | null;
   explanation: SceneAnalysisExplanation | null;
   judgeResult: SceneAnalysisQualityJudgment | null;
+  semanticSceneModel: SemanticSceneModel | null;
+  semanticSceneResponse: string | null;
+  semanticSceneDurationMs: number | null;
 }>;
 
 export type SceneAnalysisTrace = Readonly<{
@@ -174,6 +217,8 @@ export type SceneAnalysisTrace = Readonly<{
   selectedArticle: SceneAnalysisArticleCandidate | null;
   explanation: SceneAnalysisExplanation | null;
   judgeResult: SceneAnalysisQualityJudgment | null;
+  semanticSceneModel: SemanticSceneModel | null;
+  semanticSceneResponse: string | null;
   timing: Readonly<{
     totalMs: number;
     nodeTimings: ReadonlyArray<Readonly<{
@@ -210,6 +255,9 @@ export type SceneAnalysisState = Readonly<{
   secondaryArticles: readonly SceneAnalysisArticleCandidate[];
   candidateAtoms: readonly SceneAnalysisAtomCandidate[];
   rankedCandidateAtoms: readonly SceneAnalysisAtomCandidate[];
+  semanticSceneModel: SemanticSceneModel | null;
+  semanticSceneResponse: string | null;
+  semanticSceneDurationMs: number | null;
   explanation: SceneAnalysisExplanation | null;
   qualityJudgment: SceneAnalysisQualityJudgment | null;
   trace: readonly SceneAnalysisTraceEntry[];
@@ -267,6 +315,9 @@ export function createSceneAnalysisState(input: Readonly<{
     secondaryArticles: freezeReadonlyArray([]),
     candidateAtoms: freezeReadonlyArray([]),
     rankedCandidateAtoms: freezeReadonlyArray([]),
+    semanticSceneModel: null,
+    semanticSceneResponse: null,
+    semanticSceneDurationMs: null,
     explanation: null,
     qualityJudgment: null,
     trace: freezeReadonlyArray([]),
@@ -295,6 +346,9 @@ export function freezeSceneAnalysisState(state: SceneAnalysisState | Readonly<Re
     secondaryArticles: freezeReadonlyArray((state as SceneAnalysisState).secondaryArticles ?? []),
     candidateAtoms: freezeReadonlyArray((state as SceneAnalysisState).candidateAtoms ?? []),
     rankedCandidateAtoms: freezeReadonlyArray((state as SceneAnalysisState).rankedCandidateAtoms ?? []),
+    semanticSceneModel: (state as SceneAnalysisState).semanticSceneModel ?? null,
+    semanticSceneResponse: (state as SceneAnalysisState).semanticSceneResponse ?? null,
+    semanticSceneDurationMs: (state as SceneAnalysisState).semanticSceneDurationMs ?? null,
     trace: freezeReadonlyArray((state as SceneAnalysisState).trace ?? []),
     explanation: (state as SceneAnalysisState).explanation ?? null,
     qualityJudgment: (state as SceneAnalysisState).qualityJudgment ?? null,
@@ -331,6 +385,9 @@ export function snapshotSceneAnalysisState(state: SceneAnalysisState): SceneAnal
     rankedSecondaryArticleIds: freezeReadonlyArray(state.secondaryArticles.map((candidate) => candidate.articleId)),
     candidateAtomIds: freezeReadonlyArray(state.candidateAtoms.map((candidate) => candidate.atomId)),
     explanationSummary: state.explanation?.summary ?? null,
+    semanticSceneSummary: state.semanticSceneModel?.summary ?? null,
+    semanticSceneConfidence: state.semanticSceneModel?.confidence ?? null,
+    semanticSceneResponseLength: state.semanticSceneResponse?.length ?? null,
     qualityJudgmentStatus: state.qualityJudgment?.status ?? null,
     qualityJudgmentRejectionReasons: freezeReadonlyArray(state.qualityJudgment?.rejectionReasons ?? []),
     traceLength: state.trace.length,

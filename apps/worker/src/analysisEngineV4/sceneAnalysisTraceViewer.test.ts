@@ -38,11 +38,12 @@ async function testTraceReplayStartsFromRequestedNode(): Promise<void> {
   const replay = replaySceneAnalysisTrace(trace, "rank_articles");
 
   assert.equal(replay.startingNode, "rank_articles");
-  assert.equal(replay.startingNodeIndex, 6);
+  assert.equal(replay.startingNodeIndex, 7);
   assert.equal(replay.remainingNodeExecutionOrder[0], "rank_articles");
   assert.equal(replay.steps[0]?.node, "rank_articles");
   assert.equal(replay.startingView.knowledgeDomains.includes("profanity"), true);
   assert.equal(replay.startingView.candidateArticles.length > 0, true);
+  assert.equal((replay.startingView.semanticSceneModel?.summary.length ?? 0) > 0, true);
 }
 
 async function testBenchmarkPersistenceStoresTraceDocuments(): Promise<void> {
