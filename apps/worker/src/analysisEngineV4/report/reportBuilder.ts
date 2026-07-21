@@ -1,6 +1,7 @@
 import type { DecisionProvenanceCollection } from "../provenance/decisionProvenanceTypes.js";
 import type { VerifiedFindingCollection } from "../judge/qualityJudgeTypes.js";
 import type { V3RuntimeFinding } from "../../analysisEngineV3/runtime/runtimeTypes.js";
+import { createNodeTruthVerification, type FindingTruth } from "../truthVerification.js";
 
 export type V4AnalysisReportRow = Readonly<{
   sceneId: string;
@@ -28,6 +29,7 @@ export type V4ReportAdapterInput = Readonly<{
   findings: readonly V3RuntimeFinding[];
   verifiedFindingCollection: VerifiedFindingCollection | null;
   decisionProvenanceCollection: DecisionProvenanceCollection | null;
+  findingTruth?: FindingTruth | null;
 }>;
 
 export type V4ReportAdapterResult = Readonly<{
@@ -153,6 +155,31 @@ export function buildV4ReportAdapter(input: V4ReportAdapterInput): V4ReportAdapt
     analysisReport: finalizedAnalysisReport,
   });
 
+  const reportAdapterVerification = createNodeTruthVerification({
+    nodeName: "report_adapter",
+    nodeLabel: "Report Adapter",
+    input: Object.freeze({
+      findings_count: analysisFindings.length,
+      finding_ids: findingIds,
+      article_ids: articleIds,
+      atom_ids: atomIds,
+      verified_finding_report: input.verifiedFindingCollection?.report ?? null,
+      decision_provenance_report: input.decisionProvenanceCollection?.report ?? null,
+    }),
+    output: Object.freeze({
+      report_document: finalizedReportDocument,
+      analysis_report: finalizedAnalysisReport,
+    }),
+    expectedTruth: input.findingTruth ?? null,
+    actualTruth: input.findingTruth ?? null,
+    executionTimeMs: 0,
+    reason: "report_adapter_serialized_only",
+    truthNode: true,
+    inputSummary: `findings=${analysisFindings.length}; articles=${articleIds.join(",") || "none"}; atoms=${atomIds.join(",") || "none"}`,
+    outputSummary: `reportFindings=${analysisFindings.length}; reportArticles=${articleIds.join(",") || "none"}; reportAtoms=${atomIds.join(",") || "none"}`,
+    mutations: Object.freeze([]),
+  });
+
   return Object.freeze({
     analysisFindings,
     analysisReport: finalizedAnalysisReport,
@@ -171,6 +198,7 @@ export function buildV4ReportAdapter(input: V4ReportAdapterInput): V4ReportAdapt
         atom_ids: atomIds,
         verified_finding_report: input.verifiedFindingCollection?.report ?? null,
         decision_provenance_report: input.decisionProvenanceCollection?.report ?? null,
+        truth_verification: reportAdapterVerification,
       }),
     }),
   });

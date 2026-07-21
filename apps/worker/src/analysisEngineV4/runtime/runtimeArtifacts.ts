@@ -7,6 +7,7 @@ import type { DecisionProvenanceCollection } from "../provenance/decisionProvena
 import type { SceneAnalysisTraceDocument } from "../sceneAnalysisTraceViewer.js";
 import type { V4ReportAdapterResult, V4AnalysisReportRow } from "../report/reportBuilder.js";
 import type { ShadowBenchmarkSummary, ShadowComparisonReport } from "../shadow/shadowComparator.js";
+import type { FindingTruthNodeVerification, TruthVerificationSummary } from "../truthVerification.js";
 
 export type RuntimeEvidenceSnapshot = Readonly<{
   text: string;
@@ -86,6 +87,8 @@ export type RuntimeOrchestrationResult = Readonly<{
   trace: SceneAnalysisTraceDocument;
   report: V4ReportAdapterResult;
   provenance: DecisionProvenanceCollection | null;
+  reportAdapterVerification: FindingTruthNodeVerification | null;
+  verificationSummary: TruthVerificationSummary | null;
   metrics: Readonly<{
     benchmark: BenchmarkReport["metrics"];
     engineMetrics: BenchmarkReport["engineMetrics"];

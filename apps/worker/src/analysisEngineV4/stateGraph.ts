@@ -1,7 +1,30 @@
 import type { SceneAnalysisState } from "./sceneAnalysisState.js";
 import { appendSceneAnalysisTrace, createTraceTransition } from "./sceneAnalysisTrace.js";
 import { freezeSceneAnalysisState, snapshotSceneAnalysisState } from "./sceneAnalysisState.js";
-import { buildFindingTruth, createNodeTruthVerification, createTruthVerificationError, isSameFindingTruth } from "./truthVerification.js";
+import { buildFindingTruth, compareFindingTruth, createNodeTruthVerification, createTruthVerificationError, isSameFindingTruth } from "./truthVerification.js";
+
+function labelForNode(nodeName: string): string {
+  switch (nodeName) {
+    case "understand_scene":
+      return "Scene Understanding";
+    case "interpret_scene":
+      return "Interpret Scene";
+    case "candidate_evidence":
+      return "Candidate Evidence";
+    case "concept_classification":
+      return "Concept Classification";
+    case "legal_mapping":
+      return "Legal Mapping";
+    case "explanation":
+      return "Explanation";
+    case "quality_judge":
+      return "Judge";
+    case "finalize":
+      return "Finalize";
+    default:
+      return nodeName;
+  }
+}
 
 export type SceneAnalysisNode = (state: SceneAnalysisState) => SceneAnalysisState | Promise<SceneAnalysisState>;
 
@@ -114,9 +137,17 @@ export class CompiledStateGraph {
 
       afterTruth = normalizedResult.findingTruth ?? afterTruth;
       if (beforeTruth && !afterTruth) {
+        const mutations = compareFindingTruth(beforeTruth, afterTruth);
         throw createTruthVerificationError({
           nodeName: node.name,
+          nodeLabel: labelForNode(node.name),
           truthId: beforeTruth.truthId,
+          inputTruthHash: beforeTruth.truthId,
+          outputTruthHash: null,
+          inputSummary: JSON.stringify(beforeSnapshot),
+          outputSummary: JSON.stringify(snapshotSceneAnalysisState(normalizedResult)),
+          mutationDetected: mutations.length > 0,
+          mutations,
           expectedTruth: beforeTruth,
           actualTruth: null,
           reason: "finding_truth_removed",
@@ -124,9 +155,17 @@ export class CompiledStateGraph {
       }
 
       if (beforeTruth && afterTruth && !isSameFindingTruth(beforeTruth, afterTruth)) {
+        const mutations = compareFindingTruth(beforeTruth, afterTruth);
         throw createTruthVerificationError({
           nodeName: node.name,
+          nodeLabel: labelForNode(node.name),
           truthId: beforeTruth.truthId,
+          inputTruthHash: beforeTruth.truthId,
+          outputTruthHash: afterTruth.truthId,
+          inputSummary: JSON.stringify(beforeSnapshot),
+          outputSummary: JSON.stringify(snapshotSceneAnalysisState(normalizedResult)),
+          mutationDetected: mutations.length > 0,
+          mutations,
           expectedTruth: beforeTruth,
           actualTruth: afterTruth,
           reason: "finding_truth_changed",
@@ -137,6 +176,7 @@ export class CompiledStateGraph {
       const finishedAtMs = globalThis.performance?.now?.() ?? Date.now();
       const verification = createNodeTruthVerification({
         nodeName: node.name,
+        nodeLabel: labelForNode(node.name),
         input: beforeSnapshot,
         output: snapshotSceneAnalysisState(normalizedResult),
         expectedTruth: beforeTruth,
@@ -147,6 +187,7 @@ export class CompiledStateGraph {
           : afterTruth
             ? "finding_truth_initialized"
             : "finding_truth_not_yet_initialized",
+        truthNode: node.name !== "finalize",
       });
       normalizedResult = freezeSceneAnalysisState({
         ...normalizedResult,

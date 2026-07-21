@@ -3,6 +3,7 @@ import { buildCognitiveDashboard } from "../dashboard/cognitiveDashboard.js";
 import { runSceneAnalysisBenchmark } from "../benchmark/benchmarkRunner.js";
 import type { SceneAnalysisTraceDocument } from "../sceneAnalysisTraceViewer.js";
 import { logger } from "../../logger.js";
+import { createTruthVerificationSummary, type FindingTruthNodeVerification } from "../truthVerification.js";
 import {
   buildRuntimeBenchmarkCase,
   buildRuntimeMetrics,
@@ -57,6 +58,7 @@ export async function runRuntimeOrchestrator(
     traceDocument,
   });
   const reportExecutionTimeMs = Date.now() - reportStartedAt;
+  const reportAdapterVerification = ((report.truthLayerMeta as Record<string, unknown> | null | undefined)?.report_adapter as Record<string, unknown> | null | undefined)?.truth_verification as FindingTruthNodeVerification | null ?? null;
 
   const provenanceStartedAt = Date.now();
   const provenance = traceDocument.decisionProvenanceCollection ?? null;
@@ -120,6 +122,11 @@ export async function runRuntimeOrchestrator(
     trace: traceDocument,
     report,
     provenance,
+    reportAdapterVerification,
+    verificationSummary: createTruthVerificationSummary([
+      ...traceDocument.verificationTrail,
+      ...(reportAdapterVerification ? [reportAdapterVerification] : []),
+    ]),
     metrics: Object.freeze({
       benchmark: benchmark.metrics,
       engineMetrics: benchmark.engineMetrics,

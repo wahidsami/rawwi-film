@@ -18,6 +18,7 @@ export function buildSceneAnalysisTraceEntry(input: Readonly<{
   after: SceneAnalysisTraceSnapshot;
   beforeState: SceneAnalysisState;
   afterState: SceneAnalysisState;
+  verification: SceneAnalysisTraceEntry["verification"];
 }>): SceneAnalysisTraceEntry {
   return Object.freeze({
     node: input.node,
@@ -29,6 +30,7 @@ export function buildSceneAnalysisTraceEntry(input: Readonly<{
     after: input.after,
     beforeView: createSceneAnalysisTraceNodeView(input.beforeState),
     afterView: createSceneAnalysisTraceNodeView(input.afterState),
+    verification: input.verification,
   });
 }
 
@@ -49,6 +51,7 @@ export function createTraceTransition(
   finishedAt: string,
   durationMs: number,
   nextState: SceneAnalysisState,
+  verification: SceneAnalysisTraceEntry["verification"],
 ): SceneAnalysisTraceEntry {
   return buildSceneAnalysisTraceEntry({
     node,
@@ -59,5 +62,6 @@ export function createTraceTransition(
     after: snapshotSceneAnalysisState(nextState),
     beforeState: state,
     afterState: nextState,
+    verification,
   });
 }

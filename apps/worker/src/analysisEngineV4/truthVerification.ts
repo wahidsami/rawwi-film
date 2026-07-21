@@ -28,7 +28,16 @@ export type FindingTruthSnapshot = Readonly<{
 
 export type FindingTruthNodeVerification = Readonly<{
   nodeName: string;
+  nodeLabel: string;
   truthId: string | null;
+  inputTruthHash: string | null;
+  outputTruthHash: string | null;
+  inputSummary: string;
+  outputSummary: string;
+  mutationDetected: boolean;
+  mutations: readonly TruthVerificationMutation[];
+  verificationPassed: boolean;
+  truthNode: boolean;
   input: Readonly<Record<string, unknown>>;
   output: Readonly<Record<string, unknown>>;
   reason: string;
@@ -40,6 +49,7 @@ export type FindingTruthNodeVerification = Readonly<{
 
 export type TruthVerificationMetric = Readonly<{
   nodeName: string;
+  nodeLabel: string;
   truthId: string | null;
   preserved: boolean;
   preservationRate: number;
@@ -48,17 +58,38 @@ export type TruthVerificationMetric = Readonly<{
 
 export type TruthVerificationSummary = Readonly<{
   totalNodes: number;
+  totalFindings: number;
   passCount: number;
+  verified: number;
   rejectCount: number;
+  failed: number;
   overallPreservationRate: number;
+  truthChainIntact: boolean;
+  truthChainState: "Truth Chain Intact" | "Truth Divergence Detected";
   firstFailureNode: string | null;
+  firstDivergenceNode: string | null;
+  firstDivergenceField: string | null;
   firstFailureReason: string | null;
+  firstDivergenceReason: string | null;
   metrics: readonly TruthVerificationMetric[];
+}>;
+
+export type TruthVerificationMutation = Readonly<{
+  field: string;
+  oldValue: unknown;
+  newValue: unknown;
 }>;
 
 export type TruthVerificationErrorDetails = Readonly<{
   nodeName: string;
+  nodeLabel: string;
   truthId: string | null;
+  inputTruthHash: string | null;
+  outputTruthHash: string | null;
+  inputSummary: string;
+  outputSummary: string;
+  mutationDetected: boolean;
+  mutations: readonly TruthVerificationMutation[];
   expectedTruth: FindingTruth | null;
   actualTruth: FindingTruth | null;
   reason: string;
@@ -66,7 +97,14 @@ export type TruthVerificationErrorDetails = Readonly<{
 
 export class TruthVerificationError extends Error {
   readonly nodeName: string;
-  readonly truthId: string | null;
+  readonly nodeLabel!: string;
+  readonly truthId!: string | null;
+  readonly inputTruthHash!: string | null;
+  readonly outputTruthHash!: string | null;
+  readonly inputSummary!: string;
+  readonly outputSummary!: string;
+  readonly mutationDetected!: boolean;
+  readonly mutations!: readonly TruthVerificationMutation[];
   readonly expectedTruth: FindingTruth | null;
   readonly actualTruth: FindingTruth | null;
   readonly reason: string;
@@ -75,7 +113,13 @@ export class TruthVerificationError extends Error {
     super(
       [
         "Truth verification failed",
-        `Node: ${details.nodeName}`,
+        `Node: ${details.nodeLabel} (${details.nodeName})`,
+        `Input Truth Hash: ${details.inputTruthHash ?? "null"}`,
+        `Output Truth Hash: ${details.outputTruthHash ?? "null"}`,
+        `Input Summary: ${details.inputSummary}`,
+        `Output Summary: ${details.outputSummary}`,
+        `Mutation Detected: ${details.mutationDetected ? "Yes" : "No"}`,
+        ...details.mutations.map((mutation) => `Field: ${mutation.field} | Old Value: ${formatValue(mutation.oldValue)} | New Value: ${formatValue(mutation.newValue)}`),
         `Expected: ${formatTruth(details.expectedTruth)}`,
         `Actual: ${formatTruth(details.actualTruth)}`,
         `Reason: ${details.reason}`,
@@ -102,6 +146,70 @@ function sha256(value: string): string {
 
 function formatTruth(truth: FindingTruth | null): string {
   return truth ? JSON.stringify(truth) : "null";
+}
+
+function formatValue(value: unknown): string {
+  if (typeof value === "string") return JSON.stringify(value);
+  if (typeof value === "number" || typeof value === "boolean" || value === null) return String(value);
+  return JSON.stringify(value);
+}
+
+function summarizeTruth(truth: FindingTruth | null): string {
+  if (!truth) {
+    return "truth=null";
+  }
+
+  return [
+    `truthId=${truth.truthId}`,
+    `sceneId=${truth.sceneId}`,
+    `evidenceId=${truth.evidenceId}`,
+    `spanId=${truth.evidenceSpanId}`,
+    `page=${truth.page}`,
+    `offsets=${truth.startOffset}-${truth.endOffset}`,
+    `scene=${normalizeText(truth.scene).slice(0, 120)}`,
+    `evidence=${normalizeText(truth.rawEvidenceText).slice(0, 120)}`,
+  ].join("; ");
+}
+
+function humanizeNodeName(nodeName: string): string {
+  return nodeName
+    .split(/[_\s-]+/g)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function diffTruth(left: FindingTruth | null, right: FindingTruth | null): readonly TruthVerificationMutation[] {
+  const fields: readonly (keyof FindingTruth)[] = [
+    "truthId",
+    "sceneId",
+    "evidenceId",
+    "evidenceSpanId",
+    "page",
+    "scene",
+    "startOffset",
+    "endOffset",
+    "rawEvidenceText",
+  ];
+  const mutations: TruthVerificationMutation[] = [];
+
+  for (const field of fields) {
+    const oldValue = left ? left[field] : null;
+    const newValue = right ? right[field] : null;
+    if (oldValue !== newValue) {
+      mutations.push(Object.freeze({
+        field,
+        oldValue,
+        newValue,
+      }));
+    }
+  }
+
+  return Object.freeze(mutations);
+}
+
+export function compareFindingTruth(left: FindingTruth | null, right: FindingTruth | null): readonly TruthVerificationMutation[] {
+  return diffTruth(left, right);
 }
 
 export function buildFindingTruth(sceneId: string, evidenceCollection: EvidenceCollection | null): FindingTruth | null {
@@ -194,16 +302,32 @@ export function createTruthVerificationError(details: TruthVerificationErrorDeta
 
 export function createNodeTruthVerification(input: Readonly<{
   nodeName: string;
+  nodeLabel?: string;
   input: Readonly<Record<string, unknown>>;
   output: Readonly<Record<string, unknown>>;
   expectedTruth: FindingTruth | null;
   actualTruth: FindingTruth | null;
   executionTimeMs: number;
   reason: string;
+  truthNode?: boolean;
+  inputSummary?: string;
+  outputSummary?: string;
+  mutations?: readonly TruthVerificationMutation[];
 }>): FindingTruthNodeVerification {
+  const nodeLabel = input.nodeLabel ?? humanizeNodeName(input.nodeName);
+  const mutations = Object.freeze([...(input.mutations ?? diffTruth(input.expectedTruth, input.actualTruth))]);
   return Object.freeze({
     nodeName: input.nodeName,
+    nodeLabel,
     truthId: input.actualTruth?.truthId ?? input.expectedTruth?.truthId ?? null,
+    inputTruthHash: input.expectedTruth?.truthId ?? null,
+    outputTruthHash: input.actualTruth?.truthId ?? null,
+    inputSummary: input.inputSummary ?? summarizeTruth(input.expectedTruth),
+    outputSummary: input.outputSummary ?? summarizeTruth(input.actualTruth),
+    mutationDetected: mutations.length > 0,
+    mutations,
+    verificationPassed: input.reason !== "finding_truth_removed" && input.reason !== "finding_truth_changed",
+    truthNode: input.truthNode ?? true,
     input: Object.freeze({ ...input.input }),
     output: Object.freeze({ ...input.output }),
     reason: input.reason,
@@ -215,12 +339,15 @@ export function createNodeTruthVerification(input: Readonly<{
 }
 
 export function createTruthVerificationSummary(steps: readonly FindingTruthNodeVerification[]): TruthVerificationSummary {
+  const truthSteps = steps.filter((step) => step.truthNode !== false);
   const totalNodes = steps.length;
-  const passCount = steps.filter((step) => step.verificationResult === "pass").length;
-  const rejectCount = steps.filter((step) => step.verificationResult === "reject").length;
-  const firstFailure = steps.find((step) => step.verificationResult === "reject") ?? null;
+  const totalFindings = truthSteps.length;
+  const passCount = truthSteps.filter((step) => step.verificationResult === "pass").length;
+  const rejectCount = truthSteps.filter((step) => step.verificationResult === "reject").length;
+  const firstFailure = truthSteps.find((step) => step.verificationResult === "reject") ?? null;
   const metrics = steps.map((step) => Object.freeze({
     nodeName: step.nodeName,
+    nodeLabel: step.nodeLabel,
     truthId: step.truthId,
     preserved: step.verificationResult === "pass",
     preservationRate: step.verificationResult === "pass" ? 100 : 0,
@@ -229,11 +356,19 @@ export function createTruthVerificationSummary(steps: readonly FindingTruthNodeV
 
   return Object.freeze({
     totalNodes,
+    totalFindings,
     passCount,
+    verified: passCount,
     rejectCount,
-    overallPreservationRate: totalNodes === 0 ? 100 : Number(((passCount / totalNodes) * 100).toFixed(6)),
+    failed: rejectCount,
+    overallPreservationRate: totalFindings === 0 ? 100 : Number(((passCount / totalFindings) * 100).toFixed(6)),
+    truthChainIntact: rejectCount === 0,
+    truthChainState: rejectCount === 0 ? "Truth Chain Intact" : "Truth Divergence Detected",
     firstFailureNode: firstFailure?.nodeName ?? null,
+    firstDivergenceNode: firstFailure?.nodeLabel ?? firstFailure?.nodeName ?? null,
+    firstDivergenceField: firstFailure?.mutations[0]?.field ?? null,
     firstFailureReason: firstFailure?.reason ?? null,
+    firstDivergenceReason: firstFailure?.reason ?? null,
     metrics: Object.freeze(metrics),
   });
 }
