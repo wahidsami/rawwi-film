@@ -1,5 +1,6 @@
 import type {
   SceneAnalysisState,
+  SceneAnalysisEvidenceCollection,
   SceneAnalysisTrace,
   SceneAnalysisTraceEntry,
   SceneAnalysisTraceNodeView,
@@ -15,11 +16,35 @@ function freezeTraceEntries(entries: readonly SceneAnalysisTraceEntry[]): readon
   return Object.freeze([...entries]);
 }
 
+function normalizeEvidenceCollectionForDocument(collection: SceneAnalysisEvidenceCollection | null): SceneAnalysisEvidenceCollection | null {
+  if (!collection) {
+    return null;
+  }
+
+  return Object.freeze({
+    ...collection,
+    executionTimeMs: 0,
+    evidence: Object.freeze([...collection.evidence]),
+    dedupDecisions: Object.freeze([...collection.dedupDecisions]),
+    grounding: Object.freeze({
+      ...collection.grounding,
+    }),
+  });
+}
+
+function normalizeTraceNodeViewForDocument(view: SceneAnalysisTraceNodeView): SceneAnalysisTraceNodeView {
+  return freezeTraceNodeView({
+    ...view,
+    evidenceCollection: normalizeEvidenceCollectionForDocument(view.evidenceCollection),
+  });
+}
+
 export function createSceneAnalysisTraceNodeView(state: SceneAnalysisState): SceneAnalysisTraceNodeView {
   return freezeTraceNodeView({
     status: state.status,
     sceneSummary: state.sceneModel?.summary ?? state.normalizedSceneText ?? state.sceneText,
     evidence: state.evidenceSpans,
+    evidenceCollection: state.evidenceCollection,
     concepts: state.detectedConcepts,
     knowledgeDomains: state.knowledgeDomains,
     candidateArticles: state.candidateArticles,
@@ -45,6 +70,7 @@ export function buildSceneAnalysisTrace(state: SceneAnalysisState): SceneAnalysi
     sceneId: state.sceneId,
     sceneSummary: state.sceneModel?.summary ?? state.normalizedSceneText ?? state.sceneText,
     evidence: state.evidenceSpans,
+    evidenceCollection: state.evidenceCollection,
     concepts: state.detectedConcepts,
     knowledgeDomains: state.knowledgeDomains,
     candidateArticles: state.candidateArticles,
@@ -75,6 +101,7 @@ export type SceneAnalysisTraceDocument = Readonly<{
   sceneId: string;
   sceneSummary: string;
   evidence: SceneAnalysisTraceNodeView["evidence"];
+  evidenceCollection: SceneAnalysisEvidenceCollection | null;
   concepts: SceneAnalysisTraceNodeView["concepts"];
   knowledgeDomains: readonly string[];
   candidateArticles: SceneAnalysisTraceNodeView["candidateArticles"];
@@ -119,8 +146,9 @@ export function replaySceneAnalysisTrace(trace: SceneAnalysisTrace, fromNode: st
         sceneModel: null,
         normalizedSceneText: trace.sceneSummary,
         sentences: [],
-        evidenceSpans: trace.evidence,
-        primaryEvidenceSpanId: null,
+      evidenceSpans: trace.evidence,
+      evidenceCollection: trace.evidenceCollection,
+      primaryEvidenceSpanId: null,
         primaryEvidenceText: null,
         primaryEvidenceReason: null,
         detectedConcepts: trace.concepts,
@@ -149,8 +177,9 @@ export function replaySceneAnalysisTrace(trace: SceneAnalysisTrace, fromNode: st
         sceneModel: null,
         normalizedSceneText: trace.sceneSummary,
         sentences: [],
-        evidenceSpans: trace.evidence,
-        primaryEvidenceSpanId: null,
+      evidenceSpans: trace.evidence,
+      evidenceCollection: trace.evidenceCollection,
+      primaryEvidenceSpanId: null,
         primaryEvidenceText: null,
         primaryEvidenceReason: null,
         detectedConcepts: trace.concepts,
@@ -198,13 +227,14 @@ export function createSceneAnalysisTraceDocument(trace: SceneAnalysisTrace): Sce
     node: entry.node,
     durationMs: index + 1,
     changedKeys: entry.changedKeys,
-    before: entry.beforeView,
-    after: entry.afterView,
+    before: normalizeTraceNodeViewForDocument(entry.beforeView),
+    after: normalizeTraceNodeViewForDocument(entry.afterView),
   }));
   return Object.freeze({
     sceneId: trace.sceneId,
     sceneSummary: trace.sceneSummary,
     evidence: trace.evidence,
+    evidenceCollection: normalizeEvidenceCollectionForDocument(trace.evidenceCollection),
     concepts: trace.concepts,
     knowledgeDomains: trace.knowledgeDomains,
     candidateArticles: trace.candidateArticles,

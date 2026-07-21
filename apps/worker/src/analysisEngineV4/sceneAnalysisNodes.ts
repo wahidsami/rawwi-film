@@ -113,6 +113,17 @@ function inferSourceType(sentence: string): SceneAnalysisSentence["sourceType"] 
 function collectEvidenceSpans(sentences: readonly SceneAnalysisSentence[]): readonly SceneAnalysisEvidenceSpan[] {
   return Object.freeze(sentences.map((sentence, index) => Object.freeze({
     spanId: `evidence-${index + 1}`,
+    id: `evidence-${index + 1}`,
+    sceneId: sentence.sentenceId,
+    eventId: sentence.sentenceId,
+    speaker: null,
+    target: null,
+    page: 1,
+    scene: sentence.text,
+    byteStartOffset: sentence.startOffset,
+    byteEndOffset: sentence.endOffset,
+    rawText: sentence.text,
+    normalizedText: sentence.text.normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase(),
     text: sentence.text,
     startOffset: sentence.startOffset,
     endOffset: sentence.endOffset,
@@ -129,6 +140,26 @@ function collectEvidenceSpans(sentences: readonly SceneAnalysisSentence[]): read
     conceptIds: Object.freeze([]),
     confidence: 1,
     rationale: Object.freeze([`Sentence ${index + 1} is the grounded evidence span.`]),
+    eventType: sentence.sourceType,
+    participants: Object.freeze([]),
+    grounding: Object.freeze({
+      sentenceId: sentence.sentenceId,
+      lineId: sentence.sentenceId,
+      page: 1,
+      startOffset: sentence.startOffset,
+      endOffset: sentence.endOffset,
+      byteStartOffset: sentence.startOffset,
+      byteEndOffset: sentence.endOffset,
+      matchedText: sentence.text,
+      method: "exact" as const,
+      pageReferences: Object.freeze([
+        Object.freeze({
+          pageNumber: 1,
+          startOffsetPage: sentence.startOffset,
+          endOffsetPage: sentence.endOffset,
+        }),
+      ]),
+    }),
   })));
 }
 

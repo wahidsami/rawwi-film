@@ -17,24 +17,48 @@ function buildEvidenceSpan(input: Readonly<{
   startOffset: number;
   endOffset: number;
 }>): SceneAnalysisEvidenceSpan {
+  const pageReferences = Object.freeze([
+    Object.freeze({
+      pageNumber: 1,
+      startOffsetPage: input.startOffset,
+      endOffsetPage: input.endOffset,
+    }),
+  ]);
   return Object.freeze({
+    id: input.spanId,
     spanId: input.spanId,
+    sceneId: "scene-concepts",
+    eventId: input.spanId,
+    speaker: "فهد",
+    target: "الجارة",
+    page: 1,
+    scene: "Scene contains profanity and a reaction.",
+    byteStartOffset: input.startOffset,
+    byteEndOffset: input.endOffset,
+    rawText: input.text,
+    normalizedText: input.text.normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase(),
     text: input.text,
     startOffset: input.startOffset,
     endOffset: input.endOffset,
     lineId: input.spanId,
     sentenceIndex: 0,
-    sourceType: "dialogue",
-    pageReferences: Object.freeze([
-      Object.freeze({
-        pageNumber: 1,
-        startOffsetPage: input.startOffset,
-        endOffsetPage: input.endOffset,
-      }),
-    ]),
+    sourceType: "Dialogue",
+    pageReferences,
     conceptIds: Object.freeze([]),
     confidence: 1,
     rationale: Object.freeze(["Seed evidence span for deterministic concept classification."]),
+    grounding: Object.freeze({
+      sentenceId: input.spanId,
+      lineId: input.spanId,
+      page: 1,
+      startOffset: input.startOffset,
+      endOffset: input.endOffset,
+      byteStartOffset: input.startOffset,
+      byteEndOffset: input.endOffset,
+      matchedText: input.text,
+      method: "exact" as const,
+      pageReferences,
+    }),
   });
 }
 

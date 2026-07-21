@@ -29,6 +29,35 @@ function toConfidence(value: number): number {
   return Number(value.toFixed(6));
 }
 
+function toLegacyEvidenceType(sourceType: unknown): "unknown" | "dialogue" | "scene_description" | "story_context" | "mixed" {
+  switch (sourceType) {
+    case "Dialogue":
+    case "dialogue":
+      return "dialogue";
+    case "Action":
+    case "Description":
+    case "action":
+    case "description":
+      return "scene_description";
+    case "Narration":
+    case "VoiceOver":
+    case "Document":
+    case "Sign":
+    case "Screen":
+    case "Media":
+    case "Phone":
+    case "Message":
+    case "SocialPost":
+    case "story_context":
+    case "narration":
+      return "story_context";
+    case "mixed":
+      return "mixed";
+    default:
+      return "unknown";
+  }
+}
+
 function buildConceptContext(state: SceneAnalysisState): ReturnType<typeof normalizeConceptContext> {
   const concepts: Concept[] = state.detectedConcepts.map((concept, index) => freeze({
     id: concept.conceptId,
@@ -117,7 +146,7 @@ function buildAnalysisResponse(state: SceneAnalysisState, request: AnalysisJobCo
     quote: primaryEvidence?.text ?? null,
     scene: state.sceneModel?.summary ?? state.normalizedSceneText ?? request.chunkText,
     page: primaryEvidence?.pageReferences[0]?.pageNumber ?? null,
-    evidenceType: primaryEvidence?.sourceType ?? "unknown",
+    evidenceType: toLegacyEvidenceType(primaryEvidence?.sourceType),
     observedFacts: freeze(state.evidenceSpans.map((span) => span.text)),
     notes: freeze(["Derived from the V4 grounded evidence span(s)."]),
   });

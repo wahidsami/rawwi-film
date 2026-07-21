@@ -17,20 +17,44 @@ import {
 } from "./index.js";
 
 function buildEvidenceSpan(text: string): SceneAnalysisEvidenceSpan {
+  const pageReferences = Object.freeze([
+    Object.freeze({ pageNumber: 1, startOffsetPage: 0, endOffsetPage: text.length }),
+  ]);
   return Object.freeze({
+    id: "evidence-1",
     spanId: "evidence-1",
+    sceneId: "scene-quality",
+    eventId: "evidence-1",
+    speaker: "فهد",
+    target: null,
+    page: 1,
+    scene: "Scene focused on profanity evidence.",
+    byteStartOffset: 0,
+    byteEndOffset: text.length,
+    rawText: text,
+    normalizedText: text.normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase(),
     text,
     startOffset: 0,
     endOffset: text.length,
     lineId: "line-1",
     sentenceIndex: 0,
-    sourceType: "dialogue",
-    pageReferences: Object.freeze([
-      Object.freeze({ pageNumber: 1, startOffsetPage: 0, endOffsetPage: text.length }),
-    ]),
+    sourceType: "Dialogue",
+    pageReferences,
     conceptIds: Object.freeze(["profanity"]),
     confidence: 1,
     rationale: Object.freeze(["Grounded evidence"]),
+    grounding: Object.freeze({
+      sentenceId: "evidence-1",
+      lineId: "line-1",
+      page: 1,
+      startOffset: 0,
+      endOffset: text.length,
+      byteStartOffset: 0,
+      byteEndOffset: text.length,
+      matchedText: text,
+      method: "exact" as const,
+      pageReferences,
+    }),
   });
 }
 

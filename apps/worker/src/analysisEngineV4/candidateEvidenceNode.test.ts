@@ -4,12 +4,53 @@
  */
 import { strict as assert } from "node:assert";
 
-import { createCandidateEvidenceNode, createSceneAnalysisState, createSceneUnderstandingNode } from "./index.js";
+import {
+  createCandidateEvidenceNode,
+  createSceneAnalysisState,
+  createSceneUnderstandingNode,
+  freezeSceneAnalysisState,
+  type SemanticSceneModel,
+} from "./index.js";
+
+function buildSemanticSceneModel(): SemanticSceneModel {
+  return Object.freeze({
+    summary: "Scene contains a direct insult in dialogue.",
+    participants: Object.freeze(["فهد", "الجارة"]),
+    relationships: Object.freeze([]),
+    events: Object.freeze([
+      Object.freeze({
+        eventType: "Insult",
+        description: "فهد: يا كلب",
+        evidence: "فهد: يا كلب",
+        participants: Object.freeze(["فهد", "الجارة"]),
+      }),
+      Object.freeze({
+        eventType: "Action",
+        description: "الجارة تغلق الباب.",
+        evidence: "الجارة تغلق الباب.",
+        participants: Object.freeze(["الجارة"]),
+      }),
+    ]),
+    timeline: Object.freeze([]),
+    speakerIntent: "conversational",
+    emotionalState: "tense",
+    victims: Object.freeze([]),
+    aggressors: Object.freeze([]),
+    targets: Object.freeze([]),
+    sensitiveConcepts: Object.freeze(["profanity"]),
+    scenePurpose: "conversation",
+    sceneOutcome: "exchange_of_information",
+    confidence: 0.9,
+  });
+}
 
 function testCandidateEvidenceCopiesVerbatimSpans(): void {
   const sceneText = "INT. HOUSE - NIGHT\nفهد: يا كلب\nالجارة تغلق الباب.";
   const understood = createSceneUnderstandingNode()(createSceneAnalysisState({ sceneId: "scene-evidence", sceneText }));
-  const evidenceState = createCandidateEvidenceNode()(understood);
+  const evidenceState = createCandidateEvidenceNode()(freezeSceneAnalysisState({
+    ...understood,
+    semanticSceneModel: buildSemanticSceneModel(),
+  }));
 
   assert.equal(evidenceState.evidenceSpans.length, 2);
   for (const span of evidenceState.evidenceSpans) {
@@ -22,8 +63,10 @@ function testCandidateEvidenceCopiesVerbatimSpans(): void {
     assert.equal(span.pageReferences[0]?.endOffsetPage, span.endOffset);
   }
 
-  assert.equal(evidenceState.evidenceSpans[0]?.text, "فهد: يا كلب");
+  assert.equal(evidenceState.evidenceSpans[0]?.text, "يا كلب");
   assert.equal(evidenceState.evidenceSpans[1]?.text, "الجارة تغلق الباب.");
+  assert.equal(evidenceState.evidenceCollection?.evidence.length, 2);
+  assert.equal(evidenceState.evidenceCollection?.primaryEvidenceId, evidenceState.evidenceSpans[0]?.id ?? null);
 }
 
 function testCandidateEvidenceIsDeterministicForIdenticalScenes(): void {
@@ -42,4 +85,3 @@ function main(): void {
 }
 
 main();
-
