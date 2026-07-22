@@ -297,6 +297,267 @@ export async function persistAggregationReportOnce(
   return { inserted: false, reportId: fallbackReportId };
 }
 
+type ReportContractRow = Readonly<{
+  id: string;
+  analysis_generation_id: string | null;
+  report_generation_id: string | null;
+}>;
+
+type ReportContractSnapshot = Readonly<{
+  jobId: string;
+  generationId: string | null;
+  reportCount: number;
+  reportIds: readonly string[];
+  analysisGenerationIds: readonly (string | null)[];
+  reportGenerationIds: readonly (string | null)[];
+  firstReportId: string | null;
+  firstReportAnalysisGenerationId: string | null;
+  firstReportGenerationId: string | null;
+}>;
+
+export type ReportContractStatus = "passed" | "skipped" | "failed";
+
+export type ReportContractDiagnostic = Readonly<{
+  errorCode: "REPORT_CONTRACT_VIOLATION";
+  jobId: string;
+  generationId: string | null;
+  findingCount: number;
+  reportCount: number;
+  pipelineIntegrityStatus: ReportContractStatus;
+  atpStatus: ReportContractStatus;
+  firstFunctionPreventedReportPersistence: string | null;
+  exceptionChain: readonly string[];
+  callStack: string | null;
+  file: string;
+  functionName: string;
+  lineNumber: number | null;
+  reportIds: readonly string[];
+  analysisGenerationIds: readonly (string | null)[];
+  reportGenerationIds: readonly (string | null)[];
+  reportInserted: boolean;
+  reportId: string | null;
+}>;
+
+class ReportContractViolationError extends Error {
+  readonly diagnostic: ReportContractDiagnostic;
+
+  constructor(diagnostic: ReportContractDiagnostic) {
+    super("REPORT_CONTRACT_VIOLATION");
+    this.name = "REPORT_CONTRACT_VIOLATION";
+    this.diagnostic = diagnostic;
+  }
+}
+
+type ReportContractStore = Readonly<{
+  listReportsByJobId(jobId: string): Promise<readonly ReportContractRow[]>;
+}>;
+
+function createReportContractStore(client = supabase): ReportContractStore {
+  return Object.freeze({
+    async listReportsByJobId(jobId: string): Promise<readonly ReportContractRow[]> {
+      const { data, error } = await client
+        .from("analysis_reports")
+        .select("id, analysis_generation_id, report_generation_id")
+        .eq("job_id", jobId)
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true });
+
+      if (error) {
+        throw error;
+      }
+
+      return Object.freeze((data ?? []) as ReportContractRow[]);
+    },
+  });
+}
+
+function parseCallSite(stack: string | null): Readonly<{
+  file: string;
+  functionName: string;
+  lineNumber: number | null;
+}> {
+  if (!stack) {
+    return Object.freeze({
+      file: "apps/worker/src/aggregation.ts",
+      functionName: "runAggregation",
+      lineNumber: null,
+    });
+  }
+
+  const lines = stack.split("\n").map((line) => line.trim()).filter(Boolean);
+  for (const line of lines.slice(1)) {
+    if (/ReportContractViolationError|verifyReportContract|buildReportContractDiagnostic|parseCallSite|node:|internal\//i.test(line)) {
+      continue;
+    }
+    const namedMatch = line.match(/^at\s+(.*?)\s+\((.*):(\d+):(\d+)\)$/i);
+    if (namedMatch?.[1] && namedMatch[2]) {
+      return Object.freeze({
+        file: namedMatch[2],
+        functionName: namedMatch[1].trim(),
+        lineNumber: Number(namedMatch[3] ?? 0) || null,
+      });
+    }
+    const anonymousMatch = line.match(/^at\s+(.*):(\d+):(\d+)$/i);
+    if (anonymousMatch?.[1]) {
+      return Object.freeze({
+        file: anonymousMatch[1],
+        functionName: "runAggregation",
+        lineNumber: Number(anonymousMatch[2] ?? 0) || null,
+      });
+    }
+  }
+
+  return Object.freeze({
+    file: "apps/worker/src/aggregation.ts",
+    functionName: "runAggregation",
+    lineNumber: null,
+  });
+}
+
+function buildReportContractDiagnostic(input: Readonly<{
+  jobId: string;
+  generationId: string | null;
+  findingCount: number;
+  reportCount: number;
+  pipelineIntegrityStatus: ReportContractStatus;
+  atpStatus: ReportContractStatus;
+  reportInserted: boolean;
+  reportId: string | null;
+  reportRows: readonly ReportContractRow[];
+  failureReason: string;
+  exception?: unknown;
+}>): ReportContractDiagnostic {
+  const callStack = new Error("REPORT_CONTRACT_VIOLATION_CALLSTACK").stack ?? null;
+  const callSite = parseCallSite(callStack);
+  const exceptionChain = [input.failureReason];
+  if (input.exception instanceof Error) {
+    exceptionChain.push(input.exception.message);
+    const exceptionWithCause = input.exception as Error & { cause?: unknown };
+    if (exceptionWithCause.cause) {
+      exceptionChain.push(String(exceptionWithCause.cause));
+    }
+  }
+  return Object.freeze({
+    errorCode: "REPORT_CONTRACT_VIOLATION",
+    jobId: input.jobId,
+    generationId: input.generationId,
+    findingCount: input.findingCount,
+    reportCount: input.reportCount,
+    pipelineIntegrityStatus: input.pipelineIntegrityStatus,
+    atpStatus: input.atpStatus,
+    firstFunctionPreventedReportPersistence: input.reportInserted
+      ? null
+      : input.reportId
+        ? null
+        : "persistAggregationReportOnce",
+    exceptionChain: Object.freeze(exceptionChain),
+    callStack,
+    file: callSite.file,
+    functionName: callSite.functionName,
+    lineNumber: callSite.lineNumber,
+    reportIds: Object.freeze(input.reportRows.map((row) => row.id)),
+    analysisGenerationIds: Object.freeze(input.reportRows.map((row) => row.analysis_generation_id)),
+    reportGenerationIds: Object.freeze(input.reportRows.map((row) => row.report_generation_id)),
+    reportInserted: input.reportInserted,
+    reportId: input.reportId,
+  });
+}
+
+export async function verifyReportContract(input: Readonly<{
+  jobId: string;
+  generationId: string | null;
+  findingCount: number;
+  pipelineIntegrityStatus: ReportContractStatus;
+  atpStatus: ReportContractStatus;
+  reportInserted: boolean;
+  reportId: string | null;
+  store?: ReportContractStore;
+}>): Promise<ReportContractSnapshot> {
+  const store = input.store ?? createReportContractStore();
+  let reportRows: readonly ReportContractRow[] = [];
+  try {
+    reportRows = await store.listReportsByJobId(input.jobId);
+  } catch (error) {
+    const diagnostic = buildReportContractDiagnostic({
+      jobId: input.jobId,
+      generationId: input.generationId,
+      findingCount: input.findingCount,
+      reportCount: 0,
+      pipelineIntegrityStatus: input.pipelineIntegrityStatus,
+      atpStatus: input.atpStatus,
+      reportInserted: input.reportInserted,
+      reportId: input.reportId,
+      reportRows: [],
+      failureReason: "analysis_reports could not be read while verifying the report contract",
+      exception: error,
+    });
+    logger.error("Report contract violation", {
+      ...diagnostic,
+      snapshotError: error instanceof Error ? error.message : String(error),
+    });
+    const thrown = new ReportContractViolationError(diagnostic);
+    (thrown as Error & { reportContractDiagnostic?: ReportContractDiagnostic }).reportContractDiagnostic = diagnostic;
+    throw thrown;
+  }
+  const snapshot: ReportContractSnapshot = Object.freeze({
+    jobId: input.jobId,
+    generationId: input.generationId,
+    reportCount: reportRows.length,
+    reportIds: Object.freeze(reportRows.map((row) => row.id)),
+    analysisGenerationIds: Object.freeze(reportRows.map((row) => row.analysis_generation_id)),
+    reportGenerationIds: Object.freeze(reportRows.map((row) => row.report_generation_id)),
+    firstReportId: reportRows[0]?.id ?? null,
+    firstReportAnalysisGenerationId: reportRows[0]?.analysis_generation_id ?? null,
+    firstReportGenerationId: reportRows[0]?.report_generation_id ?? null,
+  });
+
+  const generationMismatch = input.generationId !== null
+    ? reportRows.some((row) => row.analysis_generation_id !== input.generationId || row.report_generation_id !== input.generationId)
+    : false;
+  const shouldHaveReport = input.findingCount > 0;
+  const contractViolated = shouldHaveReport && (snapshot.reportCount !== 1 || generationMismatch);
+
+  if (contractViolated) {
+    const failureReason = snapshot.reportCount === 0
+      ? "analysis_findings contained canonical findings but no analysis_reports row was persisted"
+      : snapshot.reportCount > 1
+        ? "analysis_findings contained canonical findings but more than one analysis_reports row exists"
+        : "analysis_reports generation metadata does not match the current analysis generation";
+    const diagnostic = buildReportContractDiagnostic({
+      jobId: input.jobId,
+      generationId: input.generationId,
+      findingCount: input.findingCount,
+      reportCount: snapshot.reportCount,
+      pipelineIntegrityStatus: input.pipelineIntegrityStatus,
+      atpStatus: input.atpStatus,
+      reportInserted: input.reportInserted,
+      reportId: input.reportId,
+      reportRows,
+      failureReason,
+    });
+    logger.error("Report contract violation", {
+      ...diagnostic,
+      snapshot,
+    });
+    const error = new ReportContractViolationError(diagnostic);
+    (error as Error & { reportContractDiagnostic?: ReportContractDiagnostic }).reportContractDiagnostic = diagnostic;
+    throw error;
+  }
+
+  logger.info("Report contract verified", {
+    jobId: input.jobId,
+    generationId: input.generationId,
+    findingCount: input.findingCount,
+    reportCount: snapshot.reportCount,
+    pipelineIntegrityStatus: input.pipelineIntegrityStatus,
+    atpStatus: input.atpStatus,
+    reportInserted: input.reportInserted,
+    reportId: input.reportId,
+  });
+
+  return snapshot;
+}
+
 type JobConfigMeta = {
   analysis_engine?: string;
   pipeline_version?: string;
@@ -3242,8 +3503,18 @@ export async function runAggregation(jobId: string): Promise<void> {
     reportId,
     inserted: reportInserted,
   });
+  const analysisGenerationId = (job.config_snapshot as { analysis_generation_id?: string | null } | null)?.analysis_generation_id ?? null;
 
   if (!reportInserted) {
+    await verifyReportContract({
+      jobId,
+      generationId: analysisGenerationId,
+      findingCount: list.length,
+      pipelineIntegrityStatus: "skipped",
+      atpStatus: "skipped",
+      reportInserted,
+      reportId,
+    });
     logger.info("Aggregation report already persisted by another worker; exiting without rewriting", {
       jobId,
       reportId,
@@ -3290,6 +3561,15 @@ export async function runAggregation(jobId: string): Promise<void> {
       summary,
       reportRow,
       sourceCanonicalFindings,
+    });
+    await verifyReportContract({
+      jobId,
+      generationId: analysisGenerationId,
+      findingCount: list.length,
+      pipelineIntegrityStatus: "passed",
+      atpStatus: "passed",
+      reportInserted,
+      reportId,
     });
   }
 

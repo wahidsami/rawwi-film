@@ -87,12 +87,68 @@ async function main() {
   process.env.SUPABASE_URL ??= "http://localhost:54321";
   process.env.SUPABASE_SERVICE_ROLE_KEY ??= "test-service-role-key";
 
-  const { persistAggregationReportOnce, persistReviewFindingRows } = await import("./aggregation.js");
+  const { persistAggregationReportOnce, persistReviewFindingRows, verifyReportContract } = await import("./aggregation.js");
   await testAggregationReportIsPersistedOnce(persistAggregationReportOnce);
   await testReviewerFindingMaterializationIsIdempotent(persistReviewFindingRows);
+  await testReportContractVerifier(verifyReportContract);
   testStaleRecoveryHasOneAuthoritativePath();
   testAggregationAbortsBeforeReportWhenJobFailed();
   console.log("✓ Aggregation persistence is idempotent, reviewer findings materialization is idempotent, stale recovery has one authoritative path, and failed jobs abort aggregation before report generation");
+}
+
+async function testReportContractVerifier(
+  verifyReportContractFn: (...args: any[]) => Promise<{ reportCount: number }>,
+) {
+  const passingStore = {
+    async listReportsByJobId(_jobId: string): Promise<Array<Record<string, unknown>>> {
+      return [
+        {
+          id: "report-1",
+          analysis_generation_id: "generation-1",
+          report_generation_id: "generation-1",
+        },
+      ];
+    },
+  };
+
+  const passing = await verifyReportContractFn({
+    jobId: "job-contract-pass",
+    generationId: "generation-1",
+    findingCount: 3,
+    pipelineIntegrityStatus: "passed",
+    atpStatus: "passed",
+    reportInserted: true,
+    reportId: "report-1",
+    store: passingStore,
+  });
+  assert.equal(passing.reportCount, 1, "successful analysis with findings should have exactly one report");
+
+  const failingStore = {
+    async listReportsByJobId(_jobId: string): Promise<Array<Record<string, unknown>>> {
+      return [];
+    },
+  };
+
+  await assert.rejects(
+    () => verifyReportContractFn({
+      jobId: "job-contract-fail",
+      generationId: "generation-2",
+      findingCount: 2,
+      pipelineIntegrityStatus: "passed",
+      atpStatus: "passed",
+      reportInserted: false,
+      reportId: null,
+      store: failingStore,
+    }),
+    (error: unknown) => {
+      const contractError = error as { name?: string; message?: string; diagnostic?: { errorCode?: string; reportCount?: number } };
+      assert.equal(contractError.name, "REPORT_CONTRACT_VIOLATION");
+      assert.equal(contractError.message, "REPORT_CONTRACT_VIOLATION");
+      assert.equal(contractError.diagnostic?.errorCode, "REPORT_CONTRACT_VIOLATION");
+      assert.equal(contractError.diagnostic?.reportCount, 0);
+      return true;
+    },
+  );
 }
 
 async function testReviewerFindingMaterializationIsIdempotent(
