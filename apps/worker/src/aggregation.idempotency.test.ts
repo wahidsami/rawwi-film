@@ -63,6 +63,26 @@ function testStaleRecoveryHasOneAuthoritativePath() {
   assert.equal(sweepBody.includes("void sweep();"), true, "watchdog should run immediately on startup");
 }
 
+function testAggregationAbortsBeforeReportWhenJobFailed() {
+  const sourcePath = join(process.cwd(), "apps", "worker", "src", "aggregation.ts");
+  const source = readFileSync(sourcePath, "utf8");
+
+  const runAggregationStart = source.indexOf("export async function runAggregation(jobId: string): Promise<void>");
+  const reportPersistIndex = source.indexOf("persistAggregationReportOnce(jobId, reportRow)", runAggregationStart);
+  const runAggregationBody = runAggregationStart >= 0 && reportPersistIndex > runAggregationStart
+    ? source.slice(runAggregationStart, reportPersistIndex)
+    : source.slice(runAggregationStart);
+  const failedGateIndex = runAggregationBody.indexOf("if (jobStatus === \"failed\")");
+  const findingsLoadIndex = runAggregationBody.indexOf(".from(\"analysis_findings\")");
+
+  assert.ok(runAggregationStart >= 0, "runAggregation should exist");
+  assert.ok(reportPersistIndex > runAggregationStart, "runAggregation should reach report persistence after the failed-job gate");
+  assert.ok(failedGateIndex >= 0, "runAggregation should inspect job status at entry");
+  assert.ok(failedGateIndex < findingsLoadIndex, "failed-job gate must run before loading findings");
+  assert.equal(runAggregationBody.includes("persistAggregationReportOnce(jobId, reportRow)"), false, "report persistence should not appear before the failed-job gate slice");
+  assert.equal(source.includes("Aggregation aborted because job is already failed"), true, "aggregation should log the abort reason");
+}
+
 async function main() {
   process.env.SUPABASE_URL ??= "http://localhost:54321";
   process.env.SUPABASE_SERVICE_ROLE_KEY ??= "test-service-role-key";
@@ -71,7 +91,8 @@ async function main() {
   await testAggregationReportIsPersistedOnce(persistAggregationReportOnce);
   await testReviewerFindingMaterializationIsIdempotent(persistReviewFindingRows);
   testStaleRecoveryHasOneAuthoritativePath();
-  console.log("✓ Aggregation persistence is idempotent, reviewer findings materialization is idempotent, and stale recovery has one authoritative path");
+  testAggregationAbortsBeforeReportWhenJobFailed();
+  console.log("✓ Aggregation persistence is idempotent, reviewer findings materialization is idempotent, stale recovery has one authoritative path, and failed jobs abort aggregation before report generation");
 }
 
 async function testReviewerFindingMaterializationIsIdempotent(

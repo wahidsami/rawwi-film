@@ -2350,9 +2350,18 @@ export async function runAggregation(jobId: string): Promise<void> {
   logger.info("V3 finalization trace: runAggregation entered", { jobId });
   const { data: jobControl } = await supabase
     .from("analysis_jobs")
-    .select("partial_finalize_requested")
+    .select("status, error_message, partial_finalize_requested")
     .eq("id", jobId)
     .maybeSingle();
+  const jobStatus = String((jobControl as { status?: string | null } | null)?.status ?? "").toLowerCase();
+  if (jobStatus === "failed") {
+    const failureMessage = String((jobControl as { error_message?: string | null } | null)?.error_message ?? "Analysis already failed before aggregation.");
+    logger.warn("Aggregation aborted because job is already failed", {
+      jobId,
+      failureMessage,
+    });
+    throw new Error(failureMessage);
+  }
   const isPartialFinalize = Boolean((jobControl as { partial_finalize_requested?: boolean | null } | null)?.partial_finalize_requested);
   const hasActive = isPartialFinalize
     ? await jobHasInFlightChunks(jobId)
