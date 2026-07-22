@@ -184,6 +184,8 @@ function testReportGateDoesNotBreakIntegrity() {
   });
 
   assert(report.mismatches.length === 0, `Report gate should preserve integrity; got ${JSON.stringify(report.mismatches)}`);
+  assert(report.evaluations.length === 4, `Expected 4 integrity evaluations, got ${report.evaluations.length}`);
+  assert(report.evaluations.every((evaluation) => evaluation.status === "PASS"), "All report assembly integrity evaluations should pass");
   console.log("✓ Report gate can move findings to hints without breaking integrity validation");
 }
 

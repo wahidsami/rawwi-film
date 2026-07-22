@@ -392,6 +392,7 @@ export type PipelineIntegrityReport = Readonly<{
   summaryReviewFindingIds: string[];
   manualReviewFindingCount: number;
   summaryManualReviewCount: number;
+  evaluations: IntegrityRuleEvaluation[];
   mismatches: string[];
 }>;
 
@@ -421,12 +422,19 @@ type IntegrityRuleLocation = Readonly<{
   functionName: string;
   file: string;
   lineNumber: number;
+  sourceTable: string;
+  sourceRow: string | null;
+  sourceField: string;
 }>;
 
-type IntegrityRuleFailure = Readonly<{
+type IntegrityRuleEvaluation = Readonly<{
   ruleName: string;
+  status: "PASS" | "FAIL";
   expectedValue: unknown;
   actualValue: unknown;
+  sourceTable: string;
+  sourceRow: string | null;
+  sourceField: string;
   jobId: string;
   reportId: string | null;
   findingCount: number;
@@ -437,21 +445,73 @@ type IntegrityRuleFailure = Readonly<{
   lineNumber: number;
 }>;
 
+type IntegrityRuleFailure = IntegrityRuleEvaluation;
+
+type IntegrityValidationDiagnostic = Readonly<{
+  validatorFunctionName: string;
+  jobId: string;
+  reportId: string | null;
+  findingCount: number;
+  evaluations: IntegrityRuleEvaluation[];
+  failures: IntegrityRuleFailure[];
+  integrityReport: PipelineIntegrityReport | ReportAssemblyIntegrityReport;
+}>;
+
+const INTEGRITY_LOG_CHUNK_SIZE = 3500;
+
+function prettyPrintChunked(label: string, value: unknown): void {
+  let serialized = "";
+  try {
+    serialized = JSON.stringify(value, null, 2) ?? String(value);
+  } catch {
+    serialized = String(value);
+  }
+
+  if (serialized.length <= INTEGRITY_LOG_CHUNK_SIZE) {
+    logger.error(label, serialized);
+    return;
+  }
+
+  const chunkCount = Math.ceil(serialized.length / INTEGRITY_LOG_CHUNK_SIZE);
+  for (let index = 0; index < chunkCount; index += 1) {
+    const start = index * INTEGRITY_LOG_CHUNK_SIZE;
+    const end = start + INTEGRITY_LOG_CHUNK_SIZE;
+    logger.error(`${label} [chunk ${index + 1}/${chunkCount}]`, serialized.slice(start, end));
+  }
+}
+
+function emitIntegrityDiagnosticLogs(diagnostic: IntegrityValidationDiagnostic): void {
+  const firstFailedRule = diagnostic.failures[0] ?? null;
+  logger.error("Integrity validation diagnostic summary", {
+    validatorFunctionName: diagnostic.validatorFunctionName,
+    jobId: diagnostic.jobId,
+    reportId: diagnostic.reportId,
+    findingCount: diagnostic.findingCount,
+    failureCount: diagnostic.failures.length,
+    firstFailedRuleName: firstFailedRule?.ruleName ?? null,
+  });
+  prettyPrintChunked("Integrity validation diagnostic payload", diagnostic);
+  prettyPrintChunked("Integrity validation failures", diagnostic.failures);
+  if (firstFailedRule) {
+    prettyPrintChunked("Integrity validation first failed rule", firstFailedRule);
+  }
+}
+
 const PIPELINE_RULE_LOCATIONS: Record<string, IntegrityRuleLocation> = {
-  analysis_findings_count_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 447 },
-  analysis_reports_findings_count_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 451 },
-  summary_canonical_count_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 454 },
-  summary_canonical_ids_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 457 },
-  analysis_review_findings_count_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 460 },
-  analysis_review_findings_ids_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 463 },
-  manual_review_count_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 466 },
+  analysis_findings_count_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 447, sourceTable: "analysis_findings", sourceRow: "jobId", sourceField: "job_id" },
+  analysis_reports_findings_count_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 451, sourceTable: "analysis_reports", sourceRow: "reportId", sourceField: "findings_count" },
+  summary_canonical_count_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 454, sourceTable: "analysis_findings", sourceRow: "jobId", sourceField: "canonical_finding_id" },
+  summary_canonical_ids_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 457, sourceTable: "analysis_findings", sourceRow: "jobId", sourceField: "canonical_finding_id" },
+  analysis_review_findings_count_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 460, sourceTable: "analysis_review_findings", sourceRow: "reportId", sourceField: "canonical_finding_id" },
+  analysis_review_findings_ids_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 463, sourceTable: "analysis_review_findings", sourceRow: "reportId", sourceField: "canonical_finding_id" },
+  manual_review_count_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 466, sourceTable: "analysis_review_findings", sourceRow: "reportId", sourceField: "is_manual" },
 };
 
 const REPORT_ASSEMBLY_RULE_LOCATIONS: Record<string, IntegrityRuleLocation> = {
-  analysis_findings_count_mismatch: { functionName: "buildReportAssemblyIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 558 },
-  analysis_reports_findings_count_mismatch: { functionName: "buildReportAssemblyIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 561 },
-  analysis_findings_summary_ids_mismatch: { functionName: "buildReportAssemblyIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 564 },
-  report_overview_total_findings_mismatch: { functionName: "buildReportAssemblyIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 567 },
+  analysis_findings_count_mismatch: { functionName: "buildReportAssemblyIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 558, sourceTable: "analysis_findings", sourceRow: "jobId", sourceField: "job_id" },
+  analysis_reports_findings_count_mismatch: { functionName: "buildReportAssemblyIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 561, sourceTable: "analysis_reports", sourceRow: "reportId", sourceField: "findings_count" },
+  analysis_findings_summary_ids_mismatch: { functionName: "buildReportAssemblyIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 564, sourceTable: "analysis_findings", sourceRow: "jobId", sourceField: "canonical_finding_id" },
+  report_overview_total_findings_mismatch: { functionName: "buildReportAssemblyIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 567, sourceTable: "analysis_reports", sourceRow: "reportId", sourceField: "report_overview.total_findings" },
 };
 
 function firstDifferingFindingId(expected: readonly string[], actual: readonly string[]): string | null {
@@ -485,22 +545,7 @@ function buildIntegrityFailure(
   const [ruleName, actualRaw, expectedRaw] = mismatch.split(":");
   const location = locationMap[ruleName];
   if (!location) return null;
-
   let firstOffendingFindingId: string | null = null;
-  const failure: IntegrityRuleFailure = {
-    ruleName,
-    expectedValue: expectedRaw ?? null,
-    actualValue: actualRaw ?? null,
-    jobId: report.jobId,
-    reportId: report.reportId ?? null,
-    findingCount: report.findingsCount,
-    firstOffendingFindingId,
-    functionName: location.functionName,
-    validatorFunctionName,
-    file: location.file,
-    lineNumber: location.lineNumber,
-  };
-
   if (ruleName === "analysis_findings_count_mismatch" || ruleName === "summary_canonical_count_mismatch" || ruleName === "summary_canonical_ids_mismatch" || ruleName === "analysis_findings_summary_ids_mismatch") {
     firstOffendingFindingId = firstDifferingFindingId(report.analysisFindingIds, report.summaryFindingIds);
   } else if (ruleName === "analysis_reports_findings_count_mismatch" || ruleName === "report_overview_total_findings_mismatch") {
@@ -510,8 +555,23 @@ function buildIntegrityFailure(
   } else if (ruleName === "manual_review_count_mismatch") {
     firstOffendingFindingId = report.reviewFindingIds?.[0] ?? null;
   }
-
-  return { ...failure, firstOffendingFindingId };
+  return {
+    ruleName,
+    status: "FAIL",
+    expectedValue: expectedRaw ?? null,
+    actualValue: actualRaw ?? null,
+    sourceTable: location.sourceTable,
+    sourceRow: location.sourceRow,
+    sourceField: location.sourceField,
+    jobId: report.jobId,
+    reportId: report.reportId ?? null,
+    findingCount: report.findingsCount,
+    firstOffendingFindingId,
+    functionName: location.functionName,
+    validatorFunctionName,
+    file: location.file,
+    lineNumber: location.lineNumber,
+  };
 }
 
 function emitIntegrityFailures(
@@ -566,30 +626,134 @@ export function buildPipelineIntegrityReport(input: {
   ]);
   const manualReviewFindingCount = input.reviewFindings.filter((row) => row.is_manual).length;
   const summaryManualReviewCount = input.summary.manual_review_context?.items?.length ?? 0;
-  const mismatches: string[] = [];
-
   const reportFindingsCount = Number(input.reportRow.findings_count ?? 0) || 0;
-  if (input.findings.length !== sourceCanonicalFindingIds.length) {
-    mismatches.push(`analysis_findings_count_mismatch:${input.findings.length}:${sourceCanonicalFindingIds.length}`);
-  }
-  if (reportFindingsCount !== input.summary.totals.findings_count) {
-    mismatches.push(`analysis_reports_findings_count_mismatch:${reportFindingsCount}:${input.summary.totals.findings_count}`);
-  }
-  if (sourceCanonicalFindingIds.length > 0 && analysisFindingIds.length !== sourceCanonicalFindingIds.length) {
-    mismatches.push(`summary_canonical_count_mismatch:${analysisFindingIds.length}:${sourceCanonicalFindingIds.length}`);
-  }
-  if (sourceCanonicalFindingIds.length > 0 && JSON.stringify(analysisFindingIds) !== JSON.stringify(sourceCanonicalFindingIds)) {
-    mismatches.push("summary_canonical_ids_mismatch");
-  }
-  if (summaryReviewFindingIds.length > 0 && reviewFindingIds.length !== summaryReviewFindingIds.length) {
-    mismatches.push(`analysis_review_findings_count_mismatch:${reviewFindingIds.length}:${summaryReviewFindingIds.length}`);
-  }
-  if (summaryReviewFindingIds.length > 0 && JSON.stringify(reviewFindingIds) !== JSON.stringify(summaryReviewFindingIds)) {
-    mismatches.push("analysis_review_findings_ids_mismatch");
-  }
-  if (manualReviewFindingCount !== summaryManualReviewCount) {
-    mismatches.push(`manual_review_count_mismatch:${manualReviewFindingCount}:${summaryManualReviewCount}`);
-  }
+  const evaluations: IntegrityRuleEvaluation[] = [
+    {
+      ruleName: "analysis_findings_count_mismatch",
+      status: input.findings.length === sourceCanonicalFindingIds.length ? "PASS" : "FAIL",
+      expectedValue: sourceCanonicalFindingIds.length,
+      actualValue: input.findings.length,
+      sourceTable: "analysis_findings",
+      sourceRow: `job_id=${input.jobId}`,
+      sourceField: "job_id",
+      jobId: input.jobId,
+      reportId: input.reportId,
+      findingCount: input.findings.length,
+      firstOffendingFindingId: input.findings.length === sourceCanonicalFindingIds.length ? null : firstDifferingFindingId(analysisFindingIds, sourceCanonicalFindingIds),
+      functionName: "buildPipelineIntegrityReport",
+      validatorFunctionName: "buildPipelineIntegrityReport",
+      file: "apps/worker/src/aggregation.ts",
+      lineNumber: 447,
+    },
+    {
+      ruleName: "analysis_reports_findings_count_mismatch",
+      status: reportFindingsCount === input.summary.totals.findings_count ? "PASS" : "FAIL",
+      expectedValue: input.summary.totals.findings_count,
+      actualValue: reportFindingsCount,
+      sourceTable: "analysis_reports",
+      sourceRow: `report_id=${input.reportId}`,
+      sourceField: "findings_count",
+      jobId: input.jobId,
+      reportId: input.reportId,
+      findingCount: input.findings.length,
+      firstOffendingFindingId: reportFindingsCount === input.summary.totals.findings_count ? null : (analysisFindingIds[0] ?? sourceCanonicalFindingIds[0] ?? null),
+      functionName: "buildPipelineIntegrityReport",
+      validatorFunctionName: "buildPipelineIntegrityReport",
+      file: "apps/worker/src/aggregation.ts",
+      lineNumber: 451,
+    },
+    {
+      ruleName: "summary_canonical_count_mismatch",
+      status: sourceCanonicalFindingIds.length === 0 || analysisFindingIds.length === sourceCanonicalFindingIds.length ? "PASS" : "FAIL",
+      expectedValue: sourceCanonicalFindingIds.length,
+      actualValue: analysisFindingIds.length,
+      sourceTable: "analysis_findings",
+      sourceRow: `job_id=${input.jobId}`,
+      sourceField: "canonical_finding_id",
+      jobId: input.jobId,
+      reportId: input.reportId,
+      findingCount: input.findings.length,
+      firstOffendingFindingId: sourceCanonicalFindingIds.length === 0 || analysisFindingIds.length === sourceCanonicalFindingIds.length ? null : firstDifferingFindingId(analysisFindingIds, sourceCanonicalFindingIds),
+      functionName: "buildPipelineIntegrityReport",
+      validatorFunctionName: "buildPipelineIntegrityReport",
+      file: "apps/worker/src/aggregation.ts",
+      lineNumber: 454,
+    },
+    {
+      ruleName: "summary_canonical_ids_mismatch",
+      status: sourceCanonicalFindingIds.length === 0 || JSON.stringify(analysisFindingIds) === JSON.stringify(sourceCanonicalFindingIds) ? "PASS" : "FAIL",
+      expectedValue: sourceCanonicalFindingIds,
+      actualValue: analysisFindingIds,
+      sourceTable: "analysis_findings",
+      sourceRow: `job_id=${input.jobId}`,
+      sourceField: "canonical_finding_id",
+      jobId: input.jobId,
+      reportId: input.reportId,
+      findingCount: input.findings.length,
+      firstOffendingFindingId: sourceCanonicalFindingIds.length === 0 || JSON.stringify(analysisFindingIds) === JSON.stringify(sourceCanonicalFindingIds) ? null : firstDifferingFindingId(analysisFindingIds, sourceCanonicalFindingIds),
+      functionName: "buildPipelineIntegrityReport",
+      validatorFunctionName: "buildPipelineIntegrityReport",
+      file: "apps/worker/src/aggregation.ts",
+      lineNumber: 457,
+    },
+    {
+      ruleName: "analysis_review_findings_count_mismatch",
+      status: summaryReviewFindingIds.length === 0 || reviewFindingIds.length === summaryReviewFindingIds.length ? "PASS" : "FAIL",
+      expectedValue: summaryReviewFindingIds.length,
+      actualValue: reviewFindingIds.length,
+      sourceTable: "analysis_review_findings",
+      sourceRow: `report_id=${input.reportId}`,
+      sourceField: "canonical_finding_id",
+      jobId: input.jobId,
+      reportId: input.reportId,
+      findingCount: input.findings.length,
+      firstOffendingFindingId: summaryReviewFindingIds.length === 0 || reviewFindingIds.length === summaryReviewFindingIds.length ? null : firstDifferingFindingId(reviewFindingIds, summaryReviewFindingIds),
+      functionName: "buildPipelineIntegrityReport",
+      validatorFunctionName: "buildPipelineIntegrityReport",
+      file: "apps/worker/src/aggregation.ts",
+      lineNumber: 460,
+    },
+    {
+      ruleName: "analysis_review_findings_ids_mismatch",
+      status: summaryReviewFindingIds.length === 0 || JSON.stringify(reviewFindingIds) === JSON.stringify(summaryReviewFindingIds) ? "PASS" : "FAIL",
+      expectedValue: summaryReviewFindingIds,
+      actualValue: reviewFindingIds,
+      sourceTable: "analysis_review_findings",
+      sourceRow: `report_id=${input.reportId}`,
+      sourceField: "canonical_finding_id",
+      jobId: input.jobId,
+      reportId: input.reportId,
+      findingCount: input.findings.length,
+      firstOffendingFindingId: summaryReviewFindingIds.length === 0 || JSON.stringify(reviewFindingIds) === JSON.stringify(summaryReviewFindingIds) ? null : firstDifferingFindingId(reviewFindingIds, summaryReviewFindingIds),
+      functionName: "buildPipelineIntegrityReport",
+      validatorFunctionName: "buildPipelineIntegrityReport",
+      file: "apps/worker/src/aggregation.ts",
+      lineNumber: 463,
+    },
+    {
+      ruleName: "manual_review_count_mismatch",
+      status: manualReviewFindingCount === summaryManualReviewCount ? "PASS" : "FAIL",
+      expectedValue: summaryManualReviewCount,
+      actualValue: manualReviewFindingCount,
+      sourceTable: "analysis_review_findings",
+      sourceRow: `report_id=${input.reportId}`,
+      sourceField: "is_manual",
+      jobId: input.jobId,
+      reportId: input.reportId,
+      findingCount: input.findings.length,
+      firstOffendingFindingId: manualReviewFindingCount === summaryManualReviewCount ? null : reviewFindingIds[0] ?? null,
+      functionName: "buildPipelineIntegrityReport",
+      validatorFunctionName: "buildPipelineIntegrityReport",
+      file: "apps/worker/src/aggregation.ts",
+      lineNumber: 466,
+    },
+  ];
+  const mismatches = evaluations.filter((evaluation) => evaluation.status === "FAIL").map((evaluation) => {
+    if (evaluation.ruleName === "summary_canonical_ids_mismatch" || evaluation.ruleName === "analysis_review_findings_ids_mismatch") {
+      return evaluation.ruleName;
+    }
+    return `${evaluation.ruleName}:${String(evaluation.actualValue)}:${String(evaluation.expectedValue)}`;
+  });
 
   return {
     jobId: input.jobId,
@@ -602,6 +766,7 @@ export function buildPipelineIntegrityReport(input: {
     summaryReviewFindingIds,
     manualReviewFindingCount,
     summaryManualReviewCount,
+    evaluations,
     mismatches,
   };
 }
@@ -637,14 +802,21 @@ export async function validatePipelineIntegrity(input: {
   });
   if (report.mismatches.length > 0) {
     const validationFailures = emitIntegrityFailures(report, "validatePipelineIntegrity", PIPELINE_RULE_LOCATIONS);
-    logger.error("Pipeline integrity validation failed", {
+    const integrityDiagnostic: IntegrityValidationDiagnostic = {
+      validatorFunctionName: "validatePipelineIntegrity",
       jobId: report.jobId,
       reportId: report.reportId,
       findingCount: report.findingsCount,
-      validationFailures,
+      evaluations: report.evaluations,
+      failures: validationFailures,
       integrityReport: report,
+    };
+    emitIntegrityDiagnosticLogs(integrityDiagnostic);
+    logger.error("Pipeline integrity validation failed", {
+      ...integrityDiagnostic,
     });
     const error = new Error("Pipeline integrity validation failed");
+    (error as Error & { integrityDiagnostic?: IntegrityValidationDiagnostic }).integrityDiagnostic = integrityDiagnostic;
     (error as Error & { integrityReport?: PipelineIntegrityReport; validationFailures?: IntegrityRuleFailure[] }).integrityReport = report;
     (error as Error & { integrityReport?: PipelineIntegrityReport; validationFailures?: IntegrityRuleFailure[] }).validationFailures = validationFailures;
     throw error;
@@ -664,6 +836,7 @@ export type ReportAssemblyIntegrityReport = Readonly<{
   reportFindingsCount: number;
   analysisFindingIds: string[];
   summaryFindingIds: string[];
+  evaluations: IntegrityRuleEvaluation[];
   mismatches: string[];
 }>;
 
@@ -681,22 +854,83 @@ export function buildReportAssemblyIntegrityReport(input: {
     ),
   );
   const reportFindingsCount = Number(input.reportRow.findings_count ?? 0) || 0;
-  const mismatches: string[] = [];
-
-  if (input.findings.length !== sourceCanonicalFindingIds.length) {
-    mismatches.push(`analysis_findings_count_mismatch:${input.findings.length}:${sourceCanonicalFindingIds.length}`);
-  }
-  if (reportFindingsCount !== input.summary.totals.findings_count) {
-    mismatches.push(`analysis_reports_findings_count_mismatch:${reportFindingsCount}:${input.summary.totals.findings_count}`);
-  }
-  if (sourceCanonicalFindingIds.length > 0 && JSON.stringify(analysisFindingIds) !== JSON.stringify(sourceCanonicalFindingIds)) {
-    mismatches.push("analysis_findings_summary_ids_mismatch");
-  }
-  if ((input.summary.report_overview?.total_findings ?? input.summary.totals.findings_count) !== input.summary.totals.findings_count) {
-    mismatches.push(
-      `report_overview_total_findings_mismatch:${input.summary.report_overview?.total_findings ?? input.summary.totals.findings_count}:${input.summary.totals.findings_count}`,
-    );
-  }
+  const reportOverviewTotalFindings = input.summary.report_overview?.total_findings ?? input.summary.totals.findings_count;
+  const evaluations: IntegrityRuleEvaluation[] = [
+    {
+      ruleName: "analysis_findings_count_mismatch",
+      status: input.findings.length === sourceCanonicalFindingIds.length ? "PASS" : "FAIL",
+      expectedValue: sourceCanonicalFindingIds.length,
+      actualValue: input.findings.length,
+      sourceTable: "analysis_findings",
+      sourceRow: `job_id=${input.jobId}`,
+      sourceField: "job_id",
+      jobId: input.jobId,
+      reportId: input.reportRow.report_id ? String(input.reportRow.report_id) : null,
+      findingCount: input.findings.length,
+      firstOffendingFindingId: input.findings.length === sourceCanonicalFindingIds.length ? null : firstDifferingFindingId(analysisFindingIds, sourceCanonicalFindingIds),
+      functionName: "buildReportAssemblyIntegrityReport",
+      validatorFunctionName: "buildReportAssemblyIntegrityReport",
+      file: "apps/worker/src/aggregation.ts",
+      lineNumber: 558,
+    },
+    {
+      ruleName: "analysis_reports_findings_count_mismatch",
+      status: reportFindingsCount === input.summary.totals.findings_count ? "PASS" : "FAIL",
+      expectedValue: input.summary.totals.findings_count,
+      actualValue: reportFindingsCount,
+      sourceTable: "analysis_reports",
+      sourceRow: `job_id=${input.jobId}`,
+      sourceField: "findings_count",
+      jobId: input.jobId,
+      reportId: input.reportRow.report_id ? String(input.reportRow.report_id) : null,
+      findingCount: input.findings.length,
+      firstOffendingFindingId: reportFindingsCount === input.summary.totals.findings_count ? null : (analysisFindingIds[0] ?? sourceCanonicalFindingIds[0] ?? null),
+      functionName: "buildReportAssemblyIntegrityReport",
+      validatorFunctionName: "buildReportAssemblyIntegrityReport",
+      file: "apps/worker/src/aggregation.ts",
+      lineNumber: 561,
+    },
+    {
+      ruleName: "analysis_findings_summary_ids_mismatch",
+      status: sourceCanonicalFindingIds.length === 0 || JSON.stringify(analysisFindingIds) === JSON.stringify(sourceCanonicalFindingIds) ? "PASS" : "FAIL",
+      expectedValue: sourceCanonicalFindingIds,
+      actualValue: analysisFindingIds,
+      sourceTable: "analysis_findings",
+      sourceRow: `job_id=${input.jobId}`,
+      sourceField: "canonical_finding_id",
+      jobId: input.jobId,
+      reportId: input.reportRow.report_id ? String(input.reportRow.report_id) : null,
+      findingCount: input.findings.length,
+      firstOffendingFindingId: sourceCanonicalFindingIds.length === 0 || JSON.stringify(analysisFindingIds) === JSON.stringify(sourceCanonicalFindingIds) ? null : firstDifferingFindingId(analysisFindingIds, sourceCanonicalFindingIds),
+      functionName: "buildReportAssemblyIntegrityReport",
+      validatorFunctionName: "buildReportAssemblyIntegrityReport",
+      file: "apps/worker/src/aggregation.ts",
+      lineNumber: 564,
+    },
+    {
+      ruleName: "report_overview_total_findings_mismatch",
+      status: reportOverviewTotalFindings === input.summary.totals.findings_count ? "PASS" : "FAIL",
+      expectedValue: input.summary.totals.findings_count,
+      actualValue: reportOverviewTotalFindings,
+      sourceTable: "analysis_reports",
+      sourceRow: `job_id=${input.jobId}`,
+      sourceField: "report_overview.total_findings",
+      jobId: input.jobId,
+      reportId: input.reportRow.report_id ? String(input.reportRow.report_id) : null,
+      findingCount: input.findings.length,
+      firstOffendingFindingId: reportOverviewTotalFindings === input.summary.totals.findings_count ? null : (analysisFindingIds[0] ?? sourceCanonicalFindingIds[0] ?? null),
+      functionName: "buildReportAssemblyIntegrityReport",
+      validatorFunctionName: "buildReportAssemblyIntegrityReport",
+      file: "apps/worker/src/aggregation.ts",
+      lineNumber: 567,
+    },
+  ];
+  const mismatches = evaluations.filter((evaluation) => evaluation.status === "FAIL").map((evaluation) => {
+    if (evaluation.ruleName === "analysis_findings_summary_ids_mismatch") {
+      return evaluation.ruleName;
+    }
+    return `${evaluation.ruleName}:${String(evaluation.actualValue)}:${String(evaluation.expectedValue)}`;
+  });
 
   return {
     jobId: input.jobId,
@@ -705,6 +939,7 @@ export function buildReportAssemblyIntegrityReport(input: {
     reportFindingsCount,
     analysisFindingIds,
     summaryFindingIds: sourceCanonicalFindingIds,
+    evaluations,
     mismatches,
   };
 }
@@ -724,14 +959,21 @@ export function validateReportAssemblyIntegrity(input: {
       "validateReportAssemblyIntegrity",
       REPORT_ASSEMBLY_RULE_LOCATIONS,
     );
-    logger.error("Report assembly integrity validation failed", {
+    const integrityDiagnostic: IntegrityValidationDiagnostic = {
+      validatorFunctionName: "validateReportAssemblyIntegrity",
       jobId: report.jobId,
       reportId: input.reportId ?? null,
       findingCount: report.findingsCount,
-      validationFailures,
+      evaluations: report.evaluations,
+      failures: validationFailures,
       integrityReport: report,
+    };
+    emitIntegrityDiagnosticLogs(integrityDiagnostic);
+    logger.error("Report assembly integrity validation failed", {
+      ...integrityDiagnostic,
     });
     const error = new Error("Report assembly integrity validation failed");
+    (error as Error & { integrityDiagnostic?: IntegrityValidationDiagnostic }).integrityDiagnostic = integrityDiagnostic;
     (error as Error & { integrityReport?: ReportAssemblyIntegrityReport; validationFailures?: IntegrityRuleFailure[] }).integrityReport = report;
     (error as Error & { integrityReport?: ReportAssemblyIntegrityReport; validationFailures?: IntegrityRuleFailure[] }).validationFailures = validationFailures;
     throw error;

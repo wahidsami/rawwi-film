@@ -88,6 +88,8 @@ async function testIntegrityReportPassesForMatchingIdsAsync() {
   });
 
   assert.deepEqual(report.mismatches, [], "Integrity report should pass for matching data");
+  assert.ok(report.evaluations.length >= 7, `Expected all pipeline integrity rules to be evaluated, got ${report.evaluations.length}`);
+  assert.ok(report.evaluations.every((evaluation) => evaluation.status === "PASS"), "All pipeline integrity evaluations should pass");
 }
 
 async function testIntegrityReportDetectsDivergenceAsync() {
@@ -135,6 +137,7 @@ async function testIntegrityReportDetectsDivergenceAsync() {
   });
 
   assert.ok(report.mismatches.length > 0, "Integrity report should detect mismatches");
+  assert.ok(report.evaluations.some((evaluation) => evaluation.status === "FAIL"), "Divergent pipeline integrity report should include failing evaluations");
 }
 
 async function main() {
