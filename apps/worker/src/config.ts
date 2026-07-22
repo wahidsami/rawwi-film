@@ -36,6 +36,10 @@ export const config = {
     parseInt(process.env.AI_OVERLOAD_MAX_RETRIES ?? "3", 10) || 3
   ),
   POLL_INTERVAL_MS: parseInt(process.env.POLL_INTERVAL_MS ?? "2000", 10),
+  IDLE_POLL_INTERVAL_MS: Math.max(
+    1000,
+    parseInt(process.env.IDLE_POLL_INTERVAL_MS ?? "30000", 10) || 30_000
+  ),
   STALE_JUDGING_MS: Math.max(
     60_000,
     parseInt(process.env.STALE_JUDGING_MS ?? "600000", 10) || 600_000

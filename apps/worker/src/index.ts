@@ -13,11 +13,13 @@ import {
   setChunkPending,
   setChunkFailed,
   recoverStaleJudgingChunks,
+  hasStaleJudgingChunks,
   fetchNextPendingExtractionVersion,
   setExtractionFailed,
   notifyAdminAiOverload,
 } from "./jobs.js";
 import { setContext, logger } from "./logger.js";
+import { resolveWorkerPollMode } from "./idlePolling.js";
 import { initializeLexiconCache, getLexiconCache } from "./lexiconCache.js";
 import { processChunkForJob } from "./pipelineRunner.js";
 import { processPdfExtraction } from "./pdfExtraction.js";
@@ -53,6 +55,7 @@ function getRuntimeConfigLogPayload() {
     chunkHardTimeoutMaxRetries: config.CHUNK_HARD_TIMEOUT_MAX_RETRIES,
     aiOverloadMaxRetries: config.AI_OVERLOAD_MAX_RETRIES,
     pollIntervalMs: config.POLL_INTERVAL_MS,
+    idlePollIntervalMs: config.IDLE_POLL_INTERVAL_MS,
     staleJudgingMs: config.STALE_JUDGING_MS,
     chunkConcurrency: config.WORKER_CHUNK_CONCURRENCY,
     highRecall: config.HIGH_RECALL,
@@ -302,7 +305,12 @@ async function processClaimedChunk(
   }
 }
 
-async function processOneJob(): Promise<boolean> {
+type ProcessOneJobResult = {
+  didWork: boolean;
+  idleEligible: boolean;
+};
+
+async function processOneJob(): Promise<ProcessOneJobResult> {
   logger.info("Poll tick started", {
     pollIntervalMs: config.POLL_INTERVAL_MS,
     chunkConcurrency: config.WORKER_CHUNK_CONCURRENCY,
@@ -316,23 +324,23 @@ async function processOneJob(): Promise<boolean> {
         scriptId: extractionVersion.script_id,
       });
       await processPdfExtraction(extractionVersion);
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") {
-        logger.info("Backend PDF extraction cancelled", {
+      } catch (e) {
+        if (e instanceof Error && e.name === "AbortError") {
+          logger.info("Backend PDF extraction cancelled", {
+            versionId: extractionVersion.id,
+            scriptId: extractionVersion.script_id,
+          });
+          return { didWork: true, idleEligible: false };
+        }
+        const errMsg = e instanceof Error ? e.message : String(e);
+        logger.error("Backend PDF extraction failed", {
           versionId: extractionVersion.id,
           scriptId: extractionVersion.script_id,
-        });
-        return true;
-      }
-      const errMsg = e instanceof Error ? e.message : String(e);
-      logger.error("Backend PDF extraction failed", {
-        versionId: extractionVersion.id,
-        scriptId: extractionVersion.script_id,
         error: errMsg,
       });
       await setExtractionFailed(extractionVersion.id, errMsg);
-    }
-    return true;
+      }
+    return { didWork: true, idleEligible: false };
   }
 
   const jobStartedAt = Date.now();
@@ -343,17 +351,23 @@ async function processOneJob(): Promise<boolean> {
       chunkConcurrency: config.WORKER_CHUNK_CONCURRENCY,
     });
     const aggregationJob = await fetchNextAggregationCandidateJob();
-    if (!aggregationJob) return false;
+    if (!aggregationJob) {
+      const staleJudgingChunksExist = await hasStaleJudgingChunks(config.STALE_JUDGING_MS);
+      return {
+        didWork: false,
+        idleEligible: !staleJudgingChunksExist,
+      };
+    }
     setContext({ jobId: aggregationJob.id });
     try {
       await runAggregation(aggregationJob.id);
       logger.info("Recovered aggregation-only job", { jobId: aggregationJob.id });
-      return true;
+      return { didWork: true, idleEligible: false };
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : String(e);
       logger.error("Aggregation recovery failed", { jobId: aggregationJob.id, error: errMsg });
-      await setJobFailed(aggregationJob.id, errMsg);
-      return true;
+    await setJobFailed(aggregationJob.id, errMsg);
+      return { didWork: true, idleEligible: false };
     }
   }
 
@@ -372,7 +386,13 @@ async function processOneJob(): Promise<boolean> {
     claimedCount: claimed.length,
     chunkIndexes: claimed.map((chunk) => chunk.chunk_index),
   });
-  if (claimed.length === 0) return false;
+  if (claimed.length === 0) {
+    const staleJudgingChunksExist = await hasStaleJudgingChunks(config.STALE_JUDGING_MS);
+    return {
+      didWork: false,
+      idleEligible: !staleJudgingChunksExist,
+    };
+  }
 
   logger.info("Worker runtime config for claimed job", {
     jobId: job.id,
@@ -412,7 +432,7 @@ async function processOneJob(): Promise<boolean> {
       retryableCount: results.filter((result) => !result.ok && result.retryable).length,
       failedCount: results.filter((result) => !result.ok && !result.retryable).length,
     });
-    return true;
+    return { didWork: true, idleEligible: false };
   }
 
   try {
@@ -435,7 +455,7 @@ async function processOneJob(): Promise<boolean> {
       stack: e instanceof Error ? e.stack ?? null : null,
     });
     await setJobFailed(job.id, errMsg);
-    return true;
+    return { didWork: true, idleEligible: false };
   }
   logger.info("Job batch processed", {
     jobId: job.id,
@@ -445,7 +465,7 @@ async function processOneJob(): Promise<boolean> {
     failedCount: results.filter((result) => !result.ok).length,
     batchDurationMs: Date.now() - jobStartedAt,
   });
-  return true;
+  return { didWork: true, idleEligible: false };
 }
 
 function startStaleJudgingSweep(): ReturnType<typeof setInterval> {
@@ -547,7 +567,7 @@ async function runOnce(jobId: string | undefined): Promise<void> {
       return;
     }
 
-    const didWork = await processOneJob();
+    const { didWork } = await processOneJob();
     if (!didWork) logger.info("No job or chunk available");
   } finally {
     clearInterval(staleSweep);
@@ -575,23 +595,46 @@ async function runDev(): Promise<never> {
     ...getRuntimeConfigLogPayload(),
   });
   const staleSweep = startStaleJudgingSweep();
+  let isIdleMode = false;
 
   try {
     while (true) {
       setContext({});
       let didWork = false;
+      let idleEligible = false;
       try {
         logger.info("Worker poll loop iteration starting", {
-          pollIntervalMs: config.POLL_INTERVAL_MS,
+          pollIntervalMs: isIdleMode ? config.IDLE_POLL_INTERVAL_MS : config.POLL_INTERVAL_MS,
+          idleMode: isIdleMode,
         });
-        didWork = await processOneJob();
+        const pollResult = await processOneJob();
+        didWork = pollResult.didWork;
+        idleEligible = pollResult.idleEligible;
       } catch (error) {
         logger.error("Worker loop iteration failed", {
           error: error instanceof Error ? error.message : String(error),
         });
       }
+      const nextIdleMode = !didWork && idleEligible;
+      if (nextIdleMode && !isIdleMode) {
+        logger.info("Worker entering idle mode", {
+          pollIntervalMs: config.IDLE_POLL_INTERVAL_MS,
+          activePollIntervalMs: config.POLL_INTERVAL_MS,
+        });
+      } else if (!nextIdleMode && isIdleMode) {
+        logger.info("Worker leaving idle mode", {
+          pollIntervalMs: config.POLL_INTERVAL_MS,
+          idlePollIntervalMs: config.IDLE_POLL_INTERVAL_MS,
+        });
+      }
+      isIdleMode = nextIdleMode;
+      const pollIntervalMs = isIdleMode ? config.IDLE_POLL_INTERVAL_MS : config.POLL_INTERVAL_MS;
+      logger.info("Worker polling interval selected", {
+        idleMode: isIdleMode,
+        pollIntervalMs,
+      });
       if (!didWork) {
-        await new Promise((r) => setTimeout(r, config.POLL_INTERVAL_MS));
+        await new Promise((r) => setTimeout(r, pollIntervalMs));
       }
     }
   } finally {

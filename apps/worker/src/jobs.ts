@@ -595,7 +595,15 @@ export async function countChunksWithStatuses(jobId: string, statuses: string[])
   return count ?? 0;
 }
 
-export async function recoverStaleJudgingChunks(maxAgeMs: number): Promise<number> {
+async function fetchStaleJudgingChunkRows(
+  maxAgeMs: number,
+  limit = 20,
+): Promise<Array<{
+  id: string;
+  job_id: string;
+  chunk_index: number;
+  judging_started_at?: string | null;
+}>> {
   const cutoffIso = new Date(Date.now() - maxAgeMs).toISOString();
   const { data, error } = await supabase
     .from("analysis_chunks")
@@ -605,20 +613,28 @@ export async function recoverStaleJudgingChunks(maxAgeMs: number): Promise<numbe
     .lt("judging_started_at", cutoffIso)
     .order("judging_started_at", { ascending: true })
     .order("id", { ascending: true })
-    .limit(20);
+    .limit(limit);
 
   if (error) {
     logger.warn("Failed to query stale judging chunks", { error: error.message, cutoffIso });
-    return 0;
+    return [];
   }
 
-  const staleChunks = (data ?? []) as Array<{
+  return (data ?? []) as Array<{
     id: string;
     job_id: string;
     chunk_index: number;
     judging_started_at?: string | null;
   }>;
+}
 
+export async function hasStaleJudgingChunks(maxAgeMs: number): Promise<boolean> {
+  const staleChunks = await fetchStaleJudgingChunkRows(maxAgeMs, 1);
+  return staleChunks.length > 0;
+}
+
+export async function recoverStaleJudgingChunks(maxAgeMs: number): Promise<number> {
+  const staleChunks = await fetchStaleJudgingChunkRows(maxAgeMs);
   if (!staleChunks.length) return 0;
 
   let recovered = 0;
