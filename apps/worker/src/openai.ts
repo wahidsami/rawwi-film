@@ -1,3 +1,4 @@
+import { installHttpTrace } from "./httpTrace.js";
 import OpenAI from "openai";
 import { config } from "./config.js";
 import type { GCAMArticle } from "./gcam.js";
@@ -21,6 +22,8 @@ import { sha256 } from "./hash.js";
 import { canonicalStringify } from "./canonicalJson.js";
 import { persistAnalysisExecutionSignature, type AnalysisExecutionSignatureInput } from "./executionSignature.js";
 import { createV3AnalysisFailure } from "./analysisEngineV3/provider/analysisFailure.js";
+
+installHttpTrace();
 
 const openai = new OpenAI({ apiKey: config.OPENAI_API_KEY });
 
