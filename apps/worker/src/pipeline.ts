@@ -1311,6 +1311,78 @@ export function getPersistenceFindingSource(finding: FindingWithGlobal): "ai" | 
   return "ai";
 }
 
+function getFindingProvenanceDetails(finding: FindingWithGlobal): {
+  sourceLabel: "AI" | "Lexicon" | "HardFallback" | "RuleEngine" | "Manual";
+  createdByFunction: string;
+} {
+  const normalizedSource = normalizePersistenceSource(finding.source);
+  const normalizedPass = normalizePersistenceSource(finding.detection_pass);
+
+  if (normalizedSource === "manual") {
+    return {
+      sourceLabel: "Manual",
+      createdByFunction: "processChunkJudge (manual carry-forward / review-layer materialization)",
+    };
+  }
+
+  if (normalizedSource === "lexicon_mandatory" && normalizedPass === "hard_fallback_insults") {
+    return {
+      sourceLabel: "HardFallback",
+      createdByFunction: "processChunkJudge (hard fallback insults branch)",
+    };
+  }
+
+  if (normalizedSource === "lexicon_mandatory") {
+    return {
+      sourceLabel: "Lexicon",
+      createdByFunction: "processChunkJudge (lexicon mandatory branch via analyzeLexiconMatches)",
+    };
+  }
+
+  if (normalizedPass.includes("rule_engine") || normalizedPass.startsWith("rule_")) {
+    return {
+      sourceLabel: "RuleEngine",
+      createdByFunction: "processChunkJudge (rule engine / deterministic validation branch)",
+    };
+  }
+
+  return {
+    sourceLabel: "AI",
+    createdByFunction: "processChunkJudge (multi-pass judge / runMultiPassDetection)",
+  };
+}
+
+function captureProvenanceStack(originStage: string): string {
+  const stack = new Error(originStage).stack;
+  return stack ?? originStage;
+}
+
+function buildProvenanceLogPayload(args: {
+  jobId: string;
+  chunkId: string;
+  findingIndex: number;
+  evidenceSnippet: string;
+  articleId: number;
+  source: "AI" | "Lexicon" | "HardFallback" | "RuleEngine" | "Manual";
+  originStage: string;
+  createdByFunction: string;
+  timestamp?: string;
+}): Record<string, unknown> {
+  const timestamp = args.timestamp ?? new Date().toISOString();
+  return {
+    jobId: args.jobId,
+    chunkId: args.chunkId,
+    findingIndex: args.findingIndex,
+    evidenceSnippet: args.evidenceSnippet,
+    articleId: args.articleId,
+    source: args.source,
+    origin_stage: args.originStage,
+    created_by_function: args.createdByFunction,
+    created_by_stack: captureProvenanceStack(args.originStage),
+    timestamp,
+  };
+}
+
 function buildPersistenceFilterRejection(
   finding: FindingWithGlobal,
   filterName: string,
@@ -1683,7 +1755,9 @@ export async function processChunkJudge(
 
   const { mandatoryFindings } = analyzeLexiconMatches(chunkText, supabase);
   const deferredLexiconCandidates: FindingWithGlobal[] = [];
+  let lexiconFindingIndex = 0;
   for (const m of mandatoryFindings) {
+    const findingIndex = lexiconFindingIndex++;
     const hash = lexiconEvidenceHash(jobId, m.articleId, m.term.term, m.line_start);
     const startGlobal = chunkStart + m.match.startIndex;
     const endGlobal = chunkStart + m.match.endIndex;
@@ -1768,6 +1842,18 @@ export async function processChunkJudge(
         documentContent: normalizedText,
       }),
     };
+    const lexiconProvenance = buildProvenanceLogPayload({
+      jobId,
+      chunkId: chunk.id,
+      findingIndex,
+      evidenceSnippet: evidence_snippet,
+      articleId: m.articleId,
+      source: "Lexicon",
+      originStage: analysisEngine === "hybrid" ? "lexicon_deferred_hybrid" : "lexicon_mandatory_insert",
+      createdByFunction: "processChunkJudge (lexicon mandatory branch via analyzeLexiconMatches)",
+      timestamp: new Date().toISOString(),
+    });
+    logger.info("FINAL FINDING PROVENANCE", lexiconProvenance);
     if (analysisEngine === "hybrid") {
       deferredLexiconCandidates.push({
         source: "lexicon_mandatory",
@@ -1825,9 +1911,11 @@ export async function processChunkJudge(
 
   // 1a) Tiny hard fallback for critical direct insults (deterministic match; independent from model output).
   let hardFallbackInserted = 0;
+  let hardFallbackFindingIndex = 0;
   for (const rule of HARD_FALLBACK_INSULTS) {
     const hardMatches = findStringMatches(chunkText, rule.term, "word");
     for (const hardMatch of hardMatches) {
+      const findingIndex = hardFallbackFindingIndex++;
       const startLocal = hardMatch.startIndex;
       const endLocal = hardMatch.endIndex;
       const startGlobal = chunkStart + startLocal;
@@ -1883,6 +1971,18 @@ export async function processChunkJudge(
           documentContent: normalizedText,
         }),
       };
+      const hardFallbackProvenance = buildProvenanceLogPayload({
+        jobId,
+        chunkId: chunk.id,
+        findingIndex,
+        evidenceSnippet: evidence,
+        articleId: rule.articleId,
+        source: "HardFallback",
+        originStage: analysisEngine === "hybrid" ? "hard_fallback_deferred_hybrid" : "hard_fallback_insert",
+        createdByFunction: "processChunkJudge (hard fallback insults branch)",
+        timestamp: new Date().toISOString(),
+      });
+      logger.info("FINAL FINDING PROVENANCE", hardFallbackProvenance);
 
       if (analysisEngine === "hybrid") {
         deferredLexiconCandidates.push({
@@ -3286,7 +3386,24 @@ export async function processChunkJudge(
         source: rejection.source,
       });
     }
-      const rows = resolvedFindings.flatMap((f) => {
+    logger.info("Resolved findings before row materialization", {
+      jobId,
+      chunkId: chunk.id,
+      runKey,
+      resolvedFindingsCount: resolvedFindings.length,
+      resolvedFindings,
+    });
+
+    const findingProvenanceRecords: Array<{
+      findingIndex: number;
+      evidenceSnippet: string;
+      articleId: number;
+      source: "AI" | "Lexicon" | "HardFallback" | "RuleEngine" | "Manual";
+      createdByFunction: string;
+      timestamp: string;
+    }> = [];
+
+    const rows = resolvedFindings.flatMap((f, findingIndex) => {
         const initialStart = f.start_offset_global ?? 0;
         const initialEnd = f.end_offset_global ?? initialStart;
         const start = initialStart;
@@ -3320,6 +3437,7 @@ export async function processChunkJudge(
         source: f.source ?? "ai",
       });
       const persistenceSource = getPersistenceFindingSource(f);
+      const provenance = getFindingProvenanceDetails(f);
       const h = evidenceHash(
         f.article_id,
         f.atom_id ?? null,
@@ -3334,6 +3452,41 @@ export async function processChunkJudge(
         index: null,
       });
       const findingPageNumber = pageNumAt(start);
+      const provenanceTimestamp = new Date().toISOString();
+        findingProvenanceRecords.push({
+          findingIndex,
+          evidenceSnippet: excerpt,
+          articleId: f.article_id,
+          source: provenance.sourceLabel,
+          createdByFunction: provenance.createdByFunction,
+          timestamp: provenanceTimestamp,
+        });
+        logger.info("FINAL FINDING PROVENANCE", {
+          jobId,
+        chunkId: chunk.id,
+        findingIndex,
+        evidenceSnippet: excerpt,
+        articleId: f.article_id,
+        source: provenance.sourceLabel,
+          createdByFunction: provenance.createdByFunction,
+          timestamp: provenanceTimestamp,
+        });
+        const originalSource = normalizePersistenceSource(f.source);
+        const persistedSource = normalizePersistenceSource(persistenceSource);
+        if (originalSource !== persistedSource) {
+          logger.warn("SOURCE MUTATION DETECTED", {
+            jobId,
+            chunkId: chunk.id,
+            findingIndex,
+            runKey,
+            originalSource: f.source ?? null,
+            persistedSource,
+            articleId: f.article_id,
+            evidenceSnippet: excerpt,
+            detectionPass: f.detection_pass ?? null,
+            createdByFunction: provenance.createdByFunction,
+          });
+        }
       return [{
         job_id: jobId,
         script_id: scriptId,
@@ -3398,8 +3551,31 @@ export async function processChunkJudge(
           anchorText: excerpt,
           documentContent: normalizedText,
         }),
-      } as unknown as FindingWithGlobal];
+        } as unknown as FindingWithGlobal];
+      });
+
+    logger.info("Rows after row materialization", {
+      jobId,
+      chunkId: chunk.id,
+      runKey,
+      rowsCount: rows.length,
+      rows,
     });
+
+      const provenanceSummary = findingProvenanceRecords.reduce<Record<string, number>>((acc, record) => {
+        acc[record.source] = (acc[record.source] ?? 0) + 1;
+        return acc;
+      }, {});
+      logger.info("FINAL FINDING PROVENANCE SUMMARY", {
+        jobId,
+        chunkId: chunk.id,
+        AI: provenanceSummary.AI ?? 0,
+        Lexicon: provenanceSummary.Lexicon ?? 0,
+        HardFallback: provenanceSummary.HardFallback ?? 0,
+        RuleEngine: provenanceSummary.RuleEngine ?? 0,
+        Manual: provenanceSummary.Manual ?? 0,
+        Total: findingProvenanceRecords.length,
+      });
 
     // Log first row shape for debugging column mismatch
     /* logger.info("AI findings upsert payload sample", ... ); */
