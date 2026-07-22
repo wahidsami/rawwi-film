@@ -421,9 +421,12 @@ export function buildPipelineIntegrityReport(input: {
   reviewFindings: PersistedReviewFindingIdentityRow[];
   summary: SummaryJson;
   reportRow: Record<string, unknown>;
+  sourceCanonicalFindings?: Array<{ canonical_finding_id: string | null }>;
 }): PipelineIntegrityReport {
   const analysisFindingIds = uniqueStrings(input.findings.map((finding) => findingIntegrityIdentity(finding)));
-  const summaryFindingIds = uniqueStrings((input.summary.canonical_findings ?? []).map((finding) => finding.canonical_finding_id));
+  const sourceCanonicalFindingIds = uniqueStrings(
+    (input.sourceCanonicalFindings ?? input.summary.canonical_findings ?? []).map((finding) => finding.canonical_finding_id),
+  );
   const reviewFindingIds = uniqueStrings(
     input.reviewFindings
       .filter((row) => !row.is_manual)
@@ -438,16 +441,16 @@ export function buildPipelineIntegrityReport(input: {
   const mismatches: string[] = [];
 
   const reportFindingsCount = Number(input.reportRow.findings_count ?? 0) || 0;
-  if (input.findings.length !== input.summary.totals.findings_count) {
-    mismatches.push(`analysis_findings_count_mismatch:${input.findings.length}:${input.summary.totals.findings_count}`);
+  if (input.findings.length !== sourceCanonicalFindingIds.length) {
+    mismatches.push(`analysis_findings_count_mismatch:${input.findings.length}:${sourceCanonicalFindingIds.length}`);
   }
-  if (input.findings.length !== reportFindingsCount) {
-    mismatches.push(`analysis_reports_findings_count_mismatch:${input.findings.length}:${reportFindingsCount}`);
+  if (reportFindingsCount !== input.summary.totals.findings_count) {
+    mismatches.push(`analysis_reports_findings_count_mismatch:${reportFindingsCount}:${input.summary.totals.findings_count}`);
   }
-  if (summaryFindingIds.length > 0 && analysisFindingIds.length !== summaryFindingIds.length) {
-    mismatches.push(`summary_canonical_count_mismatch:${analysisFindingIds.length}:${summaryFindingIds.length}`);
+  if (sourceCanonicalFindingIds.length > 0 && analysisFindingIds.length !== sourceCanonicalFindingIds.length) {
+    mismatches.push(`summary_canonical_count_mismatch:${analysisFindingIds.length}:${sourceCanonicalFindingIds.length}`);
   }
-  if (summaryFindingIds.length > 0 && JSON.stringify(analysisFindingIds) !== JSON.stringify(summaryFindingIds)) {
+  if (sourceCanonicalFindingIds.length > 0 && JSON.stringify(analysisFindingIds) !== JSON.stringify(sourceCanonicalFindingIds)) {
     mismatches.push("summary_canonical_ids_mismatch");
   }
   if (summaryReviewFindingIds.length > 0 && reviewFindingIds.length !== summaryReviewFindingIds.length) {
@@ -466,7 +469,7 @@ export function buildPipelineIntegrityReport(input: {
     findingsCount: input.findings.length,
     reportFindingsCount,
     analysisFindingIds,
-    summaryFindingIds,
+    summaryFindingIds: sourceCanonicalFindingIds,
     reviewFindingIds,
     summaryReviewFindingIds,
     manualReviewFindingCount,
@@ -497,6 +500,7 @@ export async function validatePipelineIntegrity(input: {
   findings: DbFinding[];
   summary: SummaryJson;
   reportRow: Record<string, unknown>;
+  sourceCanonicalFindings?: Array<{ canonical_finding_id: string | null }>;
 }): Promise<PipelineIntegrityReport> {
   const reviewFindings = await loadCurrentReviewFindingIdentityRows(input.reportId);
   const report = buildPipelineIntegrityReport({
@@ -536,24 +540,27 @@ export function buildReportAssemblyIntegrityReport(input: {
   findings: DbFinding[];
   summary: SummaryJson;
   reportRow: Record<string, unknown>;
+  sourceCanonicalFindings?: Array<{ canonical_finding_id: string | null }>;
 }): ReportAssemblyIntegrityReport {
   const analysisFindingIds = uniqueStrings(input.findings.map((finding) => findingIntegrityIdentity(finding)));
-  const summaryFindingIds = uniqueStrings((input.summary.canonical_findings ?? []).map((finding) => finding.canonical_finding_id));
+  const sourceCanonicalFindingIds = uniqueStrings(
+    (input.sourceCanonicalFindings ?? input.summary.canonical_findings ?? []).map((finding) => finding.canonical_finding_id),
+  );
   const reportFindingsCount = Number(input.reportRow.findings_count ?? 0) || 0;
   const mismatches: string[] = [];
 
-  if (input.findings.length !== input.summary.totals.findings_count) {
-    mismatches.push(`analysis_findings_count_mismatch:${input.findings.length}:${input.summary.totals.findings_count}`);
+  if (input.findings.length !== sourceCanonicalFindingIds.length) {
+    mismatches.push(`analysis_findings_count_mismatch:${input.findings.length}:${sourceCanonicalFindingIds.length}`);
   }
-  if (input.findings.length !== reportFindingsCount) {
-    mismatches.push(`analysis_reports_findings_count_mismatch:${input.findings.length}:${reportFindingsCount}`);
+  if (reportFindingsCount !== input.summary.totals.findings_count) {
+    mismatches.push(`analysis_reports_findings_count_mismatch:${reportFindingsCount}:${input.summary.totals.findings_count}`);
   }
-  if (summaryFindingIds.length > 0 && JSON.stringify(analysisFindingIds) !== JSON.stringify(summaryFindingIds)) {
+  if (sourceCanonicalFindingIds.length > 0 && JSON.stringify(analysisFindingIds) !== JSON.stringify(sourceCanonicalFindingIds)) {
     mismatches.push("analysis_findings_summary_ids_mismatch");
   }
-  if ((input.summary.report_overview?.total_findings ?? input.summary.totals.findings_count) !== input.findings.length) {
+  if ((input.summary.report_overview?.total_findings ?? input.summary.totals.findings_count) !== input.summary.totals.findings_count) {
     mismatches.push(
-      `report_overview_total_findings_mismatch:${input.summary.report_overview?.total_findings ?? input.summary.totals.findings_count}:${input.findings.length}`,
+      `report_overview_total_findings_mismatch:${input.summary.report_overview?.total_findings ?? input.summary.totals.findings_count}:${input.summary.totals.findings_count}`,
     );
   }
 
@@ -563,7 +570,7 @@ export function buildReportAssemblyIntegrityReport(input: {
     summaryFindingsCount: input.summary.totals.findings_count,
     reportFindingsCount,
     analysisFindingIds,
-    summaryFindingIds,
+    summaryFindingIds: sourceCanonicalFindingIds,
     mismatches,
   };
 }
@@ -573,6 +580,7 @@ export function validateReportAssemblyIntegrity(input: {
   findings: DbFinding[];
   summary: SummaryJson;
   reportRow: Record<string, unknown>;
+  sourceCanonicalFindings?: Array<{ canonical_finding_id: string | null }>;
 }): ReportAssemblyIntegrityReport {
   const report = buildReportAssemblyIntegrityReport(input);
   if (report.mismatches.length > 0) {
@@ -2802,6 +2810,7 @@ export async function runAggregation(jobId: string): Promise<void> {
     }
   }
   applySummaryContextToRulings(summary);
+  const sourceCanonicalFindings = [...(summary.canonical_findings ?? [])];
   applyReportGate(summary);
 
   const reportRow: Record<string, unknown> = {
@@ -2822,6 +2831,7 @@ export async function runAggregation(jobId: string): Promise<void> {
     findings: list,
     summary,
     reportRow,
+    sourceCanonicalFindings,
   });
 
   const reportHtml = buildReportHtml(summary);
@@ -2888,6 +2898,7 @@ export async function runAggregation(jobId: string): Promise<void> {
       findings: list,
       summary,
       reportRow,
+      sourceCanonicalFindings,
     });
   }
 

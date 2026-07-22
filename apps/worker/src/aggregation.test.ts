@@ -2,7 +2,7 @@
  * Tests for report aggregation: taxonomy order, dedup, article 26 excluded.
  * Run: npx tsx src/aggregation.test.ts (from apps/worker or repo root)
  */
-import { buildReportHtml, buildSummaryJson } from "./aggregation.js";
+import { buildReportAssemblyIntegrityReport, buildReportHtml, buildSummaryJson } from "./aggregation.js";
 import { getPolicyArticles } from "./policyMap.js";
 
 type TestFinding = {
@@ -20,6 +20,9 @@ type TestFinding = {
   end_line_chunk: number | null;
   location: ({ start_offset?: number | null; end_offset?: number | null } & Record<string, unknown>) | null;
   rationale_ar?: string | null;
+  lineage_id?: string | null;
+  canonical_hash?: string | null;
+  evidence_hash?: string | null;
 };
 
 function assert(cond: boolean, msg: string) {
@@ -142,12 +145,55 @@ function testReportOverviewAndHtml() {
   console.log("✓ Report summary and presentation fields render deterministically");
 }
 
+function testReportGateDoesNotBreakIntegrity() {
+  const findings: TestFinding[] = [
+    {
+      source: "ai",
+      article_id: 5,
+      atom_id: "5-1",
+      severity: "high",
+      confidence: 0.91,
+      title_ar: "تهديد مباشر",
+      description_ar: "وصف داعم للمخالفة",
+      evidence_snippet: "سأقتلك",
+      start_offset_global: 10,
+      end_offset_global: 14,
+      start_line_chunk: 1,
+      end_line_chunk: 1,
+      location: { v3: { scene: "scene-1" } },
+    },
+  ];
+
+  const summary = buildSummaryJson("job-report-gated", "script-report-gated", findings);
+  const canonical = [...(summary.canonical_findings ?? [])];
+  findings[0].lineage_id = canonical[0]?.canonical_finding_id ?? null;
+  summary.canonical_findings = [];
+  summary.report_hints = [canonical[0]];
+  summary.totals.findings_count = 0;
+  summary.totals.severity_counts = { low: 0, medium: 0, high: 0, critical: 0 };
+  summary.report_overview = undefined;
+
+  const report = buildReportAssemblyIntegrityReport({
+    jobId: "job-report-gated",
+    findings: findings as never,
+    summary,
+    reportRow: {
+      findings_count: 0,
+    },
+    sourceCanonicalFindings: canonical,
+  });
+
+  assert(report.mismatches.length === 0, `Report gate should preserve integrity; got ${JSON.stringify(report.mismatches)}`);
+  console.log("✓ Report gate can move findings to hints without breaking integrity validation");
+}
+
 async function main() {
   testArticleOrder();
   testDedup();
   testArticle26Excluded();
   testSummaryHasFindingsByArticle();
   testReportOverviewAndHtml();
+  testReportGateDoesNotBreakIntegrity();
   console.log("\nAll aggregation tests passed.");
 }
 
