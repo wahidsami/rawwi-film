@@ -163,10 +163,10 @@ function testReportGateDoesNotBreakIntegrity() {
       location: { v3: { scene: "scene-1" } },
     },
   ];
+  findings[0].lineage_id = "line-report-gated";
 
   const summary = buildSummaryJson("job-report-gated", "script-report-gated", findings);
   const canonical = [...(summary.canonical_findings ?? [])];
-  findings[0].lineage_id = canonical[0]?.canonical_finding_id ?? null;
   summary.canonical_findings = [];
   summary.report_hints = [canonical[0]];
   summary.totals.findings_count = 0;

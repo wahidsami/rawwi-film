@@ -103,6 +103,7 @@ export type SummaryJson = {
   }>;
   canonical_findings?: Array<{
     canonical_finding_id: string;
+    source_finding_id?: string | null;
     title_ar: string;
     description_ar?: string | null;
     evidence_snippet: string;
@@ -156,6 +157,7 @@ export type SummaryJson = {
   /** Findings where rationale says "not a violation" — show as تنبيهات/ملاحظات للمخرج. */
   report_hints?: Array<{
     canonical_finding_id: string;
+    source_finding_id?: string | null;
     title_ar: string;
     evidence_snippet: string;
     severity: string;
@@ -421,11 +423,13 @@ export function buildPipelineIntegrityReport(input: {
   reviewFindings: PersistedReviewFindingIdentityRow[];
   summary: SummaryJson;
   reportRow: Record<string, unknown>;
-  sourceCanonicalFindings?: Array<{ canonical_finding_id: string | null }>;
+  sourceCanonicalFindings?: Array<{ canonical_finding_id: string | null; source_finding_id?: string | null }>;
 }): PipelineIntegrityReport {
   const analysisFindingIds = uniqueStrings(input.findings.map((finding) => findingIntegrityIdentity(finding)));
   const sourceCanonicalFindingIds = uniqueStrings(
-    (input.sourceCanonicalFindings ?? input.summary.canonical_findings ?? []).map((finding) => finding.canonical_finding_id),
+    (input.sourceCanonicalFindings ?? input.summary.canonical_findings ?? []).map((finding) =>
+      finding.source_finding_id ?? finding.canonical_finding_id,
+    ),
   );
   const reviewFindingIds = uniqueStrings(
     input.reviewFindings
@@ -500,7 +504,7 @@ export async function validatePipelineIntegrity(input: {
   findings: DbFinding[];
   summary: SummaryJson;
   reportRow: Record<string, unknown>;
-  sourceCanonicalFindings?: Array<{ canonical_finding_id: string | null }>;
+  sourceCanonicalFindings?: Array<{ canonical_finding_id: string | null; source_finding_id?: string | null }>;
 }): Promise<PipelineIntegrityReport> {
   const reviewFindings = await loadCurrentReviewFindingIdentityRows(input.reportId);
   const report = buildPipelineIntegrityReport({
@@ -540,11 +544,13 @@ export function buildReportAssemblyIntegrityReport(input: {
   findings: DbFinding[];
   summary: SummaryJson;
   reportRow: Record<string, unknown>;
-  sourceCanonicalFindings?: Array<{ canonical_finding_id: string | null }>;
+  sourceCanonicalFindings?: Array<{ canonical_finding_id: string | null; source_finding_id?: string | null }>;
 }): ReportAssemblyIntegrityReport {
   const analysisFindingIds = uniqueStrings(input.findings.map((finding) => findingIntegrityIdentity(finding)));
   const sourceCanonicalFindingIds = uniqueStrings(
-    (input.sourceCanonicalFindings ?? input.summary.canonical_findings ?? []).map((finding) => finding.canonical_finding_id),
+    (input.sourceCanonicalFindings ?? input.summary.canonical_findings ?? []).map((finding) =>
+      finding.source_finding_id ?? finding.canonical_finding_id,
+    ),
   );
   const reportFindingsCount = Number(input.reportRow.findings_count ?? 0) || 0;
   const mismatches: string[] = [];
@@ -1870,6 +1876,7 @@ export function buildSummaryJson(
   // Build canonical findings from overlap clusters first (single source of truth).
   const canonicalMap = new Map<string, {
     canonical_finding_id: string;
+    source_finding_id?: string | null;
     title_ar: string;
     description_ar?: string | null;
     evidence_snippet: string;
@@ -1921,6 +1928,7 @@ export function buildSummaryJson(
     ];
     canonicalMap.set(cId, {
       canonical_finding_id: cId,
+      source_finding_id: findingIntegrityIdentity(primary) || null,
       title_ar: primary.title_ar,
       description_ar: primary.description_ar ?? null,
       evidence_snippet: primary.evidence_snippet,
@@ -1997,7 +2005,7 @@ export function buildSummaryJson(
           counts[f.severity as keyof typeof counts]++;
         }
       }
-      const sorted = [...list].sort(compareCanonicalItemsStable);
+        const sorted = [...list].sort(compareCanonicalItemsStable);
       const top_findings = sorted.slice(0, 10).map((f) => ({
         atom_id: null as string | null,
         title_ar: f.title_ar,
@@ -2009,6 +2017,7 @@ export function buildSummaryJson(
             primary_article_id: f.primary_article_id,
             related_article_ids: f.related_article_ids,
             canonical_finding_id: f.canonical_finding_id,
+            source_finding_id: f.source_finding_id ?? null,
             pillar_id: f.pillar_id,
             rationale: f.rationale,
             final_ruling: f.final_ruling,
@@ -2025,6 +2034,7 @@ export function buildSummaryJson(
         primary_article_id: f.primary_article_id ?? null,
         related_article_ids: f.related_article_ids ?? [],
         canonical_finding_id: f.canonical_finding_id,
+        source_finding_id: f.source_finding_id ?? null,
         policy_links: f.policy_links ?? [],
       }));
       return {
@@ -2087,6 +2097,7 @@ export function buildSummaryJson(
       const sorted = [...list].sort(compareCanonicalItemsStable);
       const top_findings = sorted.slice(0, 5).map((f) => ({
         canonical_finding_id: f.canonical_finding_id,
+        source_finding_id: f.source_finding_id ?? null,
         title_ar: f.title_ar,
         severity: f.severity,
         evidence_snippet: f.evidence_snippet,
