@@ -416,6 +416,129 @@ function uniqueStrings(values: Array<string | null | undefined>): string[] {
   return [...new Set(values.map((value) => String(value ?? "").trim()).filter(Boolean))].sort();
 }
 
+type IntegrityRuleLocation = Readonly<{
+  functionName: string;
+  file: string;
+  lineNumber: number;
+}>;
+
+type IntegrityRuleFailure = Readonly<{
+  ruleName: string;
+  expectedValue: unknown;
+  actualValue: unknown;
+  jobId: string;
+  reportId: string | null;
+  findingCount: number;
+  firstOffendingFindingId: string | null;
+  functionName: string;
+  validatorFunctionName: string;
+  file: string;
+  lineNumber: number;
+}>;
+
+const PIPELINE_RULE_LOCATIONS: Record<string, IntegrityRuleLocation> = {
+  analysis_findings_count_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 447 },
+  analysis_reports_findings_count_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 451 },
+  summary_canonical_count_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 454 },
+  summary_canonical_ids_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 457 },
+  analysis_review_findings_count_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 460 },
+  analysis_review_findings_ids_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 463 },
+  manual_review_count_mismatch: { functionName: "buildPipelineIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 466 },
+};
+
+const REPORT_ASSEMBLY_RULE_LOCATIONS: Record<string, IntegrityRuleLocation> = {
+  analysis_findings_count_mismatch: { functionName: "buildReportAssemblyIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 558 },
+  analysis_reports_findings_count_mismatch: { functionName: "buildReportAssemblyIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 561 },
+  analysis_findings_summary_ids_mismatch: { functionName: "buildReportAssemblyIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 564 },
+  report_overview_total_findings_mismatch: { functionName: "buildReportAssemblyIntegrityReport", file: "apps/worker/src/aggregation.ts", lineNumber: 567 },
+};
+
+function firstDifferingFindingId(expected: readonly string[], actual: readonly string[]): string | null {
+  const max = Math.max(expected.length, actual.length);
+  for (let index = 0; index < max; index += 1) {
+    const expectedValue = expected[index] ?? null;
+    const actualValue = actual[index] ?? null;
+    if (expectedValue !== actualValue) return actualValue ?? expectedValue;
+  }
+  return actual[0] ?? expected[0] ?? null;
+}
+
+function buildIntegrityFailure(
+  report: {
+    jobId: string;
+    reportId?: string | null;
+    findingsCount: number;
+    analysisFindingIds: string[];
+    summaryFindingIds: string[];
+    reportFindingsCount: number;
+    mismatches: string[];
+    reviewFindingIds?: string[];
+    summaryReviewFindingIds?: string[];
+    manualReviewFindingCount?: number;
+    summaryManualReviewCount?: number;
+  },
+  mismatch: string,
+  validatorFunctionName: string,
+  locationMap: Record<string, IntegrityRuleLocation>,
+): IntegrityRuleFailure | null {
+  const [ruleName, actualRaw, expectedRaw] = mismatch.split(":");
+  const location = locationMap[ruleName];
+  if (!location) return null;
+
+  let firstOffendingFindingId: string | null = null;
+  const failure: IntegrityRuleFailure = {
+    ruleName,
+    expectedValue: expectedRaw ?? null,
+    actualValue: actualRaw ?? null,
+    jobId: report.jobId,
+    reportId: report.reportId ?? null,
+    findingCount: report.findingsCount,
+    firstOffendingFindingId,
+    functionName: location.functionName,
+    validatorFunctionName,
+    file: location.file,
+    lineNumber: location.lineNumber,
+  };
+
+  if (ruleName === "analysis_findings_count_mismatch" || ruleName === "summary_canonical_count_mismatch" || ruleName === "summary_canonical_ids_mismatch" || ruleName === "analysis_findings_summary_ids_mismatch") {
+    firstOffendingFindingId = firstDifferingFindingId(report.analysisFindingIds, report.summaryFindingIds);
+  } else if (ruleName === "analysis_reports_findings_count_mismatch" || ruleName === "report_overview_total_findings_mismatch") {
+    firstOffendingFindingId = report.analysisFindingIds[0] ?? report.summaryFindingIds[0] ?? null;
+  } else if (ruleName === "analysis_review_findings_count_mismatch" || ruleName === "analysis_review_findings_ids_mismatch") {
+    firstOffendingFindingId = firstDifferingFindingId(report.reviewFindingIds ?? [], report.summaryReviewFindingIds ?? []);
+  } else if (ruleName === "manual_review_count_mismatch") {
+    firstOffendingFindingId = report.reviewFindingIds?.[0] ?? null;
+  }
+
+  return { ...failure, firstOffendingFindingId };
+}
+
+function emitIntegrityFailures(
+  report: {
+    jobId: string;
+    reportId?: string | null;
+    findingsCount: number;
+    analysisFindingIds: string[];
+    summaryFindingIds: string[];
+    reportFindingsCount: number;
+    mismatches: string[];
+    reviewFindingIds?: string[];
+    summaryReviewFindingIds?: string[];
+    manualReviewFindingCount?: number;
+    summaryManualReviewCount?: number;
+  },
+  validatorFunctionName: string,
+  locationMap: Record<string, IntegrityRuleLocation>,
+): IntegrityRuleFailure[] {
+  const failures = report.mismatches
+    .map((mismatch) => buildIntegrityFailure(report, mismatch, validatorFunctionName, locationMap))
+    .filter((failure): failure is IntegrityRuleFailure => failure != null);
+  for (const failure of failures) {
+    logger.error("Integrity validation failure", failure);
+  }
+  return failures;
+}
+
 export function buildPipelineIntegrityReport(input: {
   jobId: string;
   reportId: string;
@@ -512,13 +635,17 @@ export async function validatePipelineIntegrity(input: {
     reviewFindings,
   });
   if (report.mismatches.length > 0) {
+    const validationFailures = emitIntegrityFailures(report, "validatePipelineIntegrity", PIPELINE_RULE_LOCATIONS);
     logger.error("Pipeline integrity validation failed", {
       jobId: report.jobId,
       reportId: report.reportId,
+      findingCount: report.findingsCount,
+      validationFailures,
       integrityReport: report,
     });
     const error = new Error("Pipeline integrity validation failed");
-    (error as Error & { integrityReport?: PipelineIntegrityReport }).integrityReport = report;
+    (error as Error & { integrityReport?: PipelineIntegrityReport; validationFailures?: IntegrityRuleFailure[] }).integrityReport = report;
+    (error as Error & { integrityReport?: PipelineIntegrityReport; validationFailures?: IntegrityRuleFailure[] }).validationFailures = validationFailures;
     throw error;
   }
   logger.info("Pipeline integrity validation passed", {
@@ -586,16 +713,26 @@ export function validateReportAssemblyIntegrity(input: {
   findings: DbFinding[];
   summary: SummaryJson;
   reportRow: Record<string, unknown>;
-  sourceCanonicalFindings?: Array<{ canonical_finding_id: string | null }>;
+  reportId?: string | null;
+  sourceCanonicalFindings?: Array<{ canonical_finding_id: string | null; source_finding_id?: string | null }>;
 }): ReportAssemblyIntegrityReport {
   const report = buildReportAssemblyIntegrityReport(input);
   if (report.mismatches.length > 0) {
+    const validationFailures = emitIntegrityFailures(
+      { ...report, reportId: input.reportId ?? null },
+      "validateReportAssemblyIntegrity",
+      REPORT_ASSEMBLY_RULE_LOCATIONS,
+    );
     logger.error("Report assembly integrity validation failed", {
       jobId: report.jobId,
+      reportId: input.reportId ?? null,
+      findingCount: report.findingsCount,
+      validationFailures,
       integrityReport: report,
     });
     const error = new Error("Report assembly integrity validation failed");
-    (error as Error & { integrityReport?: ReportAssemblyIntegrityReport }).integrityReport = report;
+    (error as Error & { integrityReport?: ReportAssemblyIntegrityReport; validationFailures?: IntegrityRuleFailure[] }).integrityReport = report;
+    (error as Error & { integrityReport?: ReportAssemblyIntegrityReport; validationFailures?: IntegrityRuleFailure[] }).validationFailures = validationFailures;
     throw error;
   }
   logger.info("Report assembly integrity validation passed", {
