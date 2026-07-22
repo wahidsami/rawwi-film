@@ -1,5 +1,5 @@
 import type { ConceptCollection, ConceptRecord } from "../concepts/conceptTypes.js";
-import type { Evidence, EvidenceCollection } from "../evidence/evidenceTypes.js";
+import type { EvidenceCollection } from "../evidence/evidenceTypes.js";
 import type { LegalDecision, LegalDecisionCollection } from "../legal/legalDecision.js";
 import { validateExplanationCollection } from "./explanationValidator.js";
 import type { ExplanationCollection, ExplanationEngineInput, ExplanationRecord, ExplanationRecommendedAction } from "./explanationTypes.js";
@@ -29,34 +29,9 @@ function recommendedActionForConcept(concept: ConceptRecord | null): Explanation
 
 export function buildExplanationRecord(input: ExplanationEngineInput, decision: LegalDecision, index: number): ExplanationRecord {
   const concept = pickConcept(input.conceptCollection, decision.conceptId);
-  const evidence = input.verifiedEvidence
-    ? Object.freeze({
-        spanId: input.verifiedEvidence.evidenceId,
-        id: input.verifiedEvidence.evidenceId,
-        startOffset: input.verifiedEvidence.offsets.startOffset,
-        endOffset: input.verifiedEvidence.offsets.endOffset,
-        text: input.verifiedEvidence.text,
-        scene: input.verifiedEvidence.scene,
-        page: input.verifiedEvidence.page,
-        rawText: input.verifiedEvidence.text,
-        normalizedText: input.verifiedEvidence.text.normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase(),
-        confidence: 1,
-        sourceType: "Narration" as const,
-        lineId: null,
-        sentenceIndex: 0,
-        pageReferences: Object.freeze([
-          Object.freeze({
-            pageNumber: input.verifiedEvidence.page,
-            startOffsetPage: input.verifiedEvidence.offsets.startOffset,
-            endOffsetPage: input.verifiedEvidence.offsets.endOffset,
-          }),
-        ]),
-        conceptIds: Object.freeze([]),
-        rationale: Object.freeze(["Verified evidence provided by the V4 evidence-ranking stage."]),
-      } as Evidence)
-    : null;
+  const evidence = input.verifiedEvidence ?? null;
   const article = decision.primaryArticle;
-  const evidenceText = normalizeText(evidence?.text ?? evidence?.rawText ?? "");
+  const evidenceText = normalizeText(evidence?.text ?? "");
   const conceptLabel = concept?.label ?? decision.conceptId;
   const articleLabel = article ? `${article.articleId} (${article.titleAr})` : "unresolved article";
   const recommendedAction = recommendedActionForConcept(concept);
@@ -66,13 +41,13 @@ export function buildExplanationRecord(input: ExplanationEngineInput, decision: 
     id: `explanation-${input.sceneId}-${index + 1}`,
     legalDecisionId: decision.id,
     conceptId: decision.conceptId,
-    evidenceId: evidence?.id ?? evidence?.spanId ?? `evidence-${index + 1}`,
+    evidenceId: evidence?.evidenceId ?? `evidence-${index + 1}`,
     title: `${conceptLabel} → ${article?.titleAr ?? "Unresolved article"}`,
     summary: article
       ? `Grounded evidence "${evidenceText}" expresses ${conceptLabel}, so the Academy maps it to article ${articleLabel}.`
       : `Grounded evidence "${evidenceText}" does not resolve to a legal article.`,
     reasoning: Object.freeze([
-      evidence ? `Evidence: ${evidenceText}` : "Evidence: unavailable",
+      evidenceText ? `Evidence: ${evidenceText}` : "Evidence: unavailable",
       `Concept: ${conceptLabel} (${decision.conceptId})`,
       article ? `Article: ${articleLabel}` : "Article: unresolved",
       decision.mappingReason ? `Mapping reason: ${decision.mappingReason}` : "Mapping reason: unavailable",
@@ -106,10 +81,13 @@ function toLegacyExplanation(explanation: ExplanationRecord, input: ExplanationE
   const decision = input.legalDecisionCollection?.decisions.find((entry) => entry.id === explanation.legalDecisionId) ?? null;
   const evidence = input.evidenceCollection?.evidence.find((entry) => entry.id === explanation.evidenceId || entry.spanId === explanation.evidenceId) ?? null;
   const article = decision?.primaryArticle ?? null;
+  const groundedEvidence = input.verifiedEvidence?.evidenceId === explanation.evidenceId
+    ? input.verifiedEvidence.text
+    : evidence?.text ?? evidence?.rawText ?? "";
 
   return Object.freeze({
     summary: explanation.summary,
-    groundedEvidence: evidence?.text ?? evidence?.rawText ?? "",
+    groundedEvidence,
     primaryArticleId: article?.articleId ?? null,
     primaryArticleTitleAr: article?.titleAr ?? null,
     primaryAtomId: null,

@@ -6,6 +6,7 @@ import { strict as assert } from "node:assert";
 
 import { getPolicyArticle } from "../../policyMap.js";
 import { createVerifiedFindingCollectionFromState } from "./qualityJudgeEngine.js";
+import { createEvidenceCollectionFromVerifiedEvidence, createVerifiedEvidenceFromEvidence } from "../evidence/evidenceTypes.js";
 import {
   createQualityJudgeNode,
   createSceneAnalysisState,
@@ -72,16 +73,24 @@ function buildConcept(label = "Profanity", conceptId = "profanity"): SceneAnalys
   });
 }
 
-function buildArticle(articleId = 4, titleAr = getPolicyArticle(4)?.title_ar ?? "الألفاظ النابية"): SceneAnalysisArticleCandidate {
+function buildArticle(
+  articleId = 4,
+  titleAr = getPolicyArticle(4)?.title_ar ?? "الألفاظ النابية",
+  evidenceSpanIds: readonly string[] = ["evidence-1"],
+): SceneAnalysisArticleCandidate {
   return Object.freeze({
     articleId,
     titleAr,
     matchedKnowledgeDomains: Object.freeze(["profanity"]),
     matchedConceptIds: Object.freeze(["profanity"]),
-    evidenceSpanIds: Object.freeze(["evidence-1"]),
+    evidenceSpanIds: Object.freeze([...evidenceSpanIds]),
     score: 999,
     rationale: Object.freeze(["Academy mapping"]),
   });
+}
+
+function buildEvidenceCollection(evidence: SceneAnalysisEvidenceSpan) {
+  return createEvidenceCollectionFromVerifiedEvidence("scene-quality", createVerifiedEvidenceFromEvidence(evidence));
 }
 
 function buildLegalDecisionCollection(article: SceneAnalysisArticleCandidate): SceneAnalysisLegalDecisionCollection {
@@ -181,6 +190,7 @@ function testQualityJudgeProducesVerifiedFindingCollection(): void {
     ...createSceneAnalysisState({ sceneId: "scene-quality-pass", sceneText: "يا كلب" }),
     sceneModel: buildSceneModel("Scene contains 1 line(s), 1 dialogue line(s), 0 action line(s), and 1 character hint(s).", ["فهد"]),
     evidenceSpans: Object.freeze([evidence]),
+    evidenceCollection: buildEvidenceCollection(evidence),
     primaryEvidenceSpanId: "evidence-1",
     primaryEvidenceText: "يا كلب",
     primaryEvidenceReason: "primary evidence",
@@ -234,6 +244,7 @@ function testQualityJudgeRejectsHallucination(): void {
     ...createSceneAnalysisState({ sceneId: "scene-quality-reject", sceneText: "يا كلب" }),
     sceneModel: buildSceneModel("Scene contains 1 line(s), 1 dialogue line(s), 0 action line(s), and 1 character hint(s).", ["فهد"]),
     evidenceSpans: Object.freeze([buildEvidenceSpan("يا كلب")]),
+    evidenceCollection: buildEvidenceCollection(buildEvidenceSpan("يا كلب")),
     primaryEvidenceSpanId: "evidence-1",
     primaryEvidenceText: "يا كلب",
     primaryEvidenceReason: "primary evidence",
@@ -275,6 +286,33 @@ function testQualityJudgeRejectsHallucination(): void {
   assert.equal(judged.status, "failed");
 }
 
+function testQualityJudgeRejectsMixedEvidenceIdentity(): void {
+  const evidence = buildEvidenceSpan("يا كلب");
+  const mismatchedArticle = buildArticle(4, getPolicyArticle(4)?.title_ar ?? "الألفاظ النابية", ["evidence-2"]);
+  const state = freezeSceneAnalysisState({
+    ...createSceneAnalysisState({ sceneId: "scene-quality-mixed-identity", sceneText: "يا كلب" }),
+    sceneModel: buildSceneModel("Scene contains 1 line(s), 1 dialogue line(s), 0 action line(s), and 1 character hint(s).", ["فهد"]),
+    evidenceSpans: Object.freeze([evidence]),
+    evidenceCollection: buildEvidenceCollection(evidence),
+    primaryEvidenceSpanId: "evidence-1",
+    primaryEvidenceText: "يا كلب",
+    primaryEvidenceReason: "primary evidence",
+    detectedConcepts: Object.freeze([buildConcept()]),
+    legalDecisionCollection: buildLegalDecisionCollection(mismatchedArticle),
+    legalCandidateArticles: Object.freeze([mismatchedArticle]),
+    legalPrimaryArticle: mismatchedArticle,
+    primaryArticle: mismatchedArticle,
+    explanation: buildExplanation(),
+    explanationCollection: buildExplanationCollection([buildExplanation()]),
+  });
+
+  const verified = createVerifiedFindingCollectionFromState(state);
+
+  assert.equal(verified.report.overallStatus, "reject");
+  assert.equal(verified.verifiedFindings[0]?.verificationResult, "reject");
+  assert.equal(verified.report.rejectionReasons.some((reason) => reason.includes("evidence_identity_consistent")), true);
+}
+
 function testDuplicateFindingsAreMergedDeterministically(): void {
   const sharedExplanation = buildExplanation();
   const explanationCollection = buildExplanationCollection([
@@ -289,6 +327,7 @@ function testDuplicateFindingsAreMergedDeterministically(): void {
     ...createSceneAnalysisState({ sceneId: "scene-quality-duplicate", sceneText: "يا كلب" }),
     sceneModel: buildSceneModel("Scene contains 1 line(s), 1 dialogue line(s), 0 action line(s), and 1 character hint(s).", ["فهد"]),
     evidenceSpans: Object.freeze([buildEvidenceSpan("يا كلب")]),
+    evidenceCollection: buildEvidenceCollection(buildEvidenceSpan("يا كلب")),
     primaryEvidenceSpanId: "evidence-1",
     primaryEvidenceText: "يا كلب",
     primaryEvidenceReason: "primary evidence",
@@ -313,6 +352,7 @@ function testQualityJudgeIsDeterministic(): void {
     ...createSceneAnalysisState({ sceneId: "scene-quality-deterministic", sceneText: "يا كلب" }),
     sceneModel: buildSceneModel("Scene contains 1 line(s), 1 dialogue line(s), 0 action line(s), and 1 character hint(s).", ["فهد"]),
     evidenceSpans: Object.freeze([buildEvidenceSpan("يا كلب")]),
+    evidenceCollection: buildEvidenceCollection(buildEvidenceSpan("يا كلب")),
     primaryEvidenceSpanId: "evidence-1",
     primaryEvidenceText: "يا كلب",
     primaryEvidenceReason: "primary evidence",
@@ -344,6 +384,8 @@ function main(): void {
   console.log("✓ judge rejects missing evidence");
   testQualityJudgeRejectsHallucination();
   console.log("✓ judge rejects hallucinated explanations");
+  testQualityJudgeRejectsMixedEvidenceIdentity();
+  console.log("✓ judge rejects mixed evidence identity");
   testDuplicateFindingsAreMergedDeterministically();
   console.log("✓ judge merges duplicate findings deterministically");
   testQualityJudgeIsDeterministic();

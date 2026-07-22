@@ -457,15 +457,26 @@ function buildAnalysisResponse(state: SceneAnalysisState, request: AnalysisJobCo
     findingCount: selectedArticle ? 1 : 0,
   });
 
-  const findings = mapLegalDecisionToFindings({
-    decision: legalDecision,
-    chunkStart: request.chunkStart,
-    chunkEnd: request.chunkEnd,
-    startLine: request.startLine ?? null,
-    endLine: request.endLine ?? null,
-    diagnostics: diagnostics as unknown as Parameters<typeof mapLegalDecisionToFindings>[0]["diagnostics"],
-    gcamMapping,
-  });
+  const rejectedVerifiedFindings = state.verifiedFindingCollection?.verifiedFindings.filter((finding) => finding.verificationResult === "reject") ?? [];
+  const findings = rejectedVerifiedFindings.length > 0
+    ? []
+    : mapLegalDecisionToFindings({
+        decision: legalDecision,
+        chunkStart: request.chunkStart,
+        chunkEnd: request.chunkEnd,
+        startLine: request.startLine ?? null,
+        endLine: request.endLine ?? null,
+        diagnostics: diagnostics as unknown as Parameters<typeof mapLegalDecisionToFindings>[0]["diagnostics"],
+        gcamMapping,
+      });
+
+  if (rejectedVerifiedFindings.length > 0) {
+    logger.info("[V4] analysisEngineV4 findings suppressed after judge rejection", {
+      jobId: request.jobId,
+      chunkId: request.chunkId,
+      rejectedFindingIds: rejectedVerifiedFindings.map((finding) => finding.findingId),
+    });
+  }
 
   assertSingleEvidenceIdentity({
     verifiedEvidence,

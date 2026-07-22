@@ -504,7 +504,8 @@ export function mapLegalDecisionToFindings(args: {
     return [];
   }
 
-  return passEvaluations.flatMap((evaluation, index) => {
+  const findings: V3RuntimeFinding[] = [];
+  for (const [index, evaluation] of passEvaluations.entries()) {
     const articleId = Number(evaluation.articleId);
     const policyAssessment = evaluatePolicyDisposition(decision, evaluation);
     const policyArticleTitle = getPolicyArticle(articleId)?.title_ar ?? null;
@@ -516,25 +517,41 @@ export function mapLegalDecisionToFindings(args: {
     const atomId = normalizeAtomId(mappedAtomId ?? fallbackAtomId ?? null, articleId) || null;
     const canonicalAtom = getPrimaryCanonicalAtomForGcam(articleId, atomId);
     const policyAtomTitle = getPolicyAtomTitle(articleId, atomId) ?? null;
-    const evidenceTexts = uniqueEvidenceTexts(evaluation.evidence.length > 0
-      ? evaluation.evidence
-      : [pickPrimaryEvidence(decision)?.text ?? evaluation.reason ?? ""]);
+    const evidenceTexts = uniqueEvidenceTexts(evaluation.evidence);
+    if (evidenceTexts.length === 0) {
+      logger.info("V3 finding mapper rejected evaluation with no grounded evidence", {
+        decision_status: decision.status,
+        decision_article: articleId,
+        decision_atom: canonicalAtom,
+        decision_reason: decision.reason,
+        validator_history: decision.trace,
+        line_of_code: "findingMapper.ts:519-521",
+        reasoned_decision_article_evaluations: reasonedDecision?.articleEvaluations.length ?? 0,
+      });
+      continue;
+    }
 
-    return evidenceTexts.map((evidenceText) => {
+    for (const evidenceText of evidenceTexts) {
       const primaryEvidence = pickEvidenceCandidate(decision, evidenceText);
-      const fallbackText = evidenceText.trim();
-      const evidenceSnippet = String(primaryEvidence?.text ?? fallbackText).trim();
-      const locationEvidence = primaryEvidence ?? pickPrimaryEvidence(decision) ?? decision.evidence.candidates[0] ?? {
-        text: evidenceSnippet,
-        startOffset: chunkStart,
-        endOffset: Math.max(chunkStart + evidenceSnippet.length, chunkStart + 1),
-        confidence: decision.evidence.confidence,
-        source: "chunk" as const,
-        notes: [],
-      };
+      if (!primaryEvidence) {
+        logger.info("V3 finding mapper rejected evaluation without matching grounded evidence", {
+          decision_status: decision.status,
+          decision_article: articleId,
+          decision_atom: canonicalAtom,
+          decision_reason: decision.reason,
+          validator_history: decision.trace,
+          line_of_code: "findingMapper.ts:524-527",
+          evaluation_reason: evaluation.reason,
+          evidence_text: evidenceText,
+          reasoned_decision_article_evaluations: reasonedDecision?.articleEvaluations.length ?? 0,
+        });
+        continue;
+      }
+      const evidenceSnippet = String(primaryEvidence.text).trim();
+      const locationEvidence = primaryEvidence;
       const location = buildLocation(locationEvidence, chunkStart, startLine, endLine, diagnostics, decision.moduleId, articleId);
 
-      return {
+      findings.push({
         source: "v3",
         exists: true,
         article_id: articleId,
@@ -581,9 +598,11 @@ export function mapLegalDecisionToFindings(args: {
           ...(decision.finding?.articleIds ?? []),
           ...(gcamMapping?.status === "MAPPED" && gcamMapping.articleId !== null ? [gcamMapping.articleId] : []),
         ])].sort((left, right) => left - right),
-      } satisfies V3RuntimeFinding;
-    });
-  });
+      } satisfies V3RuntimeFinding);
+    }
+  }
+
+  return findings;
 }
 
 export function summarizeContextForReport(context: LegalContextResult): Record<string, unknown> {

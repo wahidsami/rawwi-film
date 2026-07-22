@@ -370,6 +370,159 @@ function testArticleFourteenResolvesFromPolicyCatalog(): void {
   console.log("✓ article 14 resolves through the official GCAM catalog");
 }
 
+function testMapperRejectsMissingGroundedEvidence(): void {
+  const legalDecision = createLegalDecision({
+    moduleId: "v3_01_religion",
+    moduleTitle: "Religion Reviewer",
+    articleIds: [8],
+    applies: true,
+    status: "accept",
+    reason: "The quote directly attacks religion.",
+    confidence: 0.94,
+    semantic: {
+      semanticMeaning: "Direct religious insult.",
+      narrativeIntent: "attack",
+      conversationRole: "speaker",
+      sceneRole: "dialogue",
+      speaker: "speaker",
+      listener: "listener",
+      target: "target",
+      victim: "victim",
+      emotion: "hostile",
+      riskContext: "high",
+      confidence: 0.95,
+      notes: [],
+    },
+    narrative: {
+      speaker: "speaker",
+      listener: "listener",
+      target: "target",
+      narrativeVoice: "dialogue",
+      sceneType: "dialogue",
+      narrativeIntent: "attack",
+      storyPosition: "middle",
+      relationship: "unknown",
+      emotionalTone: "hostile",
+      condemnation: false,
+      approval: false,
+      neutrality: false,
+      historicalContext: false,
+      dream: false,
+      flashback: false,
+      comedy: false,
+      satire: false,
+      threat: false,
+      instruction: false,
+      news: false,
+      documentary: false,
+      dialogue: true,
+      narration: false,
+      sceneDescription: false,
+      confidence: 0.95,
+      notes: [],
+    },
+    evidence: {
+      candidates: [
+        {
+          text: "هذا الكلام إساءة دينية",
+          startOffset: 10,
+          endOffset: 20,
+          confidence: 0.94,
+          source: "chunk",
+          notes: [],
+        },
+      ],
+      primaryCandidateIndex: 0,
+      admissible: true,
+      confidence: 0.94,
+      notes: [],
+    },
+    context: {
+      storyMemory: null,
+      sceneMemory: null,
+      localContext: "هذا الكلام إساءة دينية",
+      chunkContext: "chunk",
+      neighboringSentences: [],
+      narrativeContext: "dialogue",
+      confidence: 0.94,
+      notes: [],
+    },
+    exceptions: [],
+    finding: null,
+    trace: ["finding_built"],
+  });
+
+  const findings = mapLegalDecisionToFindings({
+    decision: legalDecision,
+    reasonedDecision: {
+      reasoning: "The quote directly attacks religion.",
+      alternativeInterpretations: [],
+      confidence: 0.94,
+      articleEvaluations: [
+        {
+          articleId: 8,
+          status: "PASS",
+          evidence: [],
+          reason: "The quote directly attacks religion.",
+          confidence: 0.94,
+        },
+      ],
+      supportingEvidence: [],
+      contradictingEvidence: [],
+      applicableArticles: [8],
+      rejectedArticles: [],
+      riskAnalysis: "Low ambiguity.",
+      narrativeAnalysis: "Direct dialogue with no exception cues.",
+      humanLikeExplanation: "A human reviewer would treat this as a direct concept-to-article case.",
+      recommendation: "RETURN VIOLATION",
+    },
+    chunkStart: 0,
+    chunkEnd: 20,
+    startLine: 1,
+    endLine: 1,
+    diagnostics: {
+      engineVersion: "v3",
+      providerName: "openai",
+      modelName: "gpt-4.1",
+      modelVersion: "test",
+      rawResponseHash: "raw",
+      responseId: "response-6",
+      responseTimestamp: "2026-07-16T00:00:00.000Z",
+      promptHash: "prompt",
+      semanticHash: "semantic",
+      legalHash: "legal",
+      executionSignatureHash: "execution",
+      stageHashes: [],
+      stageTimings: [],
+      subjectModuleId: "v3_01_religion",
+      chunkHash: "chunk",
+      findingCount: 1,
+    } as never,
+    gcamMapping: {
+      status: "UNMAPPED",
+      articleId: null,
+      articleNumber: null,
+      articleTitleAr: null,
+      atomId: null,
+      atomNumber: null,
+      atomTitleAr: null,
+      findingTitle: "UNMAPPED",
+      findingCategory: "UNMAPPED",
+      reviewerExplanation: "No official GCAM mapping exists. A mapping debt record was created instead of guessing.",
+      supportingEvidence: ["هذا الكلام إساءة دينية"],
+      matchedRuleId: null,
+      matchedArticleMappingId: null,
+      matchedAtomMappingId: null,
+      confidence: 0.94,
+      mappingDebt: [],
+      hash: "hash",
+    } as never,
+  });
+
+  assert.equal(findings.length, 0);
+  console.log("✓ finding mapper rejects evaluations without grounded evidence");
+}
+
 function testPolicyAppliedFindingIsPreserved(): void {
   const legalDecision = createLegalDecision({
     moduleId: "v4_11_profanity",
@@ -895,6 +1048,7 @@ function main(): void {
   testLegalArticleWinsOverGcamMapping();
   testArticleFourteenResolvesFromPolicyCatalog();
   testPolicyAppliedFindingIsPreserved();
+  testMapperRejectsMissingGroundedEvidence();
   testMultipleEvidenceItemsYieldMultipleFindings();
   testSmallestGroundedEvidenceSpanIsPreserved();
   console.log("\nAll V3 finding mapper tests passed.");

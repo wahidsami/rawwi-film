@@ -10,6 +10,7 @@ export type QualityJudgeStatus = "pass" | "reject" | "needs_review";
 export type QualityJudgeRuleId =
   | "evidence_exists"
   | "evidence_grounded"
+  | "evidence_identity_consistent"
   | "concept_links_evidence"
   | "legal_originates_from_concept"
   | "explanation_is_grounded"

@@ -40,6 +40,29 @@ function includesNormalized(haystack: string, needle: string | null | undefined)
   return normalizeText(haystack).includes(normalizeText(needle));
 }
 
+function collectDecisionEvidenceIds(decision: LegalDecision | null): readonly string[] {
+  const ids = new Set<string>();
+  if (!decision) {
+    return Object.freeze([]);
+  }
+
+  for (const article of decision.candidateArticles) {
+    for (const evidenceSpanId of article.evidenceSpanIds) {
+      if (evidenceSpanId.trim()) {
+        ids.add(evidenceSpanId);
+      }
+    }
+  }
+
+  for (const evidenceSpanId of decision.primaryArticle?.evidenceSpanIds ?? []) {
+    if (evidenceSpanId.trim()) {
+      ids.add(evidenceSpanId);
+    }
+  }
+
+  return Object.freeze([...ids]);
+}
+
 export function findEvidence(collection: EvidenceCollection | null, evidenceId: string): Evidence | null {
   return collection?.evidence.find((entry) => entry.id === evidenceId || entry.spanId === evidenceId) ?? null;
 }
@@ -85,6 +108,7 @@ export function evaluateRuleSet(input: QualityJudgeEngineInput, explanation: Exp
   const conceptLabel = concept?.label ?? null;
   const articleId = decision?.primaryArticle?.articleId ?? null;
   const articleTitle = decision?.primaryArticle?.titleAr ?? null;
+  const decisionEvidenceIds = collectDecisionEvidenceIds(decision);
   const allowedNames = collectAllowedNames(input, evidence);
   const evidenceGroundedText = evidence?.grounding?.matchedText ?? "";
   const evidenceSnippetExact = normalizeText(evidenceText).length > 0
@@ -134,6 +158,21 @@ export function evaluateRuleSet(input: QualityJudgeEngineInput, explanation: Exp
     "Legal article originates from concept",
     legalOriginatesFromConcept,
     legalOriginatesFromConcept ? "Legal decision originates from the detected concept." : "Legal decision does not originate from the detected concept.",
+  );
+
+  const evidenceIdentityConsistent = Boolean(
+    evidenceExists
+      && concept
+      && decision
+      && (concept.evidenceId === evidence?.id || concept.evidenceId === evidence?.spanId || concept.evidenceSpanIds.includes(evidence?.id ?? "") || concept.evidenceSpanIds.includes(evidence?.spanId ?? ""))
+      && decisionEvidenceIds.some((evidenceId) => evidenceId === evidence?.id || evidenceId === evidence?.spanId)
+      && explanation.evidenceId === (evidence?.id ?? evidence?.spanId ?? null),
+  );
+  pushRule(
+    "evidence_identity_consistent",
+    "Evidence identity is consistent",
+    evidenceIdentityConsistent,
+    evidenceIdentityConsistent ? "Evidence, concept, legal decision, and explanation reference the same grounded evidence identity." : "Evidence, concept, legal decision, and explanation do not reference the same grounded evidence identity.",
   );
 
   const explanationGrounded = Boolean(
