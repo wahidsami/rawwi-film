@@ -115,45 +115,11 @@ export function splitAnalysisReviewFindingsForPdf(
   return { findings, reportHints };
 }
 
-function sourcePriority(source?: string | null): number {
-  if (source === "manual") return 3;
-  if (source === "lexicon_mandatory" || source === "glossary") return 2;
-  return 1;
-}
-
 export function mapAnalysisFindingsForPdf(
   findings: AnalysisFinding[] | null | undefined,
   findingsByArticle: SummaryArticle[] | null | undefined,
   canonicalFindings?: CanonicalSummaryFinding[] | null
 ): AnalysisPdfFinding[] {
-  const canon = (canonicalFindings || [])
-    .filter(Boolean)
-    .map((f, idx) => ({
-      id: f.canonical_finding_id ?? `canonical-${idx}`,
-      articleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
-      titleAr: f.title_ar ?? "—",
-      severity: f.severity ?? "info",
-      confidence: f.confidence ?? 0,
-      evidenceSnippet: f.evidence_snippet ?? "",
-      startOffsetGlobal: null,
-      source:
-        f.source === "lexicon_mandatory"
-          ? "lexicon_mandatory"
-          : f.source === "manual"
-            ? "manual"
-            : "ai",
-      primaryArticleId: Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0,
-      relatedArticleIds: f.related_article_ids ?? [],
-      rationale: f.rationale ?? null,
-      actionText: f.actionText ?? null,
-      pillarId: f.pillar_id ?? null,
-      startLineChunk: f.start_line_chunk ?? undefined,
-      endLineChunk: f.end_line_chunk ?? undefined,
-      pageNumber: f.page_number ?? undefined,
-      policyAtomId: f.primary_policy_atom_id?.trim() || undefined,
-    }));
-  if (canon.length > 0) return canon;
-
   const real = (findings || [])
     .filter((f): f is AnalysisFinding => !!f)
     .map((f, idx) => {
@@ -200,19 +166,12 @@ export function mapAnalysisFindingsForPdf(
     }
     return [...deduped.values()];
   }
-
-  const byArticle = findingsByArticle || [];
-  return byArticle.flatMap((art, aIdx) => {
-    const top = art?.top_findings || [];
-    return top.filter(Boolean).map((f, idx) => ({
-      id: `summary-${art.article_id}-${aIdx}-${idx}`,
-      articleId: Number.isFinite(art.article_id) ? art.article_id : 0,
-      titleAr: f.title_ar ?? "—",
-      severity: f.severity ?? "info",
-      confidence: f.confidence ?? 0,
-      evidenceSnippet: f.evidence_snippet ?? "",
-      startOffsetGlobal: null,
-      source: "ai",
-    }));
-  });
+  function sourcePriority(source: string | undefined): number {
+    if (source === "manual") return 3;
+    if (source === "glossary") return 2;
+    return 1;
+  }
+  void findingsByArticle;
+  void canonicalFindings;
+  return [];
 }

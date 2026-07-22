@@ -156,73 +156,25 @@ function getViolationTypeIdFromFinding(
 }
 
 function getViolationTypeIdFromReviewFinding(finding: AnalysisReviewFinding): ViolationTypeId | null {
+  const reviewFinding = finding as AnalysisReviewFinding & {
+    descriptionAr?: string | null;
+  };
   return getViolationTypeIdFromFinding({
-    titleAr: finding.titleAr,
-    descriptionAr: finding.descriptionAr,
-    source: finding.sourceKind,
-    articleId: finding.primaryArticleId,
-    atomId: finding.primaryAtomId ?? null,
-    primaryArticleId: finding.primaryArticleId,
-    primaryAtomId: finding.primaryAtomId ?? null,
-    location: (finding as { location?: Record<string, unknown> | null }).location ?? null,
+    titleAr: reviewFinding.titleAr ?? '',
+    descriptionAr: reviewFinding.descriptionAr ?? '',
+    source: reviewFinding.sourceKind ?? '',
+    articleId: reviewFinding.primaryArticleId,
+    atomId: reviewFinding.primaryAtomId ?? null,
+    primaryArticleId: reviewFinding.primaryArticleId,
+    primaryAtomId: reviewFinding.primaryAtomId ?? null,
+    location: (reviewFinding as { location?: Record<string, unknown> | null }).location ?? null,
   });
 }
-
-const RATIONALE_SAYS_NOT_VIOLATION = [
-  "لا يعد مخالفة",
-  "لا توجد مخالفة",
-  "لا يعتبر مخالفة",
-  "لا تُعد مخالفة",
-  "لا تعتبر مخالفة",
-  "ليس مخالفة",
-  "لا يشكل مخالفة",
-  "لا يصل إلى حد المخالفة",
-  "لا يرقى إلى مخالفة",
-  "لا يشكل انتهاكاً",
-  "لا يشكل تجاوزاً",
-  "السياق مقبول",
-  "سياق مقبول",
-  "ضمن الضوابط",
-  "لا خرق للضوابط",
-  "لا يتجاوز الضوابط",
-  "معالجة إيجابية",
-  "دون أي إيحاء",
-  "لا إيحاءات جنسية",
-  "لا يتضمن أي إيحاء",
-  "سياق درامي فقط",
-  "جزء من السياق الدرامي",
-  "في إطار درامي",
-  "ليس تحريضاً",
-  "لا يروج للعنف",
-  "لا يروّج للعنف",
-  "يخدم السياق الدرامي",
-  "يخدم السرد",
-  "قد لا يعد مخالفة",
-  "قد لا يعتبر مخالفة",
-];
 
 function findingCanonicalId(f: AnalysisFinding): string | null {
   const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
   const raw = v3.canonical_finding_id;
   return typeof raw === 'string' && raw.trim() ? raw.trim() : null;
-}
-
-function rationaleSaysNotViolationText(value: string | null | undefined): boolean {
-  const text = (value ?? '').replace(/\s+/g, ' ').trim();
-  if (!text) return false;
-  return RATIONALE_SAYS_NOT_VIOLATION.some((phrase) => text.includes(phrase));
-}
-
-function shouldTreatFindingAsSpecialNote(
-  f: AnalysisFinding,
-  canonicalHintIds: Set<string>
-): boolean {
-  const canonicalId = findingCanonicalId(f);
-  if (canonicalId && canonicalHintIds.has(canonicalId)) return true;
-  const v3 = ((f.location as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined) ?? {};
-  const finalRuling = typeof v3.final_ruling === 'string' ? v3.final_ruling.toLowerCase() : '';
-  if (finalRuling === 'context_ok') return true;
-  return rationaleSaysNotViolationText(pickFindingRationale(f));
 }
 
 type CanonicalSummaryFinding = {
@@ -245,8 +197,9 @@ type CanonicalSummaryFinding = {
 };
 
 type FindingKindFilter = 'all' | 'ai' | 'manual' | 'glossary' | 'special' | 'approved';
+type RealFindingKind = Exclude<FindingKindFilter, 'all' | 'special' | 'approved'>;
 
-function findingKindFromSource(source: string | null | undefined): Exclude<FindingKindFilter, 'all' | 'special'> {
+function findingKindFromSource(source: string | null | undefined): RealFindingKind {
   if (source === 'manual') return 'manual';
   if (source === 'lexicon_mandatory') return 'glossary';
   return 'ai';
@@ -268,7 +221,7 @@ function findingSourcePriority(source: string | null | undefined): number {
       : 1;
 }
 
-function findingKindFromReviewSource(sourceKind: AnalysisReviewFinding['sourceKind'] | null | undefined): Exclude<FindingKindFilter, 'all' | 'special'> {
+function findingKindFromReviewSource(sourceKind: AnalysisReviewFinding['sourceKind'] | null | undefined): RealFindingKind {
   if (sourceKind === 'manual') return 'manual';
   if (sourceKind === 'glossary') return 'glossary';
   return 'ai';
@@ -348,6 +301,10 @@ export function Results() {
   const [findingFilter, setFindingFilter] = useState<FindingKindFilter>('all');
   /** script_pages slices for viewer-accurate page labels (same model as workspace). */
   const [reportViewerPages, setReportViewerPages] = useState<Array<{ pageNumber: number; content: string }> | null>(null);
+  void updateScriptStatus;
+  void isDownloadingPdf;
+  void isDownloadingWord;
+  void setGroupFindingsByAtom;
 
   // Finding review modal
   const [reviewModal, setReviewModal] = useState<{ findingId: string; toStatus: 'approved' | 'violation'; titleAr: string } | null>(null);
@@ -379,7 +336,7 @@ export function Results() {
     reviewedAt?: string | null;
     reviewedBy?: string | null;
     createdAt?: string | null;
-    analysisMeta?: NonNullable<Report['summaryJson']['analysis_meta']>;
+    analysisMeta?: NonNullable<AnalysisReport['summaryJson']['analysis_meta']>;
   } | null>(null);
   const [bulkReviewModal, setBulkReviewModal] = useState<{ findingIds: string[]; toStatus: 'approved' | 'violation' } | null>(null);
   const [bulkReviewReason, setBulkReviewReason] = useState('');
@@ -721,9 +678,9 @@ export function Results() {
         toast.success(lang === 'ar' ? 'تم قبول التقرير وإصدار الشهادة' : 'Report approved and certificate issued');
       } else {
         toast.success(
-          status === 'approved' ? (lang === 'ar' ? 'تم قبول التقرير' : 'Report approved') :
-            status === 'rejected' ? (lang === 'ar' ? 'تم رفض التقرير' : 'Report rejected') :
-              (lang === 'ar' ? 'تمت إعادة التقرير للمراجعة' : 'Report sent back for review')
+          status === 'approved'
+            ? (lang === 'ar' ? 'تم قبول التقرير' : 'Report approved')
+            : (lang === 'ar' ? 'تمت إعادة التقرير للمراجعة' : 'Report sent back for review')
         );
       }
       if (status === 'under_review') {
@@ -756,7 +713,14 @@ export function Results() {
       const f = await findingsApi.getByJob(jobId);
       if (reportLoadTokenRef.current !== requestToken) return;
       setFindings(f);
-    } catch { /* findings endpoint may not exist yet, rely on summary */ }
+    } catch (error) {
+      console.error('[Results] Failed to load analysis_findings', { jobId, error });
+      if (reportLoadTokenRef.current !== requestToken) return;
+      setError(lang === 'ar'
+        ? 'تعذر تحميل الملاحظات النهائية الحالية من مصدرها الأساسي.'
+        : 'Unable to load the current findings from their source of truth.');
+      setLoading(false);
+    }
   }, []);
 
   const loadReviewFindings = useCallback(async (reportId: string, requestToken: number) => {
@@ -1086,9 +1050,8 @@ export function Results() {
   const analysisMeta = summary.analysis_meta;
   const partialReportMeta = summary.partial_report;
   const manualReviewContextMeta = summary.manual_review_context;
-  const canonicalSummaryFindings: CanonicalSummaryFinding[] = (summary.canonical_findings || []).filter(Boolean);
-  const reportHints: CanonicalSummaryFinding[] = (summary.report_hints || []).filter(Boolean);
-  const canonicalHintIds = new Set(reportHints.map((f) => f.canonical_finding_id).filter(Boolean));
+  void partialReportMeta;
+  void manualReviewContextMeta;
   const visibleReviewFindings = reviewFindings.filter((f) => !f.isHidden);
   const hasReviewFindings = visibleReviewFindings.length > 0;
   const reviewViolations = hasReviewFindings
@@ -1100,11 +1063,26 @@ export function Results() {
   const reviewSpecialNotes = hasReviewFindings
     ? visibleReviewFindings.filter((f) => f.sourceKind === 'special')
     : [];
+  const reportHints: CanonicalSummaryFinding[] = hasReviewFindings
+    ? reviewSpecialNotes.map((f) => ({
+        canonical_finding_id: f.canonicalFindingId?.trim() || f.id,
+        title_ar: f.titleAr,
+        evidence_snippet: f.evidenceSnippet,
+        severity: f.severity,
+        confidence: f.anchorConfidence ?? 1,
+        rationale: f.rationaleAr ?? f.descriptionAr ?? null,
+        primary_article_id: f.primaryArticleId ?? null,
+        related_article_ids: [],
+        start_offset_global: f.startOffsetGlobal ?? null,
+        end_offset_global: f.endOffsetGlobal ?? null,
+        page_numbers: f.pageNumber != null ? [f.pageNumber] : [],
+      }))
+    : [];
 
   // Split real findings into violations vs approved for card rendering
   const hasRealFindings = findings.length > 0;
   const violations = hasRealFindings
-    ? findings.filter((f) => f.reviewStatus !== 'approved' && !shouldTreatFindingAsSpecialNote(f, canonicalHintIds))
+    ? findings.filter((f) => f.reviewStatus !== 'approved')
     : [];
   const approvedFindings = hasRealFindings ? findings.filter(f => f.reviewStatus === 'approved') : [];
   const violationsDeduped = hasRealFindings ? dedupeRealFindings(violations) : [];
@@ -1134,14 +1112,6 @@ export function Results() {
       }
       return m;
     }
-    for (const cf of canonicalSummaryFindings) {
-      add(
-        getViolationTypeIdFromLegacyPolicyArticle(cf.primary_article_id, cf.primary_policy_atom_id ?? null)
-          ?? resolveViolationTypeId(cf.title_ar)
-          ?? resolveViolationTypeId(cf.rationale ?? null)
-          ?? 'other'
-      );
-    }
     return m;
   })();
   const checklistSubjectRows = semanticCategoriesOrdered
@@ -1155,13 +1125,8 @@ export function Results() {
     .filter((row) => row.id !== 'other' || row.total > 0);
 
   const violationsUniqueCount = violationsDeduped.length;
-  const preferCanonicalFindingsUi =
-    !hasReviewFindings &&
-    canonicalSummaryFindings.length > 0 &&
-    (violationsDeduped.length === 0 ||
-      violationsDeduped.length < Math.max(2, Math.ceil(canonicalSummaryFindings.length * 0.6)));
   const useReviewFindingsUi = hasReviewFindings;
-  const useRealFindingsUi = !useReviewFindingsUi && hasRealFindings && !preferCanonicalFindingsUi;
+  const useRealFindingsUi = !useReviewFindingsUi && hasRealFindings;
   const displayViolations = hasRealFindings ? (showAllFindingRows ? violations : violationsDeduped) : [];
   const displayApprovedFindings = hasRealFindings
     ? showAllFindingRows
@@ -1169,25 +1134,20 @@ export function Results() {
       : approvedFindingsDeduped
     : [];
   const rawViolationRowsCount = hasRealFindings ? violations.length : 0;
-  const fallbackSummaryCount = canonicalSummaryFindings.length > 0
-    ? canonicalSummaryFindings.length
-    : summary.findings_by_article.reduce((acc, a) => acc + (a.top_findings?.length ?? 0), 0);
   const displayViolationsCount = hasRealFindings
     ? displayViolations.length
-    : canonicalSummaryFindings.length > 0
-      ? canonicalSummaryFindings.length
-      : fallbackSummaryCount;
+    : 0;
 
   const displayTotal = useReviewFindingsUi
     ? reviewViolations.length
-    : canonicalSummaryFindings.length;
+    : findings.length;
   const displayTypeCounts = useReviewFindingsUi
     ? countReviewFindingKinds(reviewViolations)
     : useRealFindingsUi
     ? countFindingKinds(displayViolations)
-    : countFindingKinds(canonicalSummaryFindings);
-  const displayApproved = useReviewFindingsUi ? reviewApproved.length : (report.approvedCount ?? 0);
-  const displaySpecialNotes = useReviewFindingsUi ? reviewSpecialNotes.length : reportHints.length;
+    : { ai: 0, manual: 0, glossary: 0 };
+  const displayApproved = useReviewFindingsUi ? reviewApproved.length : approvedFindings.length;
+  const displaySpecialNotes = useReviewFindingsUi ? reviewSpecialNotes.length : 0;
   const matchesFindingFilter = (finding: Pick<AnalysisFinding, 'source'> | Pick<CanonicalSummaryFinding, 'source'>) => {
     if (findingFilter === 'all') return true;
     if (findingFilter === 'special') return false;
@@ -1215,29 +1175,29 @@ export function Results() {
   const filteredDisplayApproved = hasRealFindings
     ? displayApprovedFindings.filter(() => findingFilter === 'approved' || findingFilter === 'all')
     : [];
-  const filteredCanonicalSummaryFindings = canonicalSummaryFindings.filter((f) => matchesFindingFilter(f));
   const selectableReviewRawIds = filteredReviewViolations
     .map((f) => matchRawFindingForReview(f)?.id ?? null)
     .filter((id): id is string => Boolean(id));
   const selectableRawFindingIds = filteredDisplayViolations.map((f) => f.id);
   const actionableVisibleFindingIds = useReviewFindingsUi ? selectableReviewRawIds : selectableRawFindingIds;
   const selectedVisibleFindingCount = selectedFindingIds.filter((id) => actionableVisibleFindingIds.includes(id)).length;
+  void selectedVisibleFindingCount;
   const showOnlySpecialNotes = findingFilter === 'special';
   const showOnlyApproved = findingFilter === 'approved';
   const filteredViolationsCount = useReviewFindingsUi
     ? (showOnlySpecialNotes ? filteredReviewSpecialNotes.length : showOnlyApproved ? filteredReviewApproved.length : filteredReviewViolations.length)
     : hasRealFindings
     ? showOnlyApproved ? filteredDisplayApproved.length : filteredDisplayViolations.length
-    : filteredCanonicalSummaryFindings.length;
+    : 0;
   const showEmptyFindingsState = useReviewFindingsUi
     ? (showOnlySpecialNotes ? filteredReviewSpecialNotes.length === 0 : showOnlyApproved ? filteredReviewApproved.length === 0 : filteredReviewViolations.length === 0)
     : showOnlySpecialNotes
       ? reportHints.length === 0
       : showOnlyApproved
         ? filteredDisplayApproved.length === 0
-      : useRealFindingsUi
-        ? filteredDisplayViolations.length === 0
-        : filteredCanonicalSummaryFindings.length === 0;
+        : useRealFindingsUi
+          ? filteredDisplayViolations.length === 0
+          : true;
 
   const decision: 'PASS' | 'REJECT' | 'REVIEW_REQUIRED' =
     (useReviewFindingsUi ? reviewViolations.length : displayViolationsCount) > 0 ? 'REVIEW_REQUIRED' : 'PASS';
@@ -1248,6 +1208,7 @@ export function Results() {
     REVIEW_REQUIRED: { label: lang === 'ar' ? 'يتطلب مراجعة' : 'REVIEW REQUIRED', bg: 'bg-warning/5', text: 'text-warning', border: 'border-warning/30', icon: AlertTriangle },
   };
   const DecisionIcon = decisionConfig[decision].icon;
+  void DecisionIcon;
   const compactReportStats = [
     {
       key: 'total',
@@ -1325,6 +1286,7 @@ export function Results() {
     }
     return undefined;
   }
+  void matchFindingForCanonical;
 
   function matchRawFindingForReview(rf: AnalysisReviewFinding): AnalysisFinding | undefined {
     if (rf.canonicalFindingId) {
@@ -1429,39 +1391,12 @@ export function Results() {
       const clientName = escapeHtmlSafe(clientNameRaw);
       const scriptTitle = escapeHtmlSafe(scriptTitleRaw);
 
-      const canonicalForPrint = (canonicalSummaryFindings || []).map((cf, i) =>
-        ({
-          id: cf.canonical_finding_id ?? `c-${i}`,
-          articleId: Number.isFinite(cf.primary_article_id) ? (cf.primary_article_id as number) : 0,
-          atomId: cf.primary_policy_atom_id ?? undefined,
-          titleAr: cf.title_ar,
-          severity: cf.severity,
-          confidence: cf.confidence ?? 0,
-          evidenceSnippet: cf.evidence_snippet ?? '',
-          source: 'ai',
-          reviewStatus: undefined,
-        }) as unknown as AnalysisFinding
-      );
-
-      const rawVio = findings.filter((f) => f.reviewStatus !== 'approved');
-      const findingList: AnalysisFinding[] = hasRealFindings
-        ? showAllFindingRows
-          ? rawVio
-          : dedupeRealFindings(rawVio)
-        : canonicalForPrint.length > 0
-          ? canonicalForPrint
-          : summary.findings_by_article.flatMap((art) =>
-              (art.top_findings ?? []).map((f, i) => ({
-                id: `sum-${i}`,
-                articleId: art.article_id,
-                titleAr: f.title_ar,
-                severity: f.severity,
-                confidence: f.confidence,
-                evidenceSnippet: f.evidence_snippet,
-                source: 'ai',
-                reviewStatus: undefined,
-              } as unknown as AnalysisFinding))
-            );
+          const rawVio = findings.filter((f) => f.reviewStatus !== 'approved');
+          const findingList: AnalysisFinding[] = hasRealFindings
+            ? showAllFindingRows
+              ? rawVio
+              : dedupeRealFindings(rawVio)
+            : [];
 
       const groupsByCat = new Map<ViolationTypeId, AnalysisFinding[]>();
       for (const f of findingList) {
@@ -1632,32 +1567,19 @@ export function Results() {
       toast.error(lang === 'ar' ? 'فشل إنشاء التقرير' : 'Failed to generate report');
     }
   };
+  void generateHtmlPrint;
 
   const handleDownloadPdf = async () => {
     if (!report) return;
     setIsDownloadingPdf(true);
     try {
-      let latestReviewFindings = reviewFindings;
-      let latestFindings = findings;
-      if (report.id) {
-        try {
-          latestReviewFindings = await findingsApi.getReviewByReport(report.id);
-          setReviewFindings(latestReviewFindings);
-        } catch {
-          // Keep current in-memory review findings as fallback.
-        }
-      }
-      if (report.jobId) {
-        try {
-          latestFindings = await findingsApi.getByJob(report.jobId);
-          setFindings(latestFindings);
-        } catch {
-          // Keep current in-memory findings as fallback.
-        }
-      }
+      const latestReviewFindings = report.id ? await findingsApi.getReviewByReport(report.id) : reviewFindings;
+      const latestFindings = report.jobId ? await findingsApi.getByJob(report.jobId) : findings;
+      setReviewFindings(latestReviewFindings);
+      setFindings(latestFindings);
       const safeFindingsForPdf = (latestFindings || []).filter((finding): finding is AnalysisFinding => Boolean(finding));
       const safeReviewFindingsForPdf = (latestReviewFindings || []).filter((finding): finding is AnalysisReviewFinding => Boolean(finding));
-      const safeReportHintsForPdf = (summary?.report_hints || []).filter((hint): hint is CanonicalSummaryFinding => Boolean(hint));
+      const safeReportHintsForPdf: CanonicalSummaryFinding[] = [];
       const basePayload = {
         scriptTitle: report.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
         clientName: report.clientName || (isAr ? 'مستفيد' : 'Beneficiary'),
@@ -1665,8 +1587,6 @@ export function Results() {
         logoUrl: settings?.branding?.logoUrl,
         findings: safeFindingsForPdf,
         reviewFindings: safeReviewFindingsForPdf,
-        findingsByArticle: summary?.findings_by_article,
-        canonicalFindings: summary?.canonical_findings,
         reportHints: safeReportHintsForPdf,
         scriptSummary: summary?.script_summary ?? undefined,
         viewerPages: reportViewerPages,
@@ -1715,7 +1635,7 @@ export function Results() {
 
       if (res.finding) {
         setFindings((prev) => prev.map((f) => (f.id === res.finding!.id ? res.finding! : f)));
-        await loadReviewFindings(report.id);
+        await loadReviewFindings(report.id, reportLoadTokenRef.current);
       }
 
       if (res.reportAggregates) {
@@ -1832,15 +1752,8 @@ export function Results() {
     if (!report) return;
     setIsDownloadingWord(true);
     try {
-      let latestReviewFindings = reviewFindings;
-      if (report.id) {
-        try {
-          latestReviewFindings = await findingsApi.getReviewByReport(report.id);
-          setReviewFindings(latestReviewFindings);
-        } catch {
-          // Keep current in-memory review findings as fallback.
-        }
-      }
+      const latestReviewFindings = report.id ? await findingsApi.getReviewByReport(report.id) : reviewFindings;
+      setReviewFindings(latestReviewFindings);
       const basePayload = {
         scriptTitle: report.scriptTitle || (isAr ? 'تحليل النص' : 'Script Analysis'),
         clientName: report.clientName || (isAr ? 'مستفيد' : 'Beneficiary'),
@@ -1855,11 +1768,9 @@ export function Results() {
         viewerPages: reportViewerPages,
         findings,
         reviewFindings: latestReviewFindings,
-        findingsByArticle: summary.findings_by_article,
-        canonicalFindings: canonicalSummaryFindings,
-        reportHints: summary.report_hints ?? undefined,
+        reportHints: reportHints.length > 0 ? reportHints : undefined,
         scriptSummary: summary.script_summary ?? undefined,
-        lang: isAr ? 'ar' : 'en' as const,
+        lang: (isAr ? 'ar' : 'en') as 'ar' | 'en',
       };
       await downloadAnalysisWord(basePayload);
       toast.success(isAr ? 'تم تنزيل ملف Word' : 'Word document downloaded');
@@ -1880,6 +1791,7 @@ export function Results() {
       ? `مادة ${articleId}${meta?.titleAr ? `: ${meta.titleAr}` : ''}`
       : `Article ${articleId}${meta?.titleEn ? `: ${meta.titleEn}` : ''}`;
   };
+  void articleLabel;
 
   // Render a finding card
   function findingSourceLabel(source: string): string {
@@ -1961,6 +1873,7 @@ export function Results() {
     const primaryArticleId = Number(v3.primary_article_id);
     const primaryArticle = Number.isFinite(primaryArticleId) ? primaryArticleId : f.articleId;
     const relatedArticles = ((v3.related_article_ids as number[] | undefined) ?? []).filter((id) => id !== primaryArticle);
+    void relatedArticles;
     const rationale = pickFindingRationale(f);
     const showRationale = !!rationale && !isWeakRationaleText(rationale) && rationale !== (f.evidenceSnippet ?? '').trim();
     const manualComment = (f.manualComment ?? '').trim();
@@ -2446,242 +2359,6 @@ export function Results() {
     );
   }
 
-  // Render a findings section (either from real findings or from summary)
-  function renderFindingsFromSummary(listInput: CanonicalSummaryFinding[] = canonicalSummaryFindings) {
-    type Art = (typeof summary.findings_by_article)[number];
-    type F = NonNullable<Art["top_findings"]>[number];
-    const rows: { art: Art; f: F; idx: number }[] = [];
-    const allowedEvidence = new Set(listInput.map((f) => (f.evidence_snippet ?? '').trim()).filter(Boolean));
-    for (const art of summary.findings_by_article) {
-      (art.top_findings ?? []).forEach((f, idx) => {
-        const evidence = (f.evidence_snippet ?? '').trim();
-        if (allowedEvidence.size > 0 && !allowedEvidence.has(evidence)) return;
-        rows.push({ art, f, idx });
-      });
-    }
-    const byCat = new Map<ViolationTypeId, typeof rows>();
-    for (const row of rows) {
-      const cat =
-        getViolationTypeIdFromLegacyPolicyArticle(row.art.article_id, row.f.primary_policy_atom_id ?? null)
-        ?? resolveViolationTypeId(row.f.title_ar)
-        ?? resolveViolationTypeId(row.f.evidence_snippet)
-        ?? 'other';
-      if (!byCat.has(cat)) byCat.set(cat, []);
-      byCat.get(cat)!.push(row);
-    }
-    return semanticCategoriesOrdered.map((cat) => {
-      const list = byCat.get(cat.id);
-      if (!list?.length) return null;
-      const key = `sc-sum-${cat.id}`;
-      const isExpanded = expandedArticles[key] ?? true;
-      return (
-        <div key={cat.id} className="mb-8">
-          <div className="border border-border rounded-xl bg-surface/50 overflow-hidden">
-            <button
-              type="button"
-              onClick={() => toggleArticle(key)}
-              className="w-full flex items-center justify-between p-4 bg-surface hover:bg-background transition-colors border-b border-border"
-            >
-              <div className="flex items-center gap-3">
-                <span className="bg-primary/10 text-primary w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold shrink-0">
-                  {semanticCategoriesOrdered.findIndex((c) => c.id === cat.id) + 1}
-                </span>
-                <span className="font-bold text-text-main text-start">{lang === "ar" ? cat.titleAr : cat.titleEn}</span>
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <Badge variant="outline">{list.length}</Badge>
-                {isExpanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
-              </div>
-            </button>
-            {isExpanded && (
-              <div className="p-4 space-y-3">
-                {list.map(({ art, f, idx }) => (
-                  (() => {
-                    const sceneLabel = formatResolvedSceneLabel(
-                      resolveSceneLabelFromOffset(f.start_offset_global ?? null, reportViewerPages),
-                      lang
-                    );
-                    return (
-                      <div key={`${art.article_id}-${idx}`} className="bg-surface border border-border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-semibold text-text-main text-sm">
-                            {displayFindingTitle({
-                              title: f.title_ar,
-                              description: f.description_ar ?? null,
-                              source: f.source ?? 'ai',
-                              evidenceSnippet: f.evidence_snippet,
-                              articleId: art.article_id,
-                              atomId: f.primary_policy_atom_id ?? null,
-                            })}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-text-muted">
-                              {lang === "ar" ? "ثقة" : "conf"} {Math.round((f.confidence ?? 0) * 100)}%
-                            </span>
-                          </div>
-                        </div>
-                        {sceneLabel && (
-                          <div className="text-[10px] text-text-muted font-medium mb-1">
-                            {sceneLabel}
-                          </div>
-                        )}
-                        <div className="bg-background/50 p-3 rounded-md border border-border/50 text-sm text-text-main italic" dir="rtl">
-                          &quot;{f.evidence_snippet}&quot;
-                        </div>
-                      </div>
-                    );
-                  })()
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    });
-  }
-
-  function renderFindingsFromCanonicalSummary(listInput: CanonicalSummaryFinding[] = canonicalSummaryFindings) {
-    const byCat = new Map<ViolationTypeId, CanonicalSummaryFinding[]>();
-    for (const f of listInput) {
-      const cat =
-        getViolationTypeIdFromLegacyPolicyArticle(f.primary_article_id, f.primary_policy_atom_id ?? null)
-        ?? resolveViolationTypeId(f.title_ar)
-        ?? resolveViolationTypeId(f.rationale ?? null)
-        ?? 'other';
-      if (!byCat.has(cat)) byCat.set(cat, []);
-      byCat.get(cat)!.push(f);
-    }
-    return semanticCategoriesOrdered.map((cat) => {
-      const artFindings = byCat.get(cat.id);
-      if (!artFindings?.length) return null;
-      const key = `sc-canon-${cat.id}`;
-      const isExpanded = expandedArticles[key] ?? true;
-      return (
-        <div key={cat.id} className="mb-8">
-          <div className="border border-border rounded-xl bg-surface/50 overflow-hidden">
-            <button
-              type="button"
-              onClick={() => toggleArticle(key)}
-              className="w-full flex items-center justify-between p-4 bg-surface hover:bg-background transition-colors border-b border-border"
-            >
-              <div className="flex items-center gap-3">
-                <span className="bg-primary/10 text-primary w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold shrink-0">
-                  {semanticCategoriesOrdered.findIndex((c) => c.id === cat.id) + 1}
-                </span>
-                <span className="font-bold text-text-main text-start">{lang === "ar" ? cat.titleAr : cat.titleEn}</span>
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <Badge variant="outline">{artFindings.length}</Badge>
-                {isExpanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
-              </div>
-            </button>
-            {isExpanded && (
-              <div className="p-4 space-y-3">
-                {artFindings.map((f, idx) => {
-                  const articleId = Number.isFinite(f.primary_article_id) ? (f.primary_article_id as number) : 0;
-                  const cardRationale = isWeakRationaleText(f.rationale) ? null : stripArticleAtomReferences(f.rationale);
-                  const sceneLabel = formatResolvedSceneLabel(
-                    resolveSceneLabelFromOffset(f.start_offset_global ?? null, reportViewerPages),
-                    lang
-                  );
-                  return (
-                        <div key={`${f.canonical_finding_id}-${idx}`} className="bg-surface border border-border rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-text-main text-sm">
-                              {displayFindingTitle({
-                                title: f.title_ar,
-                                description: f.description_ar ?? null,
-                                source: f.source ?? 'ai',
-                                evidenceSnippet: f.evidence_snippet,
-                                articleId,
-                                atomId: f.primary_policy_atom_id ?? null,
-                              })}
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-text-muted">{lang === 'ar' ? 'ثقة' : 'conf'} {Math.round((f.confidence ?? 0) * 100)}%</span>
-                            </div>
-                          </div>
-                          {sceneLabel && (
-                            <div className="text-[10px] text-text-muted font-medium mb-1">
-                              {sceneLabel}
-                            </div>
-                          )}
-                          <div className="bg-background/50 p-3 rounded-md border border-border/50 text-sm text-text-main italic" dir="rtl">"{f.evidence_snippet}"</div>
-                          <div className="mt-2 text-xs text-text-muted space-y-1">
-                            <div>
-                              {lang === 'ar' ? 'النوع:' : 'Type:'}{' '}
-                              <span className="text-text-main">
-                                {findingSourceLabel(f.source ?? 'ai')}
-                              </span>
-                            </div>
-                            {f.pillar_id && <div>{lang === 'ar' ? 'المحور:' : 'Pillar:'} <span className="text-text-main">{f.pillar_id}</span></div>}
-                            {cardRationale && (
-                              <div>{lang === 'ar' ? 'ملاحظة تفسيرية:' : 'Reviewer note:'} <span className="text-text-main">{cardRationale}</span></div>
-                            )}
-                          </div>
-                          {(() => {
-                            const mf = matchFindingForCanonical(f);
-                            if (!mf) {
-                              return (
-                                <p className="text-[10px] text-text-muted mt-2 print:hidden">
-                                  {lang === 'ar'
-                                    ? 'إذا لم يظهر زر الاعتماد، حدّث الصفحة بعد اكتمال التحليل.'
-                                    : 'If no action appears, refresh the page after analysis finishes.'}
-                                </p>
-                              );
-                            }
-                            const isApproved = mf.reviewStatus === 'approved';
-                            return (
-                              <div className="mt-2 space-y-2 print:hidden">
-                                {isApproved && mf.reviewReason && (
-                                  <div className="p-2 bg-success/5 border border-success/10 rounded text-xs text-success">
-                                    <span className="font-semibold">{lang === 'ar' ? 'السبب:' : 'Reason:'}</span> {mf.reviewReason}
-                                  </div>
-                                )}
-                                <div className="flex items-center gap-2">
-                                  {!isApproved && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-7 text-[11px] gap-1 text-success border-success/30 hover:bg-success/10"
-                                      onClick={() => {
-                                        setReviewModal({ findingId: mf.id, toStatus: 'approved', titleAr: f.title_ar });
-                                        setReviewReason('');
-                                      }}
-                                    >
-                                      <CheckCircle2 className="w-3 h-3" />
-                                      {lang === 'ar' ? 'اعتماد كآمن' : 'Mark Safe'}
-                                    </Button>
-                                  )}
-                                  {isApproved && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-7 text-[11px] gap-1 text-error border-error/30 hover:bg-error/10"
-                                      onClick={() => {
-                                        setReviewModal({ findingId: mf.id, toStatus: 'violation', titleAr: f.title_ar });
-                                        setReviewReason('');
-                                      }}
-                                    >
-                                      <ShieldAlert className="w-3 h-3" />
-                                      {lang === 'ar' ? 'إعادة كمخالفة' : 'Revert to Violation'}
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })()}
-                        </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    });
-  }
-
   function renderFindingsFromReal(list: AnalysisFinding[]) {
     const byCat = new Map<ViolationTypeId, AnalysisFinding[]>();
     for (const f of list) {
@@ -3133,11 +2810,7 @@ export function Results() {
             ? renderFindingsFromReview(filteredReviewViolations)
             : useRealFindingsUi && filteredDisplayViolations.length > 0
             ? renderFindingsFromReal(filteredDisplayViolations)
-            : filteredCanonicalSummaryFindings.length > 0
-              ? renderFindingsFromCanonicalSummary(filteredCanonicalSummaryFindings)
-              : useRealFindingsUi
-                ? renderFindingsFromReal(filteredDisplayViolations)
-                : renderFindingsFromSummary(filteredCanonicalSummaryFindings)}
+            : null}
 
           {/* Report hints: not violations but notes for director (e.g. Islamic rules when filming) */}
           {!showOnlyApproved && (((useReviewFindingsUi && filteredReviewSpecialNotes.length > 0) || (!useReviewFindingsUi && reportHints.length > 0))) && (

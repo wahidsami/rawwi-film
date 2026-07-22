@@ -364,6 +364,160 @@ type ReviewFindingInsertRow = {
   supersedes_review_finding_id?: string | null;
 };
 
+type PersistedReviewFindingIdentityRow = Readonly<{
+  id: string;
+  canonical_finding_id: string | null;
+  source_kind: "ai" | "glossary" | "manual" | "special";
+  primary_article_id: number;
+  primary_atom_id: string | null;
+  evidence_snippet: string;
+  review_status: "violation" | "approved" | "needs_review";
+  is_manual: boolean;
+}>;
+
+export type PipelineIntegrityReport = Readonly<{
+  jobId: string;
+  reportId: string;
+  findingsCount: number;
+  reportFindingsCount: number;
+  analysisFindingIds: string[];
+  summaryFindingIds: string[];
+  reviewFindingIds: string[];
+  summaryReviewFindingIds: string[];
+  manualReviewFindingCount: number;
+  summaryManualReviewCount: number;
+  mismatches: string[];
+}>;
+
+function findingIntegrityIdentity(row: {
+  lineage_id?: string | null;
+  canonical_finding_id?: string | null;
+  evidence_hash?: string | null;
+  canonical_hash?: string | null;
+  article_id?: number | null;
+  atom_id?: string | null;
+  canonical_atom?: string | null;
+  evidence_snippet?: string | null;
+  start_offset_global?: number | null;
+  end_offset_global?: number | null;
+  location?: Record<string, unknown> | null;
+}): string {
+  const v3 = ((row.location ?? {}) as Record<string, unknown> | undefined)?.v3 as Record<string, unknown> | undefined;
+  const locationCanonicalId = typeof v3?.canonical_finding_id === "string" ? v3.canonical_finding_id.trim() : "";
+  return locationCanonicalId || row.lineage_id || row.canonical_finding_id || row.canonical_hash || row.evidence_hash || "";
+}
+
+function uniqueStrings(values: Array<string | null | undefined>): string[] {
+  return [...new Set(values.map((value) => String(value ?? "").trim()).filter(Boolean))].sort();
+}
+
+export function buildPipelineIntegrityReport(input: {
+  jobId: string;
+  reportId: string;
+  findings: DbFinding[];
+  reviewFindings: PersistedReviewFindingIdentityRow[];
+  summary: SummaryJson;
+  reportRow: Record<string, unknown>;
+}): PipelineIntegrityReport {
+  const analysisFindingIds = uniqueStrings(input.findings.map((finding) => findingIntegrityIdentity(finding)));
+  const summaryFindingIds = uniqueStrings((input.summary.canonical_findings ?? []).map((finding) => finding.canonical_finding_id));
+  const reviewFindingIds = uniqueStrings(
+    input.reviewFindings
+      .filter((row) => !row.is_manual)
+      .map((row) => row.canonical_finding_id ?? row.id)
+  );
+  const summaryReviewFindingIds = uniqueStrings([
+    ...(input.summary.canonical_findings ?? []).map((finding) => finding.canonical_finding_id),
+    ...(input.summary.report_hints ?? []).map((finding) => finding.canonical_finding_id),
+  ]);
+  const manualReviewFindingCount = input.reviewFindings.filter((row) => row.is_manual).length;
+  const summaryManualReviewCount = input.summary.manual_review_context?.items?.length ?? 0;
+  const mismatches: string[] = [];
+
+  const reportFindingsCount = Number(input.reportRow.findings_count ?? 0) || 0;
+  if (input.findings.length !== input.summary.totals.findings_count) {
+    mismatches.push(`analysis_findings_count_mismatch:${input.findings.length}:${input.summary.totals.findings_count}`);
+  }
+  if (input.findings.length !== reportFindingsCount) {
+    mismatches.push(`analysis_reports_findings_count_mismatch:${input.findings.length}:${reportFindingsCount}`);
+  }
+  if (summaryFindingIds.length > 0 && analysisFindingIds.length !== summaryFindingIds.length) {
+    mismatches.push(`summary_canonical_count_mismatch:${analysisFindingIds.length}:${summaryFindingIds.length}`);
+  }
+  if (summaryFindingIds.length > 0 && JSON.stringify(analysisFindingIds) !== JSON.stringify(summaryFindingIds)) {
+    mismatches.push("summary_canonical_ids_mismatch");
+  }
+  if (summaryReviewFindingIds.length > 0 && reviewFindingIds.length !== summaryReviewFindingIds.length) {
+    mismatches.push(`analysis_review_findings_count_mismatch:${reviewFindingIds.length}:${summaryReviewFindingIds.length}`);
+  }
+  if (summaryReviewFindingIds.length > 0 && JSON.stringify(reviewFindingIds) !== JSON.stringify(summaryReviewFindingIds)) {
+    mismatches.push("analysis_review_findings_ids_mismatch");
+  }
+  if (manualReviewFindingCount !== summaryManualReviewCount) {
+    mismatches.push(`manual_review_count_mismatch:${manualReviewFindingCount}:${summaryManualReviewCount}`);
+  }
+
+  return {
+    jobId: input.jobId,
+    reportId: input.reportId,
+    findingsCount: input.findings.length,
+    reportFindingsCount,
+    analysisFindingIds,
+    summaryFindingIds,
+    reviewFindingIds,
+    summaryReviewFindingIds,
+    manualReviewFindingCount,
+    summaryManualReviewCount,
+    mismatches,
+  };
+}
+
+async function loadCurrentReviewFindingIdentityRows(reportId: string): Promise<PersistedReviewFindingIdentityRow[]> {
+  const { data, error } = await supabase
+    .from("analysis_review_findings")
+    .select("id, canonical_finding_id, source_kind, primary_article_id, primary_atom_id, evidence_snippet, review_status, is_manual")
+    .eq("report_id", reportId)
+    .eq("is_hidden", false)
+    .order("updated_at", { ascending: true })
+    .order("id", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []) as PersistedReviewFindingIdentityRow[];
+}
+
+export async function validatePipelineIntegrity(input: {
+  jobId: string;
+  reportId: string;
+  findings: DbFinding[];
+  summary: SummaryJson;
+  reportRow: Record<string, unknown>;
+}): Promise<PipelineIntegrityReport> {
+  const reviewFindings = await loadCurrentReviewFindingIdentityRows(input.reportId);
+  const report = buildPipelineIntegrityReport({
+    ...input,
+    reviewFindings,
+  });
+  if (report.mismatches.length > 0) {
+    logger.error("Pipeline integrity validation failed", {
+      jobId: report.jobId,
+      reportId: report.reportId,
+      integrityReport: report,
+    });
+    const error = new Error("Pipeline integrity validation failed");
+    (error as Error & { integrityReport?: PipelineIntegrityReport }).integrityReport = report;
+    throw error;
+  }
+  logger.info("Pipeline integrity validation passed", {
+    jobId: report.jobId,
+    reportId: report.reportId,
+    integrityReport: report,
+  });
+  return report;
+}
+
 type ExistingReviewFindingRow = {
   id: string;
   report_id: string;
@@ -2176,6 +2330,8 @@ export async function runAggregation(jobId: string): Promise<void> {
   const { data: job } = await supabase
     .from("analysis_jobs")
     .select(`
+      status,
+      error_message,
       script_id, 
       version_id, 
       created_by,
@@ -2198,6 +2354,14 @@ export async function runAggregation(jobId: string): Promise<void> {
   if (!job) {
     logger.warn("runAggregation: job not found", { jobId });
     logger.warn("V3 finalization trace: exiting because job row was not found", { jobId });
+    return;
+  }
+
+  if (String((job as { status?: string | null }).status ?? "").toLowerCase() === "failed") {
+    logger.warn("V3 finalization trace: exiting because job is already failed", {
+      jobId,
+      errorMessage: (job as { error_message?: string | null }).error_message ?? null,
+    });
     return;
   }
 
@@ -2369,48 +2533,6 @@ export async function runAggregation(jobId: string): Promise<void> {
       }
     }
   };
-
-  const { data: existing } = await supabase
-    .from("analysis_reports")
-    .select("id")
-    .eq("job_id", jobId)
-    .maybeSingle();
-  if (existing) {
-    logger.info("V3 finalization trace: existing report detected", {
-      jobId,
-      reportId: (existing as { id?: string } | null)?.id ?? null,
-    });
-    logger.info("V3 finalization trace: about to mark job completed from existing report path", { jobId });
-    const totalProgress = Math.max(1, Number((job as { progress_total?: number | null }).progress_total ?? 1));
-    const completedProgress = (job as { partial_finalize_requested?: boolean | null }).partial_finalize_requested
-      ? Math.max(0, Number((job as { progress_done?: number | null }).progress_done ?? 0))
-      : totalProgress;
-    const completedPercent = (job as { partial_finalize_requested?: boolean | null }).partial_finalize_requested
-      ? Math.floor((100 * completedProgress) / totalProgress)
-      : 100;
-    await supabase
-      .from("analysis_jobs")
-      .update({
-        status: "completed",
-        completed_at: new Date().toISOString(),
-        progress_done: completedProgress,
-        progress_percent: completedPercent,
-      })
-      .eq("id", jobId);
-    logger.info("V3 finalization trace: job marked completed from existing report path", { jobId });
-    const { logAuditEvent } = await import("./audit.js");
-    const j = job as { script_id: string; created_by?: string | null };
-    logAuditEvent(supabase, {
-      event_type: "ANALYSIS_COMPLETED",
-      target_type: "task",
-      target_id: jobId,
-      target_label: j.script_id,
-      actor_user_id: j.created_by ?? null,
-    }).catch(() => { });
-    logger.info("Report already exists, job marked completed", { jobId });
-    clearCachedJobResources(jobId);
-    return;
-  }
 
   const { data: findings, error: findingsErr } = await supabase
     .from("analysis_findings")
@@ -2664,6 +2786,13 @@ export async function runAggregation(jobId: string): Promise<void> {
     );
     await materializeReviewFindings(reportId, summary, job.version_id, fullScriptText);
     await finalizeRevisionCycleReanalysis(reportId);
+    await validatePipelineIntegrity({
+      jobId,
+      reportId,
+      findings: list,
+      summary,
+      reportRow,
+    });
   }
 
   if (!isPartialReport) {

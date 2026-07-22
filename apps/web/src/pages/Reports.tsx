@@ -119,13 +119,9 @@ function Reports() {
       let findings: AnalysisFinding[] = [];
       let reviewFindings: AnalysisReviewFinding[] = [];
       if (fullReport.jobId) {
-        try {
-          findings = await findingsApi.getByJob(fullReport.jobId);
-        } catch { /* proceed with summary if findings fail */ }
+        findings = await findingsApi.getByJob(fullReport.jobId);
       }
-      try {
-        reviewFindings = await findingsApi.getReviewByReport(fullReport.id);
-      } catch { /* export can fall back to raw/summary */ }
+      reviewFindings = await findingsApi.getReviewByReport(fullReport.id);
 
       const isAr = lang === 'ar';
 
@@ -136,9 +132,7 @@ function Reports() {
         logoUrl: settings?.branding?.logoUrl,
         findings,
         reviewFindings,
-        findingsByArticle: fullReport.summaryJson?.findings_by_article,
-        canonicalFindings: fullReport.summaryJson?.canonical_findings,
-        reportHints: fullReport.summaryJson?.report_hints ?? undefined,
+        reportHints: undefined,
         wordsToRevisit: fullReport.summaryJson?.words_to_revisit ?? undefined,
         scriptSummary: fullReport.summaryJson?.script_summary ?? undefined,
         lang: isAr ? 'ar' : 'en',
@@ -176,13 +170,9 @@ function Reports() {
       let findings: AnalysisFinding[] = [];
       let reviewFindings: AnalysisReviewFinding[] = [];
       if (fullReport.jobId) {
-        try {
-          findings = await findingsApi.getByJob(fullReport.jobId);
-        } catch { /* ignore */ }
+        findings = await findingsApi.getByJob(fullReport.jobId);
       }
-      try {
-        reviewFindings = await findingsApi.getReviewByReport(fullReport.id);
-      } catch { /* export can fall back to raw/summary */ }
+      reviewFindings = await findingsApi.getReviewByReport(fullReport.id);
       await downloadAnalysisWord({
         scriptTitle: fullReport.scriptTitle || (lang === 'ar' ? 'تحليل النص' : 'Script Analysis'),
         clientName: fullReport.clientName || (lang === 'ar' ? 'مستفيد' : 'Beneficiary'),
@@ -197,9 +187,7 @@ function Reports() {
         viewerPages,
         findings,
         reviewFindings,
-        findingsByArticle: fullReport.summaryJson?.findings_by_article,
-        canonicalFindings: fullReport.summaryJson?.canonical_findings,
-        reportHints: fullReport.summaryJson?.report_hints ?? undefined,
+        reportHints: undefined,
         scriptSummary: fullReport.summaryJson?.script_summary ?? undefined,
         lang: lang === 'ar' ? 'ar' : 'en',
       });
