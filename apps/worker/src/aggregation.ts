@@ -2774,7 +2774,8 @@ export async function runAggregation(jobId: string): Promise<void> {
           if (mentions.length > 0) summary.words_to_revisit = mentions;
         }
       } catch (e) {
-        logger.warn("Revisit pass skipped or failed", { jobId, error: String(e) });
+        logger.warn("Revisit pass failed", { jobId, error: String(e) });
+        throw e;
       }
     }
     const fragmentedMentions = findFragmentedArabicMentions(fullScriptText);

@@ -410,11 +410,11 @@ export async function runDeepAuditorPass(args: {
     dedupedAssessments.push(applyGuardrails(a));
   }
   if (candidates.length > 0 && dedupedAssessments.length === 0) {
-    logger.warn("Deep auditor returned zero assessments; falling back to pre-auditor findings", {
+    logger.warn("Deep auditor returned zero assessments", {
       candidateCount: candidates.length,
       model: config.OPENAI_AUDITOR_MODEL,
     });
-    return findings;
+    throw new Error("Deep auditor returned zero assessments");
   }
   const byId = new Map(dedupedAssessments.map((a) => [a.canonical_finding_id, a]));
 
@@ -555,7 +555,8 @@ export async function runDeepAuditorPass(args: {
       ) {
         throw err;
       }
-      logger.warn("Rationale-only pass failed, keeping default rationale", { model, error: String(err) });
+      logger.warn("Rationale-only pass failed", { model, error: String(err) });
+      throw err;
     }
     if (generatedByCId.size > 0) {
       return filteredMerged.map((m) => {

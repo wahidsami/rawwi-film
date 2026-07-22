@@ -5,6 +5,7 @@ import { config } from "./config.js";
 import { supabase } from "./db.js";
 import { sha256 } from "./hash.js";
 import { logger } from "./logger.js";
+import { createV3AnalysisFailure } from "./analysisEngineV3/provider/analysisFailure.js";
 
 export const SCRIPT_SUMMARY_VERSION = "script-summary-v1";
 
@@ -363,7 +364,7 @@ async function generateScriptSummaryInternal(fullText: string, scriptTitle?: str
     };
   } catch (e) {
     logger.warn("Script summary generation failed", { error: String(e) });
-    return null;
+    throw createV3AnalysisFailure("AI_PROVIDER_UNAVAILABLE", e instanceof Error ? e.message : String(e));
   }
 }
 

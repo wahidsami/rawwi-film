@@ -5,7 +5,6 @@ import {
   auditorAssessmentSchema,
   auditorOutputSchema,
   extractJsonFromText,
-  judgeFindingSchema,
   judgeOutputSchema,
   parseAuditorOutput,
   parseJudgeOutput,
@@ -21,6 +20,7 @@ import { AUDITOR_SYSTEM_MSG, RATIONALE_ONLY_SYSTEM_MSG, ROUTER_SYSTEM_MSG, JUDGE
 import { sha256 } from "./hash.js";
 import { canonicalStringify } from "./canonicalJson.js";
 import { persistAnalysisExecutionSignature, type AnalysisExecutionSignatureInput } from "./executionSignature.js";
+import { createV3AnalysisFailure } from "./analysisEngineV3/provider/analysisFailure.js";
 
 const openai = new OpenAI({ apiKey: config.OPENAI_API_KEY });
 
@@ -103,19 +103,34 @@ export async function callRouter(
     chunkPreviewLength: textSlice.length,
   });
 
-  const resp = await openai.chat.completions.create({
-    model: jobConfig.router_model,
-    messages: [
-      { role: "system", content: routerSystemPrompt || ROUTER_SYSTEM_MSG },
-      { role: "user", content: userContent },
-    ],
-    response_format: { type: "json_object" },
-    temperature: jobConfig.temperature,
-    seed: jobConfig.seed,
-  }, { timeout: config.JUDGE_TIMEOUT_MS, signal: options.signal });
+  let raw = "";
+  try {
+    const resp = await openai.chat.completions.create({
+      model: jobConfig.router_model,
+      messages: [
+        { role: "system", content: routerSystemPrompt || ROUTER_SYSTEM_MSG },
+        { role: "user", content: userContent },
+      ],
+      response_format: { type: "json_object" },
+      temperature: jobConfig.temperature,
+      seed: jobConfig.seed,
+    }, { timeout: config.JUDGE_TIMEOUT_MS, signal: options.signal });
 
-  const raw = resp.choices[0]?.message?.content ?? "{}";
-  const parsed = parseRouterOutput(raw);
+    raw = resp.choices[0]?.message?.content ?? "";
+    if (!raw.trim()) {
+      throw createV3AnalysisFailure("AI_INVALID_RESPONSE", "Router returned an empty response.");
+    }
+  } catch (error) {
+    if (error instanceof Error && error.name.startsWith("AI_")) throw error;
+    throw createV3AnalysisFailure("AI_PROVIDER_UNAVAILABLE", error instanceof Error ? error.message : String(error));
+  }
+
+  let parsed: RouterOutput;
+  try {
+    parsed = parseRouterOutput(raw);
+  } catch (error) {
+    throw createV3AnalysisFailure("AI_INVALID_RESPONSE", error instanceof Error ? error.message : String(error));
+  }
 
   logger.info("[DEBUG] Router response parsed", {
     model: jobConfig.router_model,
@@ -131,6 +146,10 @@ export async function callRouter(
       if (Math.abs(confDiff) > 0.0001) return confDiff;
       return (a.article_id ?? 0) - (b.article_id ?? 0);
     });
+
+  if (candidates.length === 0) {
+    throw createV3AnalysisFailure("AI_INVALID_RESPONSE", "Router returned no candidate articles.");
+  }
 
   // Slice to fixed count
   const k = jobConfig.max_router_candidates || 8;
@@ -337,56 +356,6 @@ export async function parseJudgeWithRepair(
     } catch (e) {
       parserValidationErrors.push(String(e));
       logger.warn("Judge parse/validation failed, attempting repair", { attempt, error: String(e) });
-
-      // Salvage valid findings instead of dropping entire pass when some items are malformed.
-      try {
-        const json = extractJsonFromText(content);
-        const parsed = JSON.parse(json) as any;
-        const rawFindings: any[] = Array.isArray(parsed?.findings) ? parsed.findings : [];
-        if (rawFindings.length > 0) {
-          const salvaged: JudgeFinding[] = [];
-          let dropped = 0;
-          for (const rf of rawFindings) {
-            const normalized = { ...(rf ?? {}) } as Record<string, unknown>;
-            // Derive article_id from atom_id if model omitted article_id (e.g. "5-2").
-            if (
-              (normalized.article_id == null || normalized.article_id === "") &&
-              typeof normalized.atom_id === "string"
-            ) {
-              const m = normalized.atom_id.match(/^(\d+)[-.]/);
-              if (m) normalized.article_id = Number(m[1]);
-            }
-            const one = judgeFindingSchema.safeParse(normalized);
-            if (one.success) salvaged.push(one.data);
-            else dropped++;
-          }
-          if (salvaged.length > 0) {
-            logger.warn("Judge partial salvage applied", {
-              attempt,
-              rawCount: rawFindings.length,
-              salvaged: salvaged.length,
-              dropped,
-            });
-            return {
-              findings: salvaged,
-              diagnostics: {
-                raw_findings_count: rawFindingsCount,
-                parsed_findings_count: 0,
-                repaired_findings_count: null,
-                salvaged_findings_count: salvaged.length,
-                parse_status: "SALVAGED",
-                repair_invoked: false,
-                repair_reason: String(e),
-                salvage_reason: `partial_valid_findings_salvage_dropped_${dropped}`,
-                parser_validation_errors: parserValidationErrors,
-              },
-            };
-          }
-        }
-      } catch {
-        // ignore salvage errors; continue to repair path
-      }
-
       repairReason = String(e);
       content = await callRepairJson(model, content, "Judge findings JSON", options);
       usedRepair = true;
@@ -397,20 +366,9 @@ export async function parseJudgeWithRepair(
       });
     }
   }
-  return {
-    findings: [],
-    diagnostics: {
-      raw_findings_count: rawFindingsCount,
-      parsed_findings_count: 0,
-      repaired_findings_count: null,
-      salvaged_findings_count: null,
-      parse_status: "FAILED",
-      repair_invoked: usedRepair,
-      repair_reason: repairReason,
-      salvage_reason: null,
-      parser_validation_errors: parserValidationErrors,
-    },
-  };
+  throw createV3AnalysisFailure("AI_INVALID_RESPONSE", repairReason ?? "The judge response could not be parsed into valid findings.", {
+    parseErrors: parserValidationErrors,
+  });
 }
 
 export async function callAuditorRaw(
@@ -510,7 +468,7 @@ export async function callRationaleOnly(
       .filter((x): x is RationaleOnlyResult => x != null);
   } catch (e) {
     logger.warn("Rationale-only parse failed", { rawSlice: raw.slice(0, 400), error: String(e) });
-    return [];
+    throw createV3AnalysisFailure("AI_INVALID_RESPONSE", "Rationale-only response could not be parsed.");
   }
 }
 
@@ -548,7 +506,7 @@ export async function parseAuditorWithRepair(
       content = await callRepairJson(model, content, "Auditor assessments JSON", options);
     }
   }
-  return { assessments: [] };
+  throw createV3AnalysisFailure("AI_INVALID_RESPONSE", "Auditor response could not be parsed into valid assessments.");
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -603,6 +561,6 @@ export async function callRevisitSpotter(
       }));
   } catch (e) {
     logger.warn("Revisit spotter pass failed", { error: String(e), termsCount: terms.length });
-    return [];
+    throw createV3AnalysisFailure("AI_INVALID_RESPONSE", "Revisit spotter response could not be parsed.");
   }
 }

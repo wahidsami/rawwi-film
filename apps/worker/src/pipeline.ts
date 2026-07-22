@@ -2267,7 +2267,7 @@ export async function processChunkJudge(
         runKey,
       });
       await runWithV3AutomaticFallback({
-        enabled: !config.V3_DIAGNOSTIC_MODE && config.V3_ENABLE_AUTOMATIC_FALLBACK,
+        enabled: false,
         runPrimary: async () => {
           const runtimeAdapterStartedAt = Date.now();
           logger.info("V3 instrumentation ENTER: analysisEngine.execute", {
@@ -2518,8 +2518,8 @@ export async function processChunkJudge(
             throwIfAborted(signal);
             throw e;
           }
-          logger.warn("Router failed, using ALWAYS_CHECK_ARTICLES", { error: String(e) });
-          selectedIds = [...ALWAYS_CHECK_ARTICLES];
+          logger.error("Router failed", { error: String(e) });
+          throw e;
         }
       }
     }
@@ -2837,6 +2837,7 @@ export async function processChunkJudge(
         throw e;
       }
       logger.error("Multi-pass detection failed", { error: String(e), chunkId: chunk.id });
+      throw e;
     }
 
     // 4) Micro-windows (DISABLED for multi-pass - full chunk coverage is sufficient)
@@ -3068,12 +3069,13 @@ export async function processChunkJudge(
         skipped_reason: "policy_pipeline_failed",
         error: error instanceof Error ? error.message : String(error),
       };
-      logger.warn("Policy-v1 scene triage failed; baseline findings remain persisted", {
+      logger.error("Policy-v1 scene triage failed", {
         jobId,
         chunkId: chunk.id,
         runKey,
         error: error instanceof Error ? error.message : String(error),
       });
+      throw error;
     }
   } else if (shouldRunValidatedTruthPipeline) {
     await setChunkPhase(chunk.id, "hybrid");
@@ -3200,7 +3202,7 @@ export async function processChunkJudge(
         throw error;
       }
       const message = error instanceof Error ? error.message : String(error);
-      logger.warn("Hybrid context pipeline failed or timed out; falling back to baseline findings", {
+      logger.error("Hybrid context pipeline failed or timed out", {
         jobId,
         chunkId: chunk.id,
         error: message,
@@ -3211,9 +3213,8 @@ export async function processChunkJudge(
       hybridMetrics = {
         skipped_reason: error instanceof Error && error.name === "HybridTimeoutError" ? "hard_timeout" : "hybrid_failed",
         error: message,
-        fallback_to_baseline: true,
       };
-      persistedFindings = baselineFindings;
+      throw error;
     } finally {
       if (hybridTimeoutHandle) clearTimeout(hybridTimeoutHandle);
     }

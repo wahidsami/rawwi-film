@@ -24,6 +24,7 @@ import { flushChunkPassProgress, reportChunkPassProgressDebounced } from "./jobs
 import { evaluatePassGating } from "./passGating.js";
 import { getGcamRefsForCanonicalAtom } from "./canonicalAtomMapping.js";
 import { config } from "./config.js";
+import { createV3AnalysisFailure } from "./analysisEngineV3/provider/analysisFailure.js";
 import {
   buildV3PromptOverlay,
   buildV3SubjectPromptSection,
@@ -2016,7 +2017,7 @@ async function runSinglePass(
     }
     const duration = Date.now() - startTime;
     logger.error(`Pass ${pass.name} failed`, { error: String(error), duration });
-    return { passName: pass.name, findings: [], duration, error: String(error) };
+    throw createV3AnalysisFailure("AI_PROVIDER_UNAVAILABLE", String(error));
   }
 }
 
@@ -2082,21 +2083,13 @@ async function runSinglePassWithHardTimeout(
       signal.addEventListener("abort", onAbort, { once: true });
     }
     const timer = setTimeout(() => {
-      const error = new Error(`Pass ${pass.name} hard timeout`);
-      error.name = "PassTimeoutError";
+      const error = createV3AnalysisFailure("AI_TIMEOUT", `Pass ${pass.name} hard timeout`);
       passAbortController.abort(error);
       logger.error(`Pass ${pass.name} exceeded hard timeout`, {
         timeoutMs: config.PASS_HARD_TIMEOUT_MS,
         model: pass.model ?? "gpt-4.1",
       });
-      resolveOnce({
-        passName: pass.name,
-        findings: [],
-        duration: config.PASS_HARD_TIMEOUT_MS,
-        error: "hard_timeout",
-        reason: "hard_timeout",
-        model: pass.model ?? "gpt-4.1",
-      });
+      rejectOnce(error);
     }, config.PASS_HARD_TIMEOUT_MS);
 
     runSinglePass(
@@ -2127,14 +2120,7 @@ async function runSinglePassWithHardTimeout(
           error: String(error),
           model: pass.model ?? "gpt-4.1",
         });
-        resolveOnce({
-          passName: pass.name,
-          findings: [],
-          duration: 0,
-          error: String(error),
-          reason: "unexpected_error",
-          model: pass.model ?? "gpt-4.1",
-        });
+        rejectOnce(createV3AnalysisFailure("AI_PROVIDER_UNAVAILABLE", String(error)));
       }
     );
   });
