@@ -26,9 +26,9 @@ import { traceEdgeStep } from "../_shared/trace.ts";
 // Imports for PDF generation removed (migrated to client-side)
 
 // Base columns always available; extended columns added by migrations 0005/0007/0010.
-const BASE_COLS = "id, job_id, script_id, version_id, summary_json, report_html, findings_count, severity_counts, created_at";
+const BASE_COLS = "id, job_id, script_id, version_id, analysis_generation_id, report_generation_id, summary_json, report_html, findings_count, severity_counts, created_at";
 const ENRICH_COLS = "scripts(title, clients(name_ar, name_en))";
-const LIST_COLS = "id, job_id, script_id, version_id, findings_count, severity_counts, created_at";
+const LIST_COLS = "id, job_id, script_id, version_id, analysis_generation_id, report_generation_id, findings_count, severity_counts, created_at";
 
 function camelReport(r: Record<string, unknown>, full = false) {
   const summaryJson = (r.summary_json as Record<string, unknown> | null | undefined) ?? {};
@@ -38,6 +38,8 @@ function camelReport(r: Record<string, unknown>, full = false) {
     jobId: r.job_id,
     scriptId: r.script_id,
     versionId: r.version_id,
+    analysisGenerationId: r.analysis_generation_id ?? null,
+    reportGenerationId: r.report_generation_id ?? null,
     findingsCount: r.findings_count ?? 0,
     severityCounts: r.severity_counts ?? { low: 0, medium: 0, high: 0, critical: 0 },
     typeCounts: totals.type_counts ?? undefined,

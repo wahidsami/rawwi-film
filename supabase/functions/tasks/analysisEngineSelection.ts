@@ -8,17 +8,14 @@ export function resolveRequestedAnalysisEngine(
   bodyAnalysisEngine: unknown,
   envAnalysisEngine: string | null | undefined,
 ): TaskAnalysisEngine {
-  const envDefault = (() => {
-    const raw = normalize(envAnalysisEngine ?? "v2");
-    if (raw === "v3") return "v3" as const;
-    if (raw === "v4") return "v4" as const;
-    if (raw === "shadow") return "shadow" as const;
-    if (raw === "policy_v1") return "policy_v1" as const;
-    if (raw === "hybrid") return "hybrid" as const;
-    return "v2" as const;
-  })();
+  const normalizedEnv = normalize(envAnalysisEngine);
+  if (normalizedEnv === "v3") return "v3";
+  if (normalizedEnv === "v4") return "v4";
+  if (normalizedEnv === "shadow") return "shadow";
+  if (normalizedEnv === "policy_v1") return "policy_v1";
+  if (normalizedEnv === "hybrid") return "hybrid";
 
-  const requested = normalize(bodyAnalysisEngine ?? envDefault);
+  const requested = normalize(bodyAnalysisEngine);
   if (requested === "v3") return "v3";
   if (requested === "v4") return "v4";
   if (requested === "shadow") return "shadow";

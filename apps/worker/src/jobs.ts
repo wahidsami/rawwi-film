@@ -259,7 +259,7 @@ export async function fetchNextPendingChunks(jobId: string, limit: number): Prom
 export async function claimChunk(chunkId: string): Promise<AnalysisChunk | null> {
   const { data: updated } = await supabase
     .from("analysis_chunks")
-    .update({ status: "judging", judging_started_at: new Date().toISOString() })
+    .update({ status: "judging", judging_started_at: new Date().toISOString(), processing_phase: "claimed" })
     .eq("id", chunkId)
     .eq("status", "pending")
     .select("id, job_id, chunk_index, text, start_offset, end_offset, start_line, end_line, status, judging_started_at, last_error")
@@ -327,6 +327,21 @@ export async function incrementJobProgress(jobId: string): Promise<void> {
  * Mark chunk as done or failed.
  */
 export async function setChunkDone(chunkId: string): Promise<void> {
+  const { data: current, error: readError } = await supabase
+    .from("analysis_chunks")
+    .select("status, processing_phase")
+    .eq("id", chunkId)
+    .maybeSingle();
+  if (readError) throw readError;
+  const currentStatus = String((current as { status?: string | null } | null)?.status ?? "").toLowerCase();
+  const currentPhase = String((current as { processing_phase?: string | null } | null)?.processing_phase ?? "").toLowerCase();
+  if (currentStatus === "done") return;
+  if (currentStatus === "failed") {
+    throw new Error("Illegal chunk transition: failed chunk cannot be marked done");
+  }
+  if (currentPhase !== "verified") {
+    throw new Error(`Illegal chunk transition: chunk must be verified before done (current phase: '${currentPhase || "null"}')`);
+  }
   await supabase
     .from("analysis_chunks")
     .update({
@@ -481,10 +496,26 @@ function queueChunkStateUpdate(
 /** Ordered UI phase label update so chunk states cannot race each other. */
 export function setChunkPhase(chunkId: string, phase: string): Promise<void> {
   return queueChunkStateUpdate(chunkId, "setChunkPhase", () =>
-    supabase
-      .from("analysis_chunks")
-      .update({ processing_phase: phase })
-      .eq("id", chunkId)
+    (async () => {
+      const { data: current, error: readError } = await supabase
+        .from("analysis_chunks")
+        .select("status, processing_phase")
+        .eq("id", chunkId)
+        .maybeSingle();
+      if (readError) return { error: readError };
+      const currentStatus = String((current as { status?: string | null } | null)?.status ?? "").toLowerCase();
+      const currentPhase = String((current as { processing_phase?: string | null } | null)?.processing_phase ?? "").toLowerCase();
+      if (currentStatus === "done" || currentStatus === "failed") {
+        throw new Error(`Illegal chunk transition from terminal status '${currentStatus}' to '${phase}'`);
+      }
+      if (currentPhase === "verified" && phase !== "verified") {
+        throw new Error(`Illegal chunk transition from 'verified' to '${phase}'`);
+      }
+      return supabase
+        .from("analysis_chunks")
+        .update({ processing_phase: phase })
+        .eq("id", chunkId);
+    })()
   );
 }
 

@@ -42,6 +42,7 @@ type JobRow = {
   id: string;
   script_id: string;
   version_id: string;
+  analysis_generation_id?: string | null;
   status: string;
   progress_total: number;
   progress_done: number;
@@ -313,6 +314,7 @@ function toCamel(job: JobRow) {
     errorMessage: job.error_message,
     scriptContentHash: job.script_content_hash ?? null,
     canonicalLength: job.canonical_length ?? null,
+    analysisGenerationId: job.analysis_generation_id ?? null,
   };
 }
 
@@ -445,7 +447,7 @@ Deno.serve(async (req: Request) => {
     if (jobId) {
       const { data: row, error: err } = await supabase
         .from("analysis_jobs")
-        .select("id, script_id, version_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, config_snapshot, error_message, script_content_hash")
+        .select("id, script_id, version_id, analysis_generation_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, config_snapshot, error_message, script_content_hash")
         .eq("id", jobId)
         .maybeSingle();
       if (err) {
@@ -463,7 +465,7 @@ Deno.serve(async (req: Request) => {
     // 1. Fetch Analysis Jobs
     let jobQuery = supabase
       .from("analysis_jobs")
-      .select("id, script_id, version_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, config_snapshot, error_message")
+      .select("id, script_id, version_id, analysis_generation_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, config_snapshot, error_message")
       .order("created_at", { ascending: false })
       .limit(limit);
 
@@ -570,7 +572,7 @@ Deno.serve(async (req: Request) => {
 
       const { data: jobRow, error: jobErr } = await supabase
         .from("analysis_jobs")
-        .select("id, script_id, version_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, config_snapshot, error_message, script_content_hash, canonical_length")
+        .select("id, script_id, version_id, analysis_generation_id, created_by, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, config_snapshot, error_message, script_content_hash, canonical_length")
         .eq("id", jobId)
         .maybeSingle();
 
@@ -618,7 +620,7 @@ Deno.serve(async (req: Request) => {
         .from("analysis_jobs")
         .update(patch)
         .eq("id", jobId)
-        .select("id, script_id, version_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, config_snapshot, error_message, script_content_hash, canonical_length")
+      .select("id, script_id, version_id, analysis_generation_id, status, progress_total, progress_done, progress_percent, created_at, started_at, completed_at, paused_at, pause_requested, partial_finalize_requested, partial_finalize_requested_at, config_snapshot, error_message, script_content_hash, canonical_length")
         .single();
 
       if (updateErr || !updated) {
@@ -807,12 +809,14 @@ Deno.serve(async (req: Request) => {
   const chunkSize = 12_000;
   const overlapSize = usePageChunks ? 0 : 800;
   const totalDetectionPasses = requestedAnalysisEngine === "policy_v1" ? 1 : 11;
+  const analysisGenerationId = crypto.randomUUID();
 
   const { data: job, error: jobErr } = await supabase
     .from("analysis_jobs")
     .insert({
       script_id: scriptId,
       version_id: versionId.trim(),
+      analysis_generation_id: analysisGenerationId,
       created_by: uid,
       status: "queued",
       progress_total,
@@ -825,6 +829,7 @@ Deno.serve(async (req: Request) => {
         ...DEFAULT_DETERMINISTIC_CONFIG,
         analysis_memory_mode: analysisMemoryMode,
         pipeline_version: requestedPipelineVersion,
+        analysis_generation_id: analysisGenerationId,
         force_fresh: forceFresh,
         analysis_profile: analysisProfilePreset.analysisProfile,
         analysis_engine: requestedAnalysisEngine,

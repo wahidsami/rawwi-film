@@ -6,6 +6,11 @@ function testEnvShadowSelectsShadow(): void {
   assert.equal(resolveRequestedAnalysisEngine(undefined, "shadow"), "shadow");
 }
 
+function testEnvOverridesBodySelection(): void {
+  assert.equal(resolveRequestedAnalysisEngine("v3", "shadow"), "shadow");
+  assert.equal(resolveRequestedAnalysisEngine("v3", "v4"), "v4");
+}
+
 function testEnvV4SelectsV4(): void {
   assert.equal(resolveRequestedAnalysisEngine(undefined, "v4"), "v4");
 }
@@ -21,6 +26,7 @@ function testPipelineDefaultsStayStable(): void {
 
 function main(): void {
   testEnvShadowSelectsShadow();
+  testEnvOverridesBodySelection();
   testEnvV4SelectsV4();
   testEnvV3RemainsV3();
   testPipelineDefaultsStayStable();

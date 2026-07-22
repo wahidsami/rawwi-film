@@ -39,6 +39,8 @@ export type SummaryJson = {
     analysis_pipeline_version: "v1" | "v2";
     deep_auditor_enabled: boolean;
     generated_by: "worker";
+    analysis_generation_id?: string | null;
+    report_generation_id?: string | null;
   };
   client_name?: string;
   script_title?: string;
@@ -298,6 +300,7 @@ type JobConfigMeta = {
   violation_system_version?: string;
   auditor_layer_version?: string;
   deep_auditor_enabled?: boolean;
+  analysis_generation_id?: string | null;
 };
 
 function pickAnalysisEngine(value: unknown): "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1" {
@@ -513,6 +516,76 @@ export async function validatePipelineIntegrity(input: {
   logger.info("Pipeline integrity validation passed", {
     jobId: report.jobId,
     reportId: report.reportId,
+    integrityReport: report,
+  });
+  return report;
+}
+
+export type ReportAssemblyIntegrityReport = Readonly<{
+  jobId: string;
+  findingsCount: number;
+  summaryFindingsCount: number;
+  reportFindingsCount: number;
+  analysisFindingIds: string[];
+  summaryFindingIds: string[];
+  mismatches: string[];
+}>;
+
+export function buildReportAssemblyIntegrityReport(input: {
+  jobId: string;
+  findings: DbFinding[];
+  summary: SummaryJson;
+  reportRow: Record<string, unknown>;
+}): ReportAssemblyIntegrityReport {
+  const analysisFindingIds = uniqueStrings(input.findings.map((finding) => findingIntegrityIdentity(finding)));
+  const summaryFindingIds = uniqueStrings((input.summary.canonical_findings ?? []).map((finding) => finding.canonical_finding_id));
+  const reportFindingsCount = Number(input.reportRow.findings_count ?? 0) || 0;
+  const mismatches: string[] = [];
+
+  if (input.findings.length !== input.summary.totals.findings_count) {
+    mismatches.push(`analysis_findings_count_mismatch:${input.findings.length}:${input.summary.totals.findings_count}`);
+  }
+  if (input.findings.length !== reportFindingsCount) {
+    mismatches.push(`analysis_reports_findings_count_mismatch:${input.findings.length}:${reportFindingsCount}`);
+  }
+  if (summaryFindingIds.length > 0 && JSON.stringify(analysisFindingIds) !== JSON.stringify(summaryFindingIds)) {
+    mismatches.push("analysis_findings_summary_ids_mismatch");
+  }
+  if ((input.summary.report_overview?.total_findings ?? input.summary.totals.findings_count) !== input.findings.length) {
+    mismatches.push(
+      `report_overview_total_findings_mismatch:${input.summary.report_overview?.total_findings ?? input.summary.totals.findings_count}:${input.findings.length}`,
+    );
+  }
+
+  return {
+    jobId: input.jobId,
+    findingsCount: input.findings.length,
+    summaryFindingsCount: input.summary.totals.findings_count,
+    reportFindingsCount,
+    analysisFindingIds,
+    summaryFindingIds,
+    mismatches,
+  };
+}
+
+export function validateReportAssemblyIntegrity(input: {
+  jobId: string;
+  findings: DbFinding[];
+  summary: SummaryJson;
+  reportRow: Record<string, unknown>;
+}): ReportAssemblyIntegrityReport {
+  const report = buildReportAssemblyIntegrityReport(input);
+  if (report.mismatches.length > 0) {
+    logger.error("Report assembly integrity validation failed", {
+      jobId: report.jobId,
+      integrityReport: report,
+    });
+    const error = new Error("Report assembly integrity validation failed");
+    (error as Error & { integrityReport?: ReportAssemblyIntegrityReport }).integrityReport = report;
+    throw error;
+  }
+  logger.info("Report assembly integrity validation passed", {
+    jobId: report.jobId,
     integrityReport: report,
   });
   return report;
@@ -2028,6 +2101,8 @@ export function buildSummaryJson(
           ? jobConfigMeta.deep_auditor_enabled
           : config.ANALYSIS_DEEP_AUDITOR,
       generated_by: "worker",
+      analysis_generation_id: jobConfigMeta?.analysis_generation_id ?? null,
+      report_generation_id: jobConfigMeta?.analysis_generation_id ?? null,
     },
     client_name: clientName,
     script_title: scriptTitle,
@@ -2596,6 +2671,7 @@ export async function runAggregation(jobId: string): Promise<void> {
       violation_system_version: (job.config_snapshot as { violation_system_version?: string } | null)?.violation_system_version,
       auditor_layer_version: (job.config_snapshot as { auditor_layer_version?: string } | null)?.auditor_layer_version,
       deep_auditor_enabled: (job.config_snapshot as { deep_auditor_enabled?: boolean } | null)?.deep_auditor_enabled,
+      analysis_generation_id: (job.config_snapshot as { analysis_generation_id?: string | null } | null)?.analysis_generation_id ?? null,
     },
   );
   const totalChunks = Math.max(0, (((job as { progress_total?: number | null }).progress_total ?? 1) - 1));
@@ -2718,6 +2794,26 @@ export async function runAggregation(jobId: string): Promise<void> {
   applySummaryContextToRulings(summary);
   applyReportGate(summary);
 
+  const reportRow: Record<string, unknown> = {
+    job_id: jobId,
+    script_id: job.script_id,
+    version_id: job.version_id,
+    analysis_generation_id: (job.config_snapshot as { analysis_generation_id?: string | null } | null)?.analysis_generation_id ?? null,
+    report_generation_id: (job.config_snapshot as { analysis_generation_id?: string | null } | null)?.analysis_generation_id ?? null,
+    summary_json: summary as unknown as Record<string, unknown>,
+    findings_count: summary.totals.findings_count,
+    severity_counts: summary.totals.severity_counts as unknown as Record<string, unknown>,
+  };
+  const j = job as { created_by?: string | null };
+  if (j.created_by != null) reportRow.created_by = j.created_by;
+
+  validateReportAssemblyIntegrity({
+    jobId,
+    findings: list,
+    summary,
+    reportRow,
+  });
+
   const reportHtml = buildReportHtml(summary);
 
   logger.info("[DEBUG] Aggregation report payload ready", {
@@ -2727,17 +2823,7 @@ export async function runAggregation(jobId: string): Promise<void> {
     reportHintCount: summary.report_hints?.length ?? 0,
   });
 
-  const reportRow: Record<string, unknown> = {
-    job_id: jobId,
-    script_id: job.script_id,
-    version_id: job.version_id,
-    summary_json: summary as unknown as Record<string, unknown>,
-    report_html: reportHtml,
-    findings_count: summary.totals.findings_count,
-    severity_counts: summary.totals.severity_counts as unknown as Record<string, unknown>,
-  };
-  const j = job as { created_by?: string | null };
-  if (j.created_by != null) reportRow.created_by = j.created_by;
+  reportRow.report_html = reportHtml;
 
   const { inserted: reportInserted, reportId } = await persistAggregationReportOnce(jobId, reportRow);
   logger.info("report generated", {

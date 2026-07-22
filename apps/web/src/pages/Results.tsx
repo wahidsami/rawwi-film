@@ -766,7 +766,7 @@ export function Results() {
             setLoading(false);
             return;
           }
-          r = await reportService.getReport({ jobId: paramId });
+          r = await reportService.getReport({ jobId: paramId, analysisGenerationId: job.analysisGenerationId ?? null });
           if (r.jobId !== paramId) {
             throw new Error(`Current analysis report mismatch: expected job ${paramId}, received ${r.jobId}`);
           }

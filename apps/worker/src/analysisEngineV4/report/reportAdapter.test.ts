@@ -120,7 +120,22 @@ function buildDecisionProvenanceCollection(): DecisionProvenanceCollection {
 }
 
 function testReportAdapterBuildsDeterministicBundle(): void {
-  const findings = Object.freeze([buildFinding({}), buildFinding({
+  const originatingEvidence = Object.freeze({
+    text: "يا كلب",
+    startOffset: 12,
+    endOffset: 18,
+  });
+  const findings = Object.freeze([buildFinding({
+    start_offset_global: originatingEvidence.startOffset,
+    end_offset_global: originatingEvidence.endOffset,
+    location: Object.freeze({
+      start_offset: originatingEvidence.startOffset,
+      end_offset: originatingEvidence.endOffset,
+      start_line: 1,
+      end_line: 1,
+      v3: Object.freeze({ report: true }),
+    }) as V3RuntimeFinding["location"],
+  }), buildFinding({
     article_id: 11,
     atom_id: "11-2",
     canonical_atom: "ART11_ATOM_11-2",
@@ -157,6 +172,12 @@ function testReportAdapterBuildsDeterministicBundle(): void {
   });
 
   assert.equal(bundle.analysisFindings.length, 2);
+  assert.equal(bundle.analysisFindings[0]?.evidence_snippet, originatingEvidence.text);
+  assert.equal(bundle.analysisFindings[0]?.start_offset_global, originatingEvidence.startOffset);
+  assert.equal(bundle.analysisFindings[0]?.end_offset_global, originatingEvidence.endOffset);
+  assert.equal(bundle.reportDocument.analysisFindings[0]?.evidence_snippet, originatingEvidence.text);
+  assert.equal(bundle.reportDocument.analysisFindings[0]?.start_offset_global, originatingEvidence.startOffset);
+  assert.equal(bundle.reportDocument.analysisFindings[0]?.end_offset_global, originatingEvidence.endOffset);
   assert.equal(bundle.analysisReport.findingsCount, 2);
   assert.equal(bundle.analysisReport.severityCounts.high, 1);
   assert.equal(bundle.analysisReport.severityCounts.medium, 1);

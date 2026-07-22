@@ -10,8 +10,12 @@ export type { Report as AnalysisReport } from '@/api/models';
 
 export const reportService = {
   /** Fetch the report for the current job only. Never falls back to history. */
-  async getReport(params: { jobId: string }): Promise<Report> {
-    return fetchCurrentJobReport(params.jobId, (jobId) => reportsApi.getByJob(jobId));
+  async getReport(params: { jobId: string; analysisGenerationId?: string | null }): Promise<Report> {
+    return fetchCurrentJobReport(
+      params.jobId,
+      (jobId) => reportsApi.getByJob(jobId),
+      { analysisGenerationId: params.analysisGenerationId ?? null },
+    );
   },
 
   /** Explicit history lookup: list reports for a script. */

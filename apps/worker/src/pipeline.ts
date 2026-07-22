@@ -8,6 +8,7 @@ import {
   setChunkDone,
   setChunkFailed,
   setChunkPhase,
+  setJobFailed,
   setChunkMultipassStart,
 } from "./jobs.js";
 import { analyzeLexiconMatches } from "./lexiconMatcher.js";
@@ -1702,11 +1703,13 @@ export async function processChunkJudge(
   }
 
   if (!chunkText?.trim()) {
+    await setChunkPhase(chunk.id, "verified");
     await setChunkDone(chunk.id);
     await incrementJobProgress(jobId);
     return;
   }
 
+  await setChunkPhase(chunk.id, "analyzing");
   logger.info("[DEBUG] processChunkJudge started", {
     jobId,
     chunkId: chunk.id,
@@ -2200,6 +2203,7 @@ export async function processChunkJudge(
       });
       await setChunkPhase(chunk.id, "cached");
       allFindings = sortFindingsStable((hasValidatedCache ? cachedValidated : cachedLegacy) as FindingWithGlobal[]);
+      await setChunkPhase(chunk.id, "verified");
     }
   } else {
     if (cachedRun) {
@@ -3615,6 +3619,7 @@ export async function processChunkJudge(
       rows: rows.length,
       timeoutMs: CRITICAL_DB_TIMEOUT_MS,
     });
+    await setChunkPhase(chunk.id, "findings_written");
     const { data, error } = await withOperationTimeout(
       "Upsert analysis_findings",
       CRITICAL_DB_TIMEOUT_MS,
@@ -3640,6 +3645,21 @@ export async function processChunkJudge(
       inserted: data?.length ?? 0,
       error: error ?? null,
     });
+    const upsertErrorRecord: any = error;
+    if (upsertErrorRecord != null) {
+      logger.error("AI findings upsert FAILED", {
+        jobId, chunkId: chunk.id,
+        error: upsertErrorRecord,
+        errorMessage: upsertErrorRecord.message ?? null,
+        errorDetails: upsertErrorRecord.details ?? null,
+        errorHint: upsertErrorRecord.hint ?? null,
+        errorCode: upsertErrorRecord.code ?? null,
+      });
+      const failureMessage = String(upsertErrorRecord.message ?? "AI findings upsert failed");
+      await setChunkFailed(chunk.id, failureMessage);
+      await setJobFailed(jobId, failureMessage);
+      throw new Error(failureMessage);
+    }
     logger.info("[V4] analysis_findings inserted", {
       jobId,
       chunkId: chunk.id,
@@ -3777,49 +3797,40 @@ export async function processChunkJudge(
         attempted: rows.length,
         inserted: data?.length ?? 0,
         skipped: rows.length - (data?.length ?? 0),
-        error: error
-          ? {
-              message: error.message,
-              code: error.code ?? null,
-              details: error.details ?? null,
-              hint: error.hint ?? null,
+        error: upsertErrorRecord == null
+          ? null
+          : {
+              message: upsertErrorRecord.message ?? null,
+              code: upsertErrorRecord.code ?? null,
+              details: upsertErrorRecord.details ?? null,
+              hint: upsertErrorRecord.hint ?? null,
             }
-          : null,
+          ,
         rows: rows as unknown as readonly Record<string, unknown>[],
       });
       await v3InspectionRecorder.recordStages([inspectionRecord]);
     }
 
-    if (error) {
-      logger.error("AI findings upsert FAILED", {
-        jobId, chunkId: chunk.id,
-        error,
-        errorMessage: error.message,
-        errorDetails: error.details,
-        errorHint: error.hint,
-        errorCode: error.code,
-      });
-    } else {
-      await persistLineageEvents(
-        rows.map((row) =>
-          buildLineageEvent(row as unknown as FindingWithGlobal, {
-            jobId,
-            chunkId: chunk.id,
-            stageName: "aggregation",
-            passName: (row as { location?: { v3?: { detection_pass?: string | null } } }).location?.v3?.detection_pass ?? null,
-            metadata: { inserted: true },
-          })
-        )
-      );
-      await upsertFindingPolicyLinks(
-        (data ?? []).map((r) => ({
-          id: (r as { id: string }).id,
-          article_id: (r as { article_id: number }).article_id,
-          atom_id: (r as { atom_id: string | null }).atom_id,
-          confidence: (r as { confidence?: number | null }).confidence ?? 0,
-        }))
-      );
-    }
+    await persistLineageEvents(
+      rows.map((row) =>
+        buildLineageEvent(row as unknown as FindingWithGlobal, {
+          jobId,
+          chunkId: chunk.id,
+          stageName: "aggregation",
+          passName: (row as { location?: { v3?: { detection_pass?: string | null } } }).location?.v3?.detection_pass ?? null,
+          metadata: { inserted: true },
+        })
+      )
+    );
+    await upsertFindingPolicyLinks(
+      (data ?? []).map((r) => ({
+        id: (r as { id: string }).id,
+        article_id: (r as { article_id: number }).article_id,
+        atom_id: (r as { atom_id: string | null }).atom_id,
+        confidence: (r as { confidence?: number | null }).confidence ?? 0,
+      }))
+    );
+    await setChunkPhase(chunk.id, "verified");
     logger.info("Chunk insert timings", {
       jobId,
       chunkId: chunk.id,
@@ -3844,6 +3855,7 @@ export async function processChunkJudge(
       final_chunk_findings: [],
     });
     logger.info("No AI findings to insert for chunk", { jobId, chunkId: chunk.id, runKey });
+    await setChunkPhase(chunk.id, "verified");
   }
 
   throwIfAborted(signal);
