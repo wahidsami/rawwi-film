@@ -427,6 +427,7 @@ const SEVERITY_ORDER: Record<string, number> = {
 };
 
 import { scriptsApi, tasksApi, reportsApi, findingsApi, usersApi } from '@/api';
+import { reportService } from '@/services/reportService';
 import type { AnalysisFinding, AnalysisReviewFinding, DuplicateScriptCheckResponse, Report as AnalysisReport, ScriptJourneyPayload, ScriptRevisionCycleSummaryItem, UserListItem } from '@/api';
 import { downloadScriptJourneyPdf } from '@/components/reports/script-journey/download';
 import { findTextOccurrences, findBestMatch, normalizeText } from '@/utils/textMatching';
@@ -1859,9 +1860,14 @@ export function ScriptWorkspace() {
           }
           // Fetch the report id so "View Report" navigates correctly (by=id preferred)
           if (isSuccessfulJobStatus(job.status)) {
-            reportsApi.getByJob(job.id).then((report) => {
+            reportService.getReport({ jobId: job.id }).then((report) => {
               setReportIdWhenJobCompleted(report.id);
-            }).catch(() => {});
+            }).catch((error) => {
+              console.warn('[Report] current-job lookup failed for completion navigation', {
+                jobId: job.id,
+                error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : String(error),
+              });
+            });
           }
         }
       } catch (err) {
@@ -2986,7 +2992,7 @@ export function ScriptWorkspace() {
           tasksApi.getJob(jobId),
           findingsApi.getByJob(jobId),
           findingsApi.getReviewByJob(jobId),
-          reportsApi.getByJob(jobId),
+          reportService.getReport({ jobId }),
         ]);
         setSelectedJobCanonicalHash((job as { scriptContentHash?: string | null }).scriptContentHash ?? null);
         setSelectedReportSummary(fullReport);

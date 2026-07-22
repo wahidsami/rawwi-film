@@ -4,20 +4,24 @@
  */
 import { reportsApi } from '@/api';
 import type { Report, ReportListItem } from '@/api/models';
+import { fetchCurrentJobReport } from './reportLookup';
 
 export type { Report as AnalysisReport } from '@/api/models';
 
 export const reportService = {
-  /** Fetch single report by jobId (preferred) or scriptId (fallback, fetches latest). */
-  async getReport(params: { jobId?: string; scriptId?: string }): Promise<Report> {
-    if (params.jobId) return reportsApi.getByJob(params.jobId);
-    if (params.scriptId) {
-      // list and return newest
-      const list = await reportsApi.listByScript(params.scriptId);
-      if (list.length === 0) throw new Error('No reports found for this script');
-      return reportsApi.getById(list[0].id);
+  /** Fetch the report for the current job only. Never falls back to history. */
+  async getReport(params: { jobId: string }): Promise<Report> {
+    return fetchCurrentJobReport(params.jobId, (jobId) => reportsApi.getByJob(jobId));
+  },
+
+  /** Explicit history lookup: list reports for a script. */
+  async getHistoryReports(scriptId: string | undefined): Promise<ReportListItem[]> {
+    if (scriptId == null || String(scriptId).trim() === '') {
+      return [];
     }
-    throw new Error('jobId or scriptId required');
+    const trimmed = String(scriptId).trim();
+    console.info('[Report] history lookup started', { scriptId: trimmed });
+    return reportsApi.listByScript(trimmed);
   },
 
   /** List reports for a script. Pass a valid scriptId; if missing, returns [] to avoid invalid API calls. */

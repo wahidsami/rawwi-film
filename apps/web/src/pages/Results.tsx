@@ -5,7 +5,7 @@ import { useLangStore } from '@/store/langStore';
 import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate, formatDateLong, formatDateTime, formatDateTimeValue } from '@/utils/dateFormat';
-import { type AnalysisReport } from '@/services/reportService';
+import { type AnalysisReport, reportService } from '@/services/reportService';
 import { reportsApi, findingsApi, scriptsApi, tasksApi, type AnalysisFinding, type AnalysisReviewFinding } from '@/api';
 import type { AnalysisJob, ReportListItem, ReviewStatus, Script } from '@/api/models';
 import { Button } from '@/components/ui/Button';
@@ -789,6 +789,7 @@ export function Results() {
       try {
         let r: AnalysisReport;
         if (by === 'job') {
+          console.info('[Report] current analysis lookup started', { jobId: paramId });
           const job = await tasksApi.getJob(paramId);
           if (cancelled || reportLoadTokenRef.current !== requestToken) return;
           setAnalysisJob(job);
@@ -801,15 +802,22 @@ export function Results() {
             setLoading(false);
             return;
           }
-        }
-        if (by === 'id') {
+          r = await reportService.getReport({ jobId: paramId });
+          if (r.jobId !== paramId) {
+            throw new Error(`Current analysis report mismatch: expected job ${paramId}, received ${r.jobId}`);
+          }
+          console.info('[Report] current analysis lookup completed', { jobId: paramId, reportId: r.id });
+        } else if (by === 'id') {
+          console.info('[Report] explicit report history lookup started', { reportId: paramId, mode: 'by-id' });
           r = await reportsApi.getById(paramId);
         } else if (by === 'script') {
+          console.info('[Report] explicit report history lookup started', { scriptId: paramId, mode: 'by-script' });
           const list = await reportsApi.listByScript(paramId);
           if (list.length === 0) throw new Error('No reports found for this script');
           r = await reportsApi.getById(list[0].id);
         } else {
-          r = await reportsApi.getByJob(paramId);
+          console.info('[Report] current analysis lookup started', { jobId: paramId, mode: 'fallback-job' });
+          r = await reportService.getReport({ jobId: paramId });
         }
         if (!cancelled) {
           if (reportLoadTokenRef.current !== requestToken) return;

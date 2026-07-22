@@ -455,59 +455,79 @@ async function mockFetch(url: string, options: RequestInit = {}): Promise<any> {
   }
 
   if (path.startsWith('/reports')) {
-    if (method === 'GET' && path.includes('scriptId=')) {
-      const q = path.indexOf('?');
-      const scriptId = (q >= 0 ? new URLSearchParams(path.slice(q)) : new URLSearchParams()).get('scriptId') || 'mock-script';
-      const mockList = [
-        {
-          id: 'mock-report-1',
-          jobId: 'mock-job-1',
-          scriptId,
-          versionId: null,
-          findingsCount: mockDb.findings.length,
-          severityCounts: { low: 0, medium: 1, high: 0, critical: 0 },
-          approvedCount: 0,
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-          createdBy: null,
-          reviewStatus: 'under_review',
-          reviewedBy: null,
-          reviewedAt: null,
-          lastReviewedAt: null,
-          lastReviewedBy: null,
-          lastReviewedRole: null,
-        },
-        {
-          id: 'mock-report-2',
-          jobId: 'mock-job-2',
-          scriptId,
-          versionId: null,
-          findingsCount: 0,
-          severityCounts: { low: 0, medium: 0, high: 0, critical: 0 },
-          approvedCount: 0,
-          createdAt: new Date().toISOString(),
-          createdBy: 'usr_super',
-          reviewStatus: 'approved',
-          reviewedBy: null,
-          reviewedAt: null,
-          lastReviewedAt: null,
-          lastReviewedBy: null,
-          lastReviewedRole: null,
-        },
-      ];
-      return mockList;
+    const reports = mockDb.reports as Array<Record<string, any>>;
+    const getQuery = () => {
+      try {
+        return new URL(url).searchParams;
+      } catch {
+        return new URLSearchParams();
+      }
+    };
+    const toListItem = (report: Record<string, any>) => ({
+      id: report.id,
+      jobId: report.jobId,
+      scriptId: report.scriptId,
+      versionId: report.versionId ?? null,
+      findingsCount: report.findingsCount ?? 0,
+      severityCounts: report.severityCounts ?? { low: 0, medium: 0, high: 0, critical: 0 },
+      approvedCount: report.approvedCount ?? 0,
+      createdAt: report.createdAt ?? new Date().toISOString(),
+      createdBy: report.createdBy ?? null,
+      reviewStatus: report.reviewStatus ?? 'under_review',
+      reviewedBy: report.reviewedBy ?? null,
+      reviewedAt: report.reviewedAt ?? null,
+      lastReviewedAt: report.lastReviewedAt ?? null,
+      lastReviewedBy: report.lastReviewedBy ?? null,
+      lastReviewedRole: report.lastReviewedRole ?? null,
+      scriptTitle: report.scriptTitle ?? null,
+      clientName: report.clientName ?? null,
+      companyId: report.companyId ?? null,
+      companyNameAr: report.companyNameAr ?? null,
+      companyNameEn: report.companyNameEn ?? null,
+      reportCreatorId: report.reportCreatorId ?? null,
+      reportCreatorName: report.reportCreatorName ?? null,
+    });
+
+    if (method === 'GET') {
+      const params = getQuery();
+      const reportId = params.get('id');
+      const jobId = params.get('jobId');
+      const scriptId = params.get('scriptId');
+      if (reportId) {
+        const report = reports.find((item) => item.id === reportId);
+        if (!report) throw new Error(`404 Not Found: GET /reports?id=${encodeURIComponent(reportId)}`);
+        return report;
+      }
+      if (jobId) {
+        const report = reports.find((item) => item.jobId === jobId);
+        if (!report) throw new Error(`404 Not Found: GET /reports?jobId=${encodeURIComponent(jobId)}`);
+        return report;
+      }
+      if (scriptId) {
+        return reports
+          .filter((item) => item.scriptId === scriptId)
+          .slice()
+          .sort((a, b) => String(b.createdAt ?? '').localeCompare(String(a.createdAt ?? '')))
+          .map(toListItem);
+      }
+      return reports
+        .slice()
+        .sort((a, b) => String(b.createdAt ?? '').localeCompare(String(a.createdAt ?? '')))
+        .map(toListItem);
     }
+
+    if (method === 'POST' && body?.id && Object.prototype.hasOwnProperty.call(body, 'review_status')) {
+      const report = reports.find((item) => item.id === body.id);
+      if (report) {
+        report.reviewStatus = body.review_status;
+        report.reviewNotes = body.review_notes ?? '';
+        report.updatedAt = new Date().toISOString();
+      }
+      return { ok: true };
+    }
+
     return {
-      scriptId: body?.scriptId || 'SCR-001',
-      createdAt: new Date().toISOString(),
-      summaryJson: {
-        decision: 'REVIEW_REQUIRED',
-        severityCounts: { critical: 0, high: 1, medium: 1, low: 0 },
-        checklistArticles: [
-          { articleId: '4', titleAr: 'السيادة والأسس الوطنية', titleEn: 'Sovereignty', domainId: 'A', status: 'fail', severityCounts: { critical: 0, high: 1, medium: 0, low: 0 } }
-        ],
-        lexiconSignals: []
-      },
-      reportHtml: '<html dir="rtl"><body><h1>Mock Report</h1></body></html>'
+      ok: true,
     };
   }
 

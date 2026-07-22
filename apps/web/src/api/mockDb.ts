@@ -102,6 +102,42 @@ export const mockDb = {
       comments: [],
     }
   ] as Finding[],
+  reports: [
+    {
+      id: 'RPT-MOCK-001',
+      jobId: 'mock-job-1',
+      scriptId: 'SCR-001',
+      versionId: null,
+      findingsCount: 3,
+      severityCounts: { low: 0, medium: 1, high: 2, critical: 0 },
+      approvedCount: 0,
+      createdAt: '2023-10-03T12:00:00Z',
+      createdBy: 'usr_super',
+      reviewStatus: 'under_review',
+      reviewedBy: null,
+      reviewedAt: null,
+      lastReviewedAt: null,
+      lastReviewedBy: null,
+      lastReviewedRole: null,
+      scriptTitle: 'The Desert Journey',
+      clientName: 'Modern Tech Co.',
+      companyId: 'COMP-001',
+      companyNameAr: 'شركة التقنية الحديثة',
+      companyNameEn: 'Modern Tech Co.',
+      summaryJson: {
+        job_id: 'mock-job-1',
+        script_id: 'SCR-001',
+        generated_at: '2023-10-03T12:00:00Z',
+        totals: {
+          findings_count: 3,
+          severity_counts: { low: 0, medium: 1, high: 2, critical: 0 },
+        },
+        checklist_articles: [],
+        canonical_findings: [],
+      },
+      reportHtml: '<html dir="rtl"><body><h1>Mock Report</h1></body></html>',
+    },
+  ] as any[],
   lexiconTerms: [
     {
       id: 'LEX-001',
