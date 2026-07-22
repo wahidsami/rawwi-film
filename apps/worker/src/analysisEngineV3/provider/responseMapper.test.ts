@@ -7,7 +7,7 @@ import { createLegalDecision } from "../legal/legalResult.js";
 import { mapLegalDecisionToFindings } from "../runtime/findingMapper.js";
 import { mapV3ProviderResponse } from "./responseMapper.js";
 
-function testApplicableArticlesSynthesizePassEvaluations(): void {
+function testApplicableArticlesDoNotSynthesizePassEvaluations(): void {
   const mapped = mapV3ProviderResponse(JSON.stringify({
     reasoning: {
       narrative: {
@@ -81,9 +81,8 @@ function testApplicableArticlesSynthesizePassEvaluations(): void {
     },
   }));
 
-  assert.equal(mapped.reasonedDecision.articleEvaluations.length, 1);
-  assert.equal(mapped.reasonedDecision.articleEvaluations[0]?.articleId, 8);
-  assert.equal(mapped.reasonedDecision.articleEvaluations[0]?.status, "PASS");
+  assert.equal(mapped.reasonedDecision.articleEvaluations.length, 0);
+  assert.equal(mapped.reasonedDecision.applicableArticles[0], 8);
 
   const legalDecision = createLegalDecision({
     moduleId: "v3_01_religion",
@@ -184,10 +183,8 @@ function testApplicableArticlesSynthesizePassEvaluations(): void {
     } as never,
   });
 
-  assert.equal(findings.length, 1);
-  assert.equal(findings[0]?.article_id, 8);
-  assert.equal(findings[0]?.evidence_snippet, "هذا الكلام إساءة دينية");
-  console.log("✓ response mapper synthesizes PASS article evaluations from applicable_articles");
+  assert.equal(findings.length, 0);
+  console.log("✓ response mapper preserves applicable_articles without synthesizing PASS article evaluations");
 }
 
 function testCanonicalConceptFirstContractSynthesizesPrimaryPassOnly(): void {
@@ -273,9 +270,7 @@ function testCanonicalConceptFirstContractSynthesizesPrimaryPassOnly(): void {
   assert.equal(mapped.reasonedDecision.candidateArticles?.join(","), "4,8,14");
   assert.equal(mapped.reasonedDecision.primaryArticle, 4);
   assert.equal(mapped.reasonedDecision.secondaryArticles?.join(","), "8,14");
-  assert.equal(mapped.reasonedDecision.articleEvaluations.length, 1);
-  assert.equal(mapped.reasonedDecision.articleEvaluations[0]?.articleId, 4);
-  assert.equal(mapped.reasonedDecision.articleEvaluations[0]?.status, "PASS");
+  assert.equal(mapped.reasonedDecision.articleEvaluations.length, 0);
 
   const legalDecision = createLegalDecision({
     moduleId: "v3_01_religion",
@@ -376,10 +371,8 @@ function testCanonicalConceptFirstContractSynthesizesPrimaryPassOnly(): void {
     } as never,
   });
 
-  assert.equal(findings.length, 1);
-  assert.equal(findings[0]?.article_id, 4);
-  assert.equal(findings[0]?.evidence_snippet, "هذا الكلام يمس الكرامة");
-  console.log("✓ response mapper preserves canonical concept/domain/article ranking with one primary PASS");
+  assert.equal(findings.length, 0);
+  console.log("✓ response mapper preserves canonical concept/domain/article ranking without synthesizing PASS evaluations");
 }
 
 function testCanonicalArticleResolverIsApplied(): void {
@@ -458,17 +451,16 @@ function testCanonicalArticleResolverIsApplied(): void {
     resolveCanonicalArticleId: (articleId) => (articleId === 11 ? 8 : articleId),
   });
 
-  assert.equal(mapped.reasonedDecision.articleEvaluations.length, 1);
-  assert.equal(mapped.reasonedDecision.articleEvaluations[0]?.articleId, 8);
-  assert.equal(mapped.reasonedDecision.articleEvaluations[0]?.status, "PASS");
-  console.log("✓ response mapper applies canonical article resolver");
+  assert.equal(mapped.reasonedDecision.articleEvaluations.length, 0);
+  assert.equal(mapped.reasonedDecision.primaryArticle, 11);
+  console.log("✓ response mapper preserves applicable_articles without synthesizing PASS evaluations");
 }
 
 function main(): void {
-  testApplicableArticlesSynthesizePassEvaluations();
+  testApplicableArticlesDoNotSynthesizePassEvaluations();
   testCanonicalConceptFirstContractSynthesizesPrimaryPassOnly();
   testCanonicalArticleResolverIsApplied();
-  console.log("\nAll response mapper synthesis tests passed.");
+  console.log("\nAll response mapper normalization tests passed.");
 }
 
 main();

@@ -36,6 +36,12 @@ export function createOpenAIProvider(options?: OpenAIProviderOptions): V3Provide
         maxTokens: input.maxTokens ?? null,
         retryAttempt: input.retryAttempt ?? null,
       });
+      logger.info("AI Request Started", {
+        modelName: input.modelName,
+        promptTokenEstimate: input.promptTokenEstimate ?? null,
+        maxTokens: input.maxTokens ?? null,
+        retryAttempt: input.retryAttempt ?? null,
+      });
       logger.info("V3 instrumentation SEND OpenAI request", {
         modelName: input.modelName,
         promptTokenEstimate: input.promptTokenEstimate ?? null,
@@ -58,6 +64,12 @@ export function createOpenAIProvider(options?: OpenAIProviderOptions): V3Provide
           },
           { timeout: timeoutMs, signal: input.signal ?? undefined },
         );
+        logger.info("AI Response Received", {
+          modelName: input.modelName,
+          promptTokenEstimate: input.promptTokenEstimate ?? null,
+          maxTokens: input.maxTokens ?? null,
+          retryAttempt: input.retryAttempt ?? null,
+        });
         logger.info("V3 instrumentation RECEIVED OpenAI response", {
           modelName: input.modelName,
           promptTokenEstimate: input.promptTokenEstimate ?? null,
@@ -122,6 +134,21 @@ export function createOpenAIProvider(options?: OpenAIProviderOptions): V3Provide
           maxTokens: input.maxTokens,
           promptTokenEstimate: input.promptTokenEstimate,
           retryAttempt: input.retryAttempt,
+        });
+        logger.error("AI Failure", {
+          modelName: input.modelName,
+          aiFailureReason: providerError.message,
+          aiFailureCode:
+            providerError.httpStatus === 429 || /rate limit|quota|insufficient[_\s-]?quota|credit|billing|payment required|tokens per min|requests per min/i.test(providerError.message)
+              ? "AI_QUOTA_EXCEEDED"
+              : /timeout|timed out|etimedout|aborterror/i.test(providerError.message)
+                ? "AI_TIMEOUT"
+                : "AI_PROVIDER_UNAVAILABLE",
+          provider_error: providerError,
+        });
+        logger.error("AI Failure Reason", {
+          modelName: input.modelName,
+          reason: providerError.message,
         });
         logger.error("V3 OpenAI provider call failed", {
           provider_error: providerError,

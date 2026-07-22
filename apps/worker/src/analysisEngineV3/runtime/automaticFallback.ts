@@ -1,5 +1,6 @@
 import { logger } from "../../logger.js";
 import { extractV3ProviderError, type V3ProviderErrorDetails } from "../provider/providerError.js";
+import { classifyV3AnalysisFailure } from "../provider/analysisFailure.js";
 
 export type V3AutomaticFallbackDiagnostics = Readonly<{
   engineAttempted: "v3";
@@ -36,6 +37,13 @@ export async function runWithV3AutomaticFallback<T>(input: V3AutomaticFallbackIn
     return primaryResult;
   } catch (error) {
     if (!input.enabled) throw error;
+    if (classifyV3AnalysisFailure(error)) {
+      logger.warn("V3 automatic fallback skipped for AI failure", {
+        fallbackReason: error instanceof Error ? error.message : String(error),
+        providerError: extractV3ProviderError(error),
+      });
+      throw error;
+    }
 
     const diagnostics: V3AutomaticFallbackDiagnostics = {
       engineAttempted: "v3",

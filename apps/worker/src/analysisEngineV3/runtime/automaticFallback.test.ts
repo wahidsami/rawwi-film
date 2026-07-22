@@ -8,6 +8,7 @@ import {
   getV3FallbackExecutionCount,
   resetV3FallbackExecutionCount,
 } from "./runtimeMetrics.js";
+import { attachV3ProviderError, createV3ProviderErrorDetails } from "../provider/providerError.js";
 
 async function testEnabledFallbackRecoversWithDiagnostics(): Promise<void> {
   resetV3FallbackExecutionCount();
@@ -66,9 +67,42 @@ async function testDisabledFallbackPropagates(): Promise<void> {
   assert.equal(onFallbackCalled, false);
 }
 
+async function testAiFailureSkipsFallback(): Promise<void> {
+  resetV3FallbackExecutionCount();
+
+  let fallbackCalled = false;
+  const providerError = createV3ProviderErrorDetails(new Error("429 rate limit exceeded"), {
+    modelName: "test-model",
+    maxTokens: 2048,
+    promptTokenEstimate: 1234,
+    retryAttempt: 0,
+  });
+
+  const failure = attachV3ProviderError(new Error("429 rate limit exceeded"), providerError);
+
+  await assert.rejects(
+    async () =>
+      runWithV3AutomaticFallback({
+        enabled: true,
+        runPrimary: async () => {
+          throw failure;
+        },
+        onFallback: async () => {
+          fallbackCalled = true;
+        },
+        runFallback: async () => "should-not-run",
+      }),
+    /429 rate limit exceeded/,
+  );
+
+  assert.equal(fallbackCalled, false);
+  assert.equal(getV3FallbackExecutionCount(), 0);
+}
+
 async function main(): Promise<void> {
   await testEnabledFallbackRecoversWithDiagnostics();
   await testDisabledFallbackPropagates();
+  await testAiFailureSkipsFallback();
   console.log("✓ V3 automatic fallback wrapper behaves correctly");
 }
 

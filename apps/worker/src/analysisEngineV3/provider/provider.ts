@@ -18,6 +18,8 @@ import type { ReviewerKnowledgePack } from "../reviewerKnowledge/reviewerKnowled
 import { buildReviewerReasoningEnginePayload } from "../builder/reviewerReasoningEngine.js";
 import { compileReviewerContext } from "../reviewerCompiler/compiler.js";
 import { validateReasonedDecisionAgainstEvidence } from "./reasonedDecisionValidation.js";
+import { createV3AnalysisFailure, type V3AnalysisFailureCode } from "./analysisFailure.js";
+import type { V3ProviderErrorDetails } from "./providerError.js";
 import { logger } from "../../logger.js";
 import { config } from "../../config.js";
 import { writeV3PromptReplayFile } from "../runtime/promptReplay.js";
@@ -33,6 +35,28 @@ export type V3ProviderFlowInput = Readonly<{
   responseFormat?: "json_object" | "text";
   signal?: AbortSignal | null;
 }>;
+
+function hasSuccessfulArticleEvaluation(reasonedDecision: { articleEvaluations: readonly { status: string }[] }): boolean {
+  return reasonedDecision.articleEvaluations.some((evaluation) => evaluation.status === "PASS");
+}
+
+function createValidationFailure(
+  code: V3AnalysisFailureCode,
+  reason: string,
+  extras?: Readonly<{
+    providerError?: V3ProviderErrorDetails | null;
+    parseErrors?: readonly string[];
+    zeroFindingsReason?: string | null;
+    validationIssues?: readonly string[];
+  }>,
+): Error {
+  return createV3AnalysisFailure(code, reason, {
+    providerError: extras?.providerError ?? null,
+    parseErrors: extras?.parseErrors ?? [],
+    zeroFindingsReason: extras?.zeroFindingsReason ?? null,
+    validationIssues: extras?.validationIssues ?? [],
+  });
+}
 
 export function createV3Provider(provider: V3Provider): V3Provider {
   return provider;
@@ -212,11 +236,17 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
     modelName: input.modelName,
     durationMs: Date.now() - startedAt,
   });
+  let firstParseErrors: readonly string[] = [];
+  let firstZeroFindingsReason: string | null = null;
   logger.info("V3 instrumentation ENTER: mapV3ProviderResponse", {
     modelName: input.modelName,
   });
   const mapped = mapV3ProviderResponse(rawResponse.rawResponse, {
     resolveCanonicalArticleId,
+    onAudit: (audit) => {
+      firstParseErrors = audit.parseErrors;
+      firstZeroFindingsReason = audit.zeroFindingsReason;
+    },
   });
   logger.info("V3 instrumentation EXIT: mapV3ProviderResponse", {
     modelName: input.modelName,
@@ -234,8 +264,23 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
     reasonedDecision: mapped.reasonedDecision,
   });
 
-  if (!validation.valid) {
-    const repairedUserPrompt = appendValidationRepairInstruction(userPrompt, validation.issues);
+  const firstHasSuccessfulEvaluation = hasSuccessfulArticleEvaluation(mapped.reasonedDecision);
+  const firstParseFailed = firstParseErrors.length > 0;
+  const firstNeedsRetry = !validation.valid || !firstHasSuccessfulEvaluation || firstParseFailed || Boolean(firstZeroFindingsReason);
+
+  if (firstNeedsRetry) {
+    const retryIssues =
+      validation.issues.length > 0
+        ? validation.issues
+        : [
+            {
+              code: "ai.invalid_response",
+              path: "reasonedDecision.articleEvaluations",
+              message: "Return at least one PASS article evaluation and valid JSON.",
+              severity: "error" as const,
+            },
+          ];
+    const repairedUserPrompt = appendValidationRepairInstruction(userPrompt, retryIssues);
     logger.info("V3 instrumentation ENTER: provider.callJudgeRaw (validation retry)", {
       modelName: input.modelName,
     });
@@ -256,11 +301,17 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
       modelName: input.modelName,
       durationMs: Date.now() - startedAt,
     });
+    let retryParseErrors: readonly string[] = [];
+    let retryZeroFindingsReason: string | null = null;
     logger.info("V3 instrumentation ENTER: mapV3ProviderResponse (validation retry)", {
       modelName: input.modelName,
     });
     const retryMapped = mapV3ProviderResponse(retryRawResponse.rawResponse, {
       resolveCanonicalArticleId,
+      onAudit: (audit) => {
+        retryParseErrors = audit.parseErrors;
+        retryZeroFindingsReason = audit.zeroFindingsReason;
+      },
     });
     logger.info("V3 instrumentation EXIT: mapV3ProviderResponse (validation retry)", {
       modelName: input.modelName,
@@ -277,17 +328,20 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
       context: retryMapped.context,
       reasonedDecision: retryMapped.reasonedDecision,
     });
+    const retryHasSuccessfulEvaluation = hasSuccessfulArticleEvaluation(retryMapped.reasonedDecision);
+    const retryParseFailed = retryParseErrors.length > 0;
+    const retrySucceeded = retryValidation.valid && retryHasSuccessfulEvaluation && !retryParseFailed && !retryZeroFindingsReason;
 
     const retryResult = Object.freeze({
       prompt: renderedPrompt.prompt,
       promptHash: renderedPrompt.promptHash,
-      userPrompt: appendValidationRepairInstruction(userPrompt, validation.issues),
+      userPrompt: repairedUserPrompt,
       rawResponse: retryRawResponse,
       narrative: retryMapped.narrative,
       evidence: retryMapped.evidence,
       semantic: retryMapped.semantic,
       context: retryMapped.context,
-      reasonedDecision: retryValidation.valid ? retryMapped.reasonedDecision : retryValidation.sanitizedDecision,
+      reasonedDecision: retryMapped.reasonedDecision,
     });
     try {
       await writeV3PromptReplayFile({
@@ -302,14 +356,14 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
         candidateAtoms: input.promptInput.compiledReviewerContext?.candidateDiagnostics?.atomRanking.atomScores ?? [],
         compiledReviewerContext: input.promptInput.compiledReviewerContext ?? null,
         systemPrompt: renderedPrompt.prompt,
-        userPrompt: appendValidationRepairInstruction(userPrompt, validation.issues),
+        userPrompt: repairedUserPrompt,
         rawProviderResponse: retryRawResponse,
         parsedDecision: {
           narrative: retryMapped.narrative,
           evidence: retryMapped.evidence,
           semantic: retryMapped.semantic,
           context: retryMapped.context,
-          reasonedDecision: retryValidation.valid ? retryMapped.reasonedDecision : retryValidation.sanitizedDecision,
+          reasonedDecision: retryMapped.reasonedDecision,
         },
       });
     } catch (error) {
@@ -319,11 +373,38 @@ export async function runV3ProviderReasoning(input: V3ProviderFlowInput): Promis
         stack: error instanceof Error ? error.stack ?? null : null,
       });
     }
-    logger.info("V3 instrumentation EXIT: runV3ProviderReasoning", {
+
+    if (retrySucceeded) {
+      logger.info("V3 instrumentation EXIT: runV3ProviderReasoning", {
+        modelName: input.modelName,
+        durationMs: Date.now() - startedAt,
+      });
+      return retryResult;
+    }
+
+    const failure = createValidationFailure(
+      "AI_INVALID_RESPONSE",
+      retryParseFailed || Boolean(retryZeroFindingsReason)
+        ? retryZeroFindingsReason ?? "The provider response could not be parsed into a successful AI reasoning response."
+        : "The provider response did not contain a successful PASS article evaluation.",
+      {
+        parseErrors: retryParseErrors.length > 0 ? retryParseErrors : firstParseErrors,
+        zeroFindingsReason: retryZeroFindingsReason ?? firstZeroFindingsReason,
+        validationIssues: retryValidation.issues.map((issue) => `${issue.path}: ${issue.message}`),
+      },
+    );
+    logger.error("AI Failure", {
       modelName: input.modelName,
-      durationMs: Date.now() - startedAt,
+      aiFailureCode: "AI_INVALID_RESPONSE",
+      aiFailureReason: failure.message,
+      validationIssues: retryValidation.issues.map((issue) => `${issue.path}: ${issue.message}`),
+      parseErrors: retryParseErrors.length > 0 ? retryParseErrors : firstParseErrors,
     });
-    return retryResult;
+    logger.error("AI Failure Reason", {
+      modelName: input.modelName,
+      reason: failure.message,
+    });
+    throw failure;
   }
 
   const result = Object.freeze({

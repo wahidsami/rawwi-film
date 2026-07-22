@@ -326,29 +326,6 @@ function normalizeArticleEvaluation(value: unknown, options?: V3ProviderResponse
   });
 }
 
-function synthesizePrimaryArticleEvaluation(input: V3ReasoningResponsePayload, primaryArticle: number | null, options?: V3ProviderResponseNormalizationOptions): readonly V3ReasonedDecisionArticleEvaluation[] {
-  const supportingEvidence = normalizeList(input.supportingEvidence ?? input.supporting_evidence);
-  const confidence = clampConfidence(input.confidence);
-  const recommendation = String(input.recommendation ?? input.recommendation_result ?? input.recommendationResult ?? "");
-  if (primaryArticle === null) {
-    return Object.freeze([]);
-  }
-
-  const knowledgeDocument = findKnowledgeDocumentByArticleReference(primaryArticle);
-  const canonicalArticleId = options?.resolveCanonicalArticleId?.(primaryArticle, knowledgeDocument?.metadata.knowledgeDomain ?? null);
-  const resolvedArticleId = Number.isFinite(Number(canonicalArticleId)) && Number(canonicalArticleId) > 0 ? Number(canonicalArticleId) : primaryArticle;
-
-  return Object.freeze([
-    Object.freeze({
-      articleId: resolvedArticleId,
-      status: "PASS" as const,
-      evidence: Object.freeze([...supportingEvidence]),
-      reason: recommendation || "The model marked this article as applicable.",
-      confidence,
-    }),
-  ]);
-}
-
 function normalizeNarrativeResult(value: unknown): LegalNarrativeResult {
   const input = isObject(value) ? value : {};
   return Object.freeze({
@@ -463,23 +440,7 @@ function normalizeReasonedDecisionResult(value: unknown, options?: V3ProviderRes
         ...passArticleIds.slice(1),
         ...candidateArticles.filter((articleId) => articleId !== resolvedPrimaryArticle),
       ]);
-  const synthesizedArticleEvaluations = !Array.isArray(rawArticleEvaluations) || rawArticleEvaluations.length === 0
-    ? synthesizePrimaryArticleEvaluation(
-        {
-          ...input,
-          legalConcepts,
-          knowledgeDomains,
-          candidateArticles,
-          primaryArticle: resolvedPrimaryArticle,
-          secondaryArticles: resolvedSecondaryArticles,
-          applicableArticles: explicitApplicableArticles,
-          rejectedArticles: explicitRejectedArticles,
-        } as V3ReasoningResponsePayload,
-        resolvedPrimaryArticle,
-        options,
-      )
-    : [];
-  const articleEvaluations = Object.freeze(explicitArticleEvaluations.length > 0 ? explicitArticleEvaluations : synthesizedArticleEvaluations);
+  const articleEvaluations = Object.freeze(explicitArticleEvaluations);
   const applicableArticles = explicitApplicableArticles.length > 0
     ? explicitApplicableArticles
     : resolvedPrimaryArticle !== null

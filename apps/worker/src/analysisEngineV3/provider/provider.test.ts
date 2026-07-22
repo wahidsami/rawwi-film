@@ -426,8 +426,11 @@ async function testProviderRepairsInvalidReasonedDecision(): Promise<void> {
         ...validResponse,
         reasoned_decision: {
           ...validResponse.reasoned_decision,
+          article_evaluations: [
+            { article_id: 999, status: "PASS", evidence: ["invented actor attacked the mayor"], reason: "Not grounded in the supplied candidate set.", confidence: 0.94 },
+          ],
           supporting_evidence: ["invented actor attacked the mayor"],
-          applicable_articles: [4, 16],
+          applicable_articles: [999],
           recommendation: "Support the finding while keeping the legal engine authoritative.",
         },
       };
@@ -461,6 +464,119 @@ async function testProviderRepairsInvalidReasonedDecision(): Promise<void> {
   console.log("✓ provider regenerates when the reviewer response is not grounded");
 }
 
+async function testProviderFailsWhenNoPassArticleEvaluationExists(): Promise<void> {
+  const input = makeInput();
+  let callCount = 0;
+  const provider: V3Provider = {
+    name: "openai",
+    async callJudgeRaw() {
+      callCount += 1;
+      return {
+        providerName: "openai",
+        modelName: "test-model",
+        modelVersion: null,
+        rawResponse: JSON.stringify({
+          narrative: {
+            speaker: "speaker",
+            listener: "listener",
+            target: "listener",
+            narrativeVoice: "dialogue",
+            sceneType: "dialogue scene",
+            narrativeIntent: "dialogue",
+            storyPosition: "opening",
+            relationship: "peer",
+            emotionalTone: "neutral",
+            condemnation: false,
+            approval: false,
+            neutrality: true,
+            historicalContext: false,
+            dream: false,
+            flashback: false,
+            comedy: false,
+            satire: false,
+            threat: false,
+            instruction: false,
+            news: false,
+            documentary: false,
+            dialogue: true,
+            narration: false,
+            sceneDescription: false,
+            confidence: 0.91,
+          },
+          evidence: {
+            candidates: [{ text: "damn", startOffset: 10, endOffset: 14, confidence: 0.99, source: "chunk" }],
+            primaryCandidateIndex: 0,
+            admissible: true,
+            confidence: 0.99,
+          },
+          semantic: {
+            semanticMeaning: "direct dialogue",
+            narrativeIntent: "dialogue",
+            conversationRole: "speaker",
+            sceneRole: "dialogue scene",
+            speaker: "speaker",
+            listener: "listener",
+            target: "listener",
+            victim: "listener",
+            emotion: "neutral",
+            riskContext: "medium",
+            confidence: 0.9,
+          },
+          context: {
+            storyMemory: "Memory",
+            sceneMemory: "Scene",
+            localContext: "A: damn, stop that.",
+            chunkContext: "chunk_index=1",
+            neighboringSentences: ["Before", "After"],
+            narrativeContext: "dialogue",
+            confidence: 0.88,
+          },
+          reasoned_decision: {
+            reasoning: "The line is explicit profanity.",
+            alternative_interpretations: ["It could be quoted language, but the scene supports literal use."],
+            article_evaluations: [
+              { article_id: 4, status: "FAIL", evidence: ["damn"], reason: "No PASS article evaluation is returned.", confidence: 0.94 },
+              { article_id: 17, status: "FAIL", evidence: ["damn"], reason: "Different article does not fit the quote.", confidence: 0.94 },
+            ],
+            supporting_evidence: ["damn"],
+            contradicting_evidence: [],
+            applicable_articles: [4],
+            rejected_articles: [17],
+            risk_analysis: "Low risk because the evidence is direct.",
+            narrative_analysis: "Direct dialogue with no exception cues.",
+            human_like_explanation: "A human reviewer would treat this as a straightforward profanity case.",
+            recommendation: "Support the finding while keeping the legal engine authoritative.",
+            confidence: 0.94,
+          },
+        }),
+        finishReason: "stop",
+        usage: null,
+        responseId: callCount === 1 ? "resp_first" : "resp_retry",
+        responseTimestamp: "2026-07-12T00:00:00.000Z",
+      };
+    },
+  };
+
+  await assert.rejects(
+    async () =>
+      runV3ProviderReasoning({
+        promptInput: input,
+        provider,
+        modelName: "test-model",
+        temperature: 0,
+        seed: 12345,
+      }),
+    (error: unknown) => {
+      assert.ok(error instanceof Error);
+      assert.equal(error.name, "AI_INVALID_RESPONSE");
+      return true;
+    },
+  );
+
+  assert.equal(callCount, 2, "provider should retry once before failing on a no-PASS response");
+  console.log("✓ provider fails when no PASS article evaluation is returned");
+}
+
 function testFactoryCreatesOpenAIProvider(): void {
   const provider = createV3ProviderFactory().create("openai");
   assert.equal(provider.name, "openai");
@@ -473,6 +589,7 @@ async function main(): Promise<void> {
   testResponseMapperReportsParseFailure();
   await testProviderFlowWithMockProvider();
   await testProviderRepairsInvalidReasonedDecision();
+  await testProviderFailsWhenNoPassArticleEvaluationExists();
   testFactoryCreatesOpenAIProvider();
   console.log("\nAll V3 provider tests passed.");
 }

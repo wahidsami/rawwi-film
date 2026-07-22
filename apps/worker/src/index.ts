@@ -23,6 +23,7 @@ import { processChunkForJob } from "./pipelineRunner.js";
 import { processPdfExtraction } from "./pdfExtraction.js";
 import { ensureReviewerAcademyRegistry } from "./analysisEngineV3/reviewerCompiler/compilerLoader.js";
 import { createDefaultDecisionMemoryRegistry } from "./analysisEngineV3/reviewerKnowledge/decisionMemory/decisionMemory.js";
+import { classifyV3AnalysisFailure } from "./analysisEngineV3/provider/analysisFailure.js";
 
 type ChunkProcessResult = {
   ok: boolean;
@@ -170,6 +171,7 @@ async function processClaimedChunk(
     return { ok: true, retryable: false };
   } catch (e) {
     const errMsg = e instanceof Error ? e.message : String(e);
+    const analysisFailure = classifyV3AnalysisFailure(e);
     if (e instanceof Error && e.name === "JobCancelledError") {
       logger.info("Chunk processing cancelled by user", {
         jobId: job.id,
@@ -240,12 +242,55 @@ async function processClaimedChunk(
         maxRetries: config.AI_OVERLOAD_MAX_RETRIES,
         error: errMsg,
       });
-      await setChunkFailed(claimed.id, AI_OVERLOAD_PUBLIC_MESSAGE);
-      const markedFailed = await setJobFailed(job.id, AI_OVERLOAD_PUBLIC_MESSAGE);
+      const overloadFailureCode = analysisFailure?.code ?? AI_OVERLOAD_PUBLIC_MESSAGE;
+      await setChunkFailed(claimed.id, overloadFailureCode);
+      const markedFailed = await setJobFailed(job.id, analysisFailure?.code ?? AI_OVERLOAD_PUBLIC_MESSAGE);
       if (markedFailed) {
         await notifyAdminAiOverload(job, AI_OVERLOAD_PUBLIC_MESSAGE, errMsg);
       }
-      return { ok: false, retryable: false, error: AI_OVERLOAD_PUBLIC_MESSAGE };
+      logger.error("AI Failure", {
+        jobId: job.id,
+        chunkId: claimed.id,
+        aiFailureCode: overloadFailureCode,
+        aiFailureReason: errMsg,
+      });
+      logger.error("AI Failure Reason", {
+        jobId: job.id,
+        chunkId: claimed.id,
+        reason: errMsg,
+      });
+      logger.error("Analysis Aborted", {
+        jobId: job.id,
+        chunkId: claimed.id,
+        reason: overloadFailureCode,
+      });
+      return { ok: false, retryable: false, error: overloadFailureCode };
+    }
+    if (analysisFailure) {
+      logger.error("AI Failure", {
+        jobId: job.id,
+        chunkId: claimed.id,
+        aiFailureCode: analysisFailure.code,
+        aiFailureReason: analysisFailure.reason,
+        providerError: analysisFailure.providerError,
+        parseErrors: analysisFailure.parseErrors,
+        validationIssues: analysisFailure.validationIssues,
+        zeroFindingsReason: analysisFailure.zeroFindingsReason,
+        error: errMsg,
+      });
+      logger.error("AI Failure Reason", {
+        jobId: job.id,
+        chunkId: claimed.id,
+        reason: analysisFailure.reason,
+      });
+      logger.error("Analysis Aborted", {
+        jobId: job.id,
+        chunkId: claimed.id,
+        reason: analysisFailure.code,
+      });
+      await setChunkFailed(claimed.id, analysisFailure.code);
+      await setJobFailed(job.id, analysisFailure.code);
+      return { ok: false, retryable: false, error: analysisFailure.code };
     }
     logger.error("Chunk processing failed", { error: errMsg, jobId: job.id, chunkId: claimed.id });
     await setChunkFailed(claimed.id, errMsg);

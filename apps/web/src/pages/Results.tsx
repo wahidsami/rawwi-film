@@ -6,8 +6,8 @@ import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { formatDate, formatDateLong, formatDateTime, formatDateTimeValue } from '@/utils/dateFormat';
 import { type AnalysisReport } from '@/services/reportService';
-import { reportsApi, findingsApi, scriptsApi, type AnalysisFinding, type AnalysisReviewFinding } from '@/api';
-import type { ReportListItem, ReviewStatus, Script } from '@/api/models';
+import { reportsApi, findingsApi, scriptsApi, tasksApi, type AnalysisFinding, type AnalysisReviewFinding } from '@/api';
+import type { AnalysisJob, ReportListItem, ReviewStatus, Script } from '@/api/models';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -22,6 +22,7 @@ import { downloadAnalysisWord } from '@/components/reports/analysis/downloadWord
 import { downloadQuickAnalysisPdf } from '@/components/reports/quick-analysis/download';
 import { resolveStorageUrl } from '@/utils/storage';
 import { getGlossarySentenceContext } from '@/utils/findingContext';
+import { getPublicAnalysisErrorMessage } from '@/utils/raawiAiError';
 import {
   ArrowLeft, CheckCircle, ShieldAlert,
   AlertTriangle, XCircle, ChevronDown, ChevronUp, Loader2,
@@ -329,6 +330,7 @@ export function Results() {
   const canUseSendReviewAction = canUseApproveRejectActions || hasPermission('can_send_for_review');
   
   const [report, setReport] = useState<AnalysisReport | null>(null);
+  const [analysisJob, setAnalysisJob] = useState<AnalysisJob | null>(null);
   const [findings, setFindings] = useState<AnalysisFinding[]>([]);
   const [reviewFindings, setReviewFindings] = useState<AnalysisReviewFinding[]>([]);
   const [loading, setLoading] = useState(true);
@@ -774,6 +776,7 @@ export function Results() {
     setLoading(true);
     setError(null);
     setReport(null);
+    setAnalysisJob(null);
     setFindings([]);
     setReviewFindings([]);
     setReportScriptMeta(null);
@@ -785,6 +788,20 @@ export function Results() {
     (async () => {
       try {
         let r: AnalysisReport;
+        if (by === 'job') {
+          const job = await tasksApi.getJob(paramId);
+          if (cancelled || reportLoadTokenRef.current !== requestToken) return;
+          setAnalysisJob(job);
+          if (job.status === 'failed') {
+            const publicErrorMessage = getPublicAnalysisErrorMessage(job.errorMessage)
+              ?? (lang === 'ar'
+                ? 'راوي AI غير متاح حاليًا. لا يمكن إكمال التحليل. يرجى المحاولة لاحقًا.'
+                : 'Raawi AI is currently unavailable. The analysis could not be completed. Please try again later.');
+            setError(publicErrorMessage);
+            setLoading(false);
+            return;
+          }
+        }
         if (by === 'id') {
           r = await reportsApi.getById(paramId);
         } else if (by === 'script') {
@@ -797,6 +814,14 @@ export function Results() {
         if (!cancelled) {
           if (reportLoadTokenRef.current !== requestToken) return;
           setReport(r);
+          if (!analysisJob && r.jobId) {
+            tasksApi.getJob(r.jobId).then((job) => {
+              if (cancelled || reportLoadTokenRef.current !== requestToken) return;
+              setAnalysisJob(job);
+            }).catch(() => {
+              if (!cancelled && reportLoadTokenRef.current === requestToken) setAnalysisJob(null);
+            });
+          }
           setReportScriptMeta(null);
           setReportViewerPages(null);
           setReviewFindings([]);
