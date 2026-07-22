@@ -712,6 +712,7 @@ export function ClientPortal() {
         canonicalFindings,
         reportHints: summary?.report_hints ?? null,
         scriptSummary: summary?.script_summary ?? null,
+        integrityMeta: (summary as { analysis_meta?: Record<string, unknown> | null } | null)?.analysis_meta ?? undefined,
         lang,
       });
       setNotice(lang === 'ar' ? 'تم تنزيل تقرير PDF.' : 'PDF report downloaded.');
@@ -915,6 +916,7 @@ export function ClientPortal() {
           canonicalFindings,
           reportHints: summary?.report_hints ?? null,
           scriptSummary: summary?.script_summary ?? null,
+          integrityMeta: (summary as { analysis_meta?: Record<string, unknown> | null } | null)?.analysis_meta ?? undefined,
           lang,
         });
       } else {
@@ -926,6 +928,7 @@ export function ClientPortal() {
           canonicalFindings,
           reportHints: summary?.report_hints ?? null,
           scriptSummary: summary?.script_summary ?? null,
+          integrityMeta: (summary as { analysis_meta?: Record<string, unknown> | null } | null)?.analysis_meta ?? undefined,
           lang,
         });
       }

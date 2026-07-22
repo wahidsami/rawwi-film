@@ -334,6 +334,11 @@ export interface Report {
       generated_by: 'worker';
       analysis_generation_id?: string | null;
       report_generation_id?: string | null;
+      integrity_status?: 'passed' | 'failed' | 'disabled';
+      integrity_mode?: 'strict' | 'warn' | 'off';
+      validation_errors?: Array<Record<string, unknown>>;
+      validation_timestamp?: string | null;
+      validator_version?: string | null;
     };
     totals: {
       findings_count: number;

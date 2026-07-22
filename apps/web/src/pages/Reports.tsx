@@ -135,6 +135,7 @@ function Reports() {
         reportHints: undefined,
         wordsToRevisit: fullReport.summaryJson?.words_to_revisit ?? undefined,
         scriptSummary: fullReport.summaryJson?.script_summary ?? undefined,
+        integrityMeta: fullReport.summaryJson?.analysis_meta ?? undefined,
         lang: isAr ? 'ar' : 'en',
         dateFormat: settings?.platform?.dateFormat,
       });
@@ -189,6 +190,7 @@ function Reports() {
         reviewFindings,
         reportHints: undefined,
         scriptSummary: fullReport.summaryJson?.script_summary ?? undefined,
+        integrityMeta: fullReport.summaryJson?.analysis_meta ?? undefined,
         lang: lang === 'ar' ? 'ar' : 'en',
       });
       toast.success(lang === 'ar' ? 'تم تنزيل Word' : 'Word downloaded');

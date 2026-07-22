@@ -143,6 +143,11 @@ export const config = {
    * - deep auditor skip is opt-in because it can change final persisted rulings
    */
   APP_MODE: ((process.env.APP_MODE ?? "production").toLowerCase() === "development" ? "development" : "production") as "development" | "production",
+  REPORT_VALIDATION_MODE: ((process.env.REPORT_VALIDATION_MODE ?? "STRICT").toLowerCase() === "warn"
+    ? "warn"
+    : (process.env.REPORT_VALIDATION_MODE ?? "STRICT").toLowerCase() === "off"
+      ? "off"
+      : "strict") as "strict" | "warn" | "off",
   EXPORT_RUNTIME_ARTIFACT: (process.env.EXPORT_RUNTIME_ARTIFACT ?? "false").toLowerCase() === "true",
   ENABLE_DECISION_MEMORY: (process.env.ENABLE_DECISION_MEMORY ?? "true").toLowerCase() !== "false",
   ENABLE_CASE_SELECTION: (process.env.ENABLE_CASE_SELECTION ?? "true").toLowerCase() !== "false",

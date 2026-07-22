@@ -42,6 +42,11 @@ export type SummaryJson = {
     generated_by: "worker";
     analysis_generation_id?: string | null;
     report_generation_id?: string | null;
+    integrity_status?: "passed" | "failed" | "disabled";
+    integrity_mode?: "strict" | "warn" | "off";
+    validation_errors?: Array<Record<string, unknown>>;
+    validation_timestamp?: string | null;
+    validator_version?: string | null;
   };
   client_name?: string;
   script_title?: string;
@@ -718,6 +723,50 @@ type IntegrityValidationDiagnostic = Readonly<{
   integrityReport: PipelineIntegrityReport | ReportAssemblyIntegrityReport;
 }>;
 
+export type ReportValidationMode = "strict" | "warn" | "off";
+export type ReportIntegrityStatus = "passed" | "failed" | "disabled";
+type ReportValidationStageName = "report_assembly" | "pipeline_integrity";
+
+type SerializedValidationException = Readonly<{
+  name: string;
+  message: string;
+  stack: string | null;
+  code: string | null;
+  cause: string | null;
+  serializedError: string;
+}>;
+
+export type ReportValidationFailureDetail = Readonly<{
+  stageName: ReportValidationStageName;
+  validatorFunctionName: string;
+  jobId: string;
+  generationId: string | null;
+  reportId: string | null;
+  findingCount: number;
+  reportCount: number;
+  pipelineIntegrity: ReportIntegrityStatus;
+  reportIntegrity: ReportIntegrityStatus;
+  failureReason: string;
+  validatorRulesFailed: readonly string[];
+  expectedValues: readonly unknown[];
+  actualValues: readonly unknown[];
+  exception: SerializedValidationException | null;
+  callStack: string | null;
+  file: string;
+  functionName: string;
+  lineNumber: number | null;
+  integrityDiagnostic: IntegrityValidationDiagnostic | null;
+  validationFailures: readonly IntegrityRuleFailure[];
+}>;
+
+export type ReportValidationStageOutcome = Readonly<{
+  stageName: ReportValidationStageName;
+  validatorFunctionName: string;
+  status: ReportIntegrityStatus;
+  validationTimestamp: string;
+  validationErrors: readonly ReportValidationFailureDetail[];
+}>;
+
 const INTEGRITY_LOG_CHUNK_SIZE = 3500;
 
 function prettyPrintChunked(label: string, value: unknown): void {
@@ -1244,6 +1293,237 @@ export function validateReportAssemblyIntegrity(input: {
     integrityReport: report,
   });
   return report;
+}
+
+const REPORT_VALIDATION_VERSION = "report-validation-v1";
+
+function safeJsonStringify(value: unknown): string {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function serializeValidationException(error: unknown): SerializedValidationException | null {
+  if (error == null) {
+    return null;
+  }
+  if (error instanceof Error) {
+    const exception = error as Error & { code?: unknown; cause?: unknown };
+    return Object.freeze({
+      name: exception.name || "Error",
+      message: exception.message || String(error),
+      stack: exception.stack ?? null,
+      code: exception.code == null ? null : String(exception.code),
+      cause: exception.cause == null ? null : (typeof exception.cause === "string" ? exception.cause : safeJsonStringify(exception.cause)),
+      serializedError: safeJsonStringify({
+        name: exception.name || "Error",
+        message: exception.message || String(error),
+        stack: exception.stack ?? null,
+        code: exception.code ?? null,
+        cause: exception.cause ?? null,
+      }),
+    });
+  }
+
+  return Object.freeze({
+    name: typeof error,
+    message: String(error),
+    stack: null,
+    code: null,
+    cause: null,
+    serializedError: safeJsonStringify(error),
+  });
+}
+
+function buildReportValidationFailureDetail(input: Readonly<{
+  stageName: ReportValidationStageName;
+  validatorFunctionName: string;
+  jobId: string;
+  generationId: string | null;
+  reportId: string | null;
+  findingCount: number;
+  reportCount: number;
+  pipelineIntegrity: ReportIntegrityStatus;
+  reportIntegrity: ReportIntegrityStatus;
+  failureReason: string;
+  integrityDiagnostic: IntegrityValidationDiagnostic | null;
+  exception: unknown;
+}>): ReportValidationFailureDetail {
+  const validationFailures = input.integrityDiagnostic?.failures ?? [];
+  const firstFailure = validationFailures[0] ?? null;
+  const validatorRulesFailed = Object.freeze(validationFailures.map((failure) => failure.ruleName));
+  const expectedValues = Object.freeze(validationFailures.map((failure) => failure.expectedValue));
+  const actualValues = Object.freeze(validationFailures.map((failure) => failure.actualValue));
+  return Object.freeze({
+    stageName: input.stageName,
+    validatorFunctionName: input.validatorFunctionName,
+    jobId: input.jobId,
+    generationId: input.generationId,
+    reportId: input.reportId,
+    findingCount: input.findingCount,
+    reportCount: input.reportCount,
+    pipelineIntegrity: input.pipelineIntegrity,
+    reportIntegrity: input.reportIntegrity,
+    failureReason: input.failureReason,
+    validatorRulesFailed,
+    expectedValues,
+    actualValues,
+    exception: serializeValidationException(input.exception),
+    callStack: input.exception instanceof Error ? input.exception.stack ?? null : null,
+    file: firstFailure?.file ?? "apps/worker/src/aggregation.ts",
+    functionName: firstFailure?.functionName ?? input.validatorFunctionName,
+    lineNumber: firstFailure?.lineNumber ?? null,
+    integrityDiagnostic: input.integrityDiagnostic,
+    validationFailures,
+  });
+}
+
+function logReportValidationStatus(label: string, detail: ReportValidationFailureDetail): void {
+  logger.error(label, {
+    stageName: detail.stageName,
+    validatorFunctionName: detail.validatorFunctionName,
+    jobId: detail.jobId,
+    generationId: detail.generationId,
+    reportId: detail.reportId,
+    findingCount: detail.findingCount,
+    reportCount: detail.reportCount,
+    pipelineIntegrity: detail.pipelineIntegrity,
+    reportIntegrity: detail.reportIntegrity,
+    failureReason: detail.failureReason,
+    validatorRulesFailed: detail.validatorRulesFailed,
+    exception: detail.exception,
+    stack: detail.callStack,
+    file: detail.file,
+    functionName: detail.functionName,
+    lineNumber: detail.lineNumber,
+  });
+  prettyPrintChunked(`${label} diagnostic`, detail);
+}
+
+export async function runReportValidationWithPolicy(input: Readonly<{
+  mode: ReportValidationMode;
+  stageName: ReportValidationStageName;
+  validatorFunctionName: string;
+  jobId: string;
+  generationId: string | null;
+  reportId: string | null;
+  findingCount: number;
+  reportCount: number;
+  pipelineIntegrity: ReportIntegrityStatus;
+  reportIntegrity: ReportIntegrityStatus;
+  failureReason: string;
+  run: () => unknown | Promise<unknown>;
+}>): Promise<ReportValidationStageOutcome> {
+  const validationTimestamp = new Date().toISOString();
+  if (input.mode === "off") {
+    const disabledDetail = buildReportValidationFailureDetail({
+      stageName: input.stageName,
+      validatorFunctionName: input.validatorFunctionName,
+      jobId: input.jobId,
+      generationId: input.generationId,
+      reportId: input.reportId,
+      findingCount: input.findingCount,
+      reportCount: input.reportCount,
+      pipelineIntegrity: "disabled",
+      reportIntegrity: "disabled",
+      failureReason: "REPORT_VALIDATION_DISABLED",
+      integrityDiagnostic: null,
+      exception: null,
+    });
+    logReportValidationStatus("REPORT_VALIDATION_DISABLED", disabledDetail);
+    return Object.freeze({
+      stageName: input.stageName,
+      validatorFunctionName: input.validatorFunctionName,
+      status: "disabled",
+      validationTimestamp,
+      validationErrors: Object.freeze([]),
+    });
+  }
+
+  try {
+    await input.run();
+    return Object.freeze({
+      stageName: input.stageName,
+      validatorFunctionName: input.validatorFunctionName,
+      status: "passed",
+      validationTimestamp,
+      validationErrors: Object.freeze([]),
+    });
+  } catch (error) {
+    const integrityDiagnostic = (error as Error & { integrityDiagnostic?: IntegrityValidationDiagnostic }).integrityDiagnostic ?? null;
+    const failureReason = error instanceof Error ? error.message : String(error);
+    const failureDetail = buildReportValidationFailureDetail({
+      stageName: input.stageName,
+      validatorFunctionName: input.validatorFunctionName,
+      jobId: input.jobId,
+      generationId: input.generationId,
+      reportId: input.reportId,
+      findingCount: input.findingCount,
+      reportCount: input.reportCount,
+      pipelineIntegrity: input.pipelineIntegrity,
+      reportIntegrity: input.reportIntegrity,
+      failureReason,
+      integrityDiagnostic,
+      exception: error,
+    });
+    const label = input.mode === "warn" ? "REPORT_VALIDATION_WARNING" : "REPORT_VALIDATION_FAILED";
+    logReportValidationStatus(label, failureDetail);
+    if (input.mode === "strict") {
+      logReportValidationStatus("REPORT_VALIDATION_FAILED", failureDetail);
+      throw error;
+    }
+    return Object.freeze({
+      stageName: input.stageName,
+      validatorFunctionName: input.validatorFunctionName,
+      status: "failed",
+      validationTimestamp,
+      validationErrors: Object.freeze([failureDetail]),
+    });
+  }
+}
+
+function applyReportValidationMetadata(
+  summary: SummaryJson,
+  metadata: Readonly<{
+    integrity_status: "passed" | "failed" | "disabled";
+    integrity_mode: ReportValidationMode;
+    validation_errors: readonly ReportValidationFailureDetail[];
+    validation_timestamp: string;
+    validator_version: string;
+  }>,
+): void {
+  summary.analysis_meta = {
+    ...(summary.analysis_meta ?? {
+      auditor_layer_version: "v4",
+      violation_system_version: "v3",
+      analysis_engine: "v3",
+      analysis_pipeline_version: "v1",
+      deep_auditor_enabled: true,
+      generated_by: "worker",
+    }),
+    integrity_status: metadata.integrity_status,
+    integrity_mode: metadata.integrity_mode,
+    validation_errors: metadata.validation_errors.map((error) => ({
+      ...error,
+      validationFailures: error.validationFailures.map((failure) => ({ ...failure })),
+      validatorRulesFailed: [...error.validatorRulesFailed],
+      expectedValues: [...error.expectedValues],
+      actualValues: [...error.actualValues],
+      integrityDiagnostic: error.integrityDiagnostic
+        ? {
+            ...error.integrityDiagnostic,
+            evaluations: error.integrityDiagnostic.evaluations.map((evaluation) => ({ ...evaluation })),
+            failures: error.integrityDiagnostic.failures.map((failure) => ({ ...failure })),
+            integrityReport: { ...(error.integrityDiagnostic.integrityReport as Record<string, unknown>) },
+          }
+        : null,
+      exception: error.exception ? { ...error.exception } : null,
+    })),
+    validation_timestamp: metadata.validation_timestamp,
+    validator_version: metadata.validator_version,
+  };
 }
 
 type ExistingReviewFindingRow = {
@@ -2791,6 +3071,29 @@ export function buildReportHtml(summary: SummaryJson): string {
   const s = summary;
   const overview = s.report_overview ?? buildReportOverview(s);
   const typeCounts = s.totals.type_counts ?? { ai: 0, manual: 0, glossary: 0, special: (s.report_hints?.length ?? 0) };
+  const integrityMeta = s.analysis_meta ?? null;
+  const integrityStatus = integrityMeta?.integrity_status ?? "passed";
+  const integrityMode = integrityMeta?.integrity_mode ?? "strict";
+  const validationErrors = Array.isArray(integrityMeta?.validation_errors) ? (integrityMeta.validation_errors as Array<Record<string, unknown>>) : [];
+  const failedRules = uniqueSortedStrings(
+    validationErrors.flatMap((entry) => {
+      const rules = entry?.validatorRulesFailed;
+      return Array.isArray(rules) ? rules.map((rule) => String(rule)) : [];
+    }),
+  );
+  const integrityBannerHtml =
+    integrityStatus === "passed"
+      ? ""
+      : `
+  <section style="margin:1rem 0; padding:0.9rem 1rem; border-radius:10px; border:1px solid ${integrityStatus === "disabled" ? "#f59e0b" : "#d97706"}; background:${integrityStatus === "disabled" ? "#fffbeb" : "#fff7ed"};">
+    <strong style="display:block; margin-bottom:0.35rem;">${
+      integrityStatus === "disabled"
+        ? "⚠ Validation disabled for this report."
+        : "⚠ Report generated with validation warnings."
+    }</strong>
+    <div>Mode: ${integrityMode}</div>
+    ${failedRules.length > 0 ? `<div>Failed rules: ${failedRules.join("، ")}</div>` : ""}
+  </section>`;
   const typeRow = (label: string, count: number) => `<tr><td>${label}</td><td>${count}</td></tr>`;
   const text = (value: unknown): string => {
     if (value == null) return "—";
@@ -2971,6 +3274,7 @@ export function buildReportHtml(summary: SummaryJson): string {
 <head><meta charset="utf-8"/><title>تقرير التحليل</title></head>
 <body>
   <h1>تقرير تحليل المحتوى (GCAM)</h1>
+  ${integrityBannerHtml}
   <section>
     <h2>١ بيانات عامة</h2>
     <p>معرف المهمة: ${s.job_id}</p>
@@ -3478,12 +3782,47 @@ export async function runAggregation(jobId: string): Promise<void> {
   const j = job as { created_by?: string | null };
   if (j.created_by != null) reportRow.created_by = j.created_by;
 
-  validateReportAssemblyIntegrity({
+  const analysisGenerationId = (job.config_snapshot as { analysis_generation_id?: string | null } | null)?.analysis_generation_id ?? null;
+  const reportValidationMode = config.REPORT_VALIDATION_MODE;
+  const reportValidationTimestamp = new Date().toISOString();
+  let reportValidationErrors: ReportValidationFailureDetail[] = [];
+  let reportIntegrityStatus: ReportIntegrityStatus = reportValidationMode === "off" ? "disabled" : "passed";
+
+  const reportAssemblyValidation = await runReportValidationWithPolicy({
+    mode: reportValidationMode,
+    stageName: "report_assembly",
+    validatorFunctionName: "validateReportAssemblyIntegrity",
     jobId,
-    findings: list,
-    summary,
-    reportRow,
-    sourceCanonicalFindings,
+    generationId: analysisGenerationId,
+    reportId: null,
+    findingCount: list.length,
+    reportCount: 0,
+    pipelineIntegrity: reportIntegrityStatus,
+    reportIntegrity: reportIntegrityStatus,
+    failureReason: "Report assembly integrity validation failed",
+    run: () =>
+      validateReportAssemblyIntegrity({
+        jobId,
+        findings: list,
+        summary,
+        reportRow,
+        sourceCanonicalFindings,
+      }),
+  });
+
+  if (reportAssemblyValidation.validationErrors.length > 0) {
+    reportValidationErrors = [...reportValidationErrors, ...reportAssemblyValidation.validationErrors];
+    reportIntegrityStatus = "failed";
+  } else if (reportAssemblyValidation.status === "disabled") {
+    reportIntegrityStatus = "disabled";
+  }
+
+  applyReportValidationMetadata(summary, {
+    integrity_status: reportIntegrityStatus,
+    integrity_mode: reportValidationMode,
+    validation_errors: reportValidationErrors,
+    validation_timestamp: reportValidationTimestamp,
+    validator_version: REPORT_VALIDATION_VERSION,
   });
 
   const reportHtml = buildReportHtml(summary);
@@ -3503,7 +3842,6 @@ export async function runAggregation(jobId: string): Promise<void> {
     reportId,
     inserted: reportInserted,
   });
-  const analysisGenerationId = (job.config_snapshot as { analysis_generation_id?: string | null } | null)?.analysis_generation_id ?? null;
 
   if (!reportInserted) {
     await verifyReportContract({
@@ -3554,19 +3892,54 @@ export async function runAggregation(jobId: string): Promise<void> {
     );
     await materializeReviewFindings(reportId, summary, job.version_id, fullScriptText);
     await finalizeRevisionCycleReanalysis(reportId);
-    await validatePipelineIntegrity({
+    const pipelineValidation = await runReportValidationWithPolicy({
+      mode: reportValidationMode,
+      stageName: "pipeline_integrity",
+      validatorFunctionName: "validatePipelineIntegrity",
       jobId,
+      generationId: analysisGenerationId,
       reportId,
-      findings: list,
-      summary,
-      reportRow,
-      sourceCanonicalFindings,
+      findingCount: list.length,
+      reportCount: reportInserted && reportId ? 1 : 0,
+      pipelineIntegrity: reportIntegrityStatus,
+      reportIntegrity: reportIntegrityStatus,
+      failureReason: "Pipeline integrity validation failed",
+      run: () =>
+        validatePipelineIntegrity({
+          jobId,
+          reportId,
+          findings: list,
+          summary,
+          reportRow,
+          sourceCanonicalFindings,
+        }),
     });
+    if (pipelineValidation.validationErrors.length > 0) {
+      reportValidationErrors = [...reportValidationErrors, ...pipelineValidation.validationErrors];
+      reportIntegrityStatus = reportValidationMode === "off" ? "disabled" : "failed";
+      applyReportValidationMetadata(summary, {
+        integrity_status: reportIntegrityStatus,
+        integrity_mode: reportValidationMode,
+        validation_errors: reportValidationErrors,
+        validation_timestamp: reportValidationTimestamp,
+        validator_version: REPORT_VALIDATION_VERSION,
+      });
+      const updatedReportHtml = buildReportHtml(summary);
+      await supabase
+        .from("analysis_reports")
+        .update({
+          summary_json: summary as unknown as Record<string, unknown>,
+          report_html: updatedReportHtml,
+        })
+        .eq("id", reportId);
+      reportRow.summary_json = summary as unknown as Record<string, unknown>;
+      reportRow.report_html = updatedReportHtml;
+    }
     await verifyReportContract({
       jobId,
       generationId: analysisGenerationId,
       findingCount: list.length,
-      pipelineIntegrityStatus: "passed",
+      pipelineIntegrityStatus: reportIntegrityStatus === "disabled" ? "skipped" : reportIntegrityStatus,
       atpStatus: "passed",
       reportInserted,
       reportId,

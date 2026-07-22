@@ -63,6 +63,11 @@ export interface DownloadAnalysisPdfParams {
     compliance_posture_ar?: string;
     confidence: number;
   } | null;
+  integrityMeta?: {
+    integrity_status?: "passed" | "failed" | "disabled";
+    integrity_mode?: "strict" | "warn" | "off";
+    validation_errors?: Array<Record<string, unknown>>;
+  } | null;
   wordsToRevisit?: Array<{ term: string; snippet: string; start_offset: number; end_offset: number }> | null;
   viewerPages?: ViewerPageSlice[] | null;
   lang: "ar" | "en";
@@ -108,6 +113,7 @@ export async function downloadAnalysisPdf(params: DownloadAnalysisPdfParams): Pr
       findings,
       reportHints: reportHintsMapped,
       scriptSummary: params.scriptSummary ?? undefined,
+      integrityMeta: params.integrityMeta ?? undefined,
       wordsToRevisit: params.wordsToRevisit ?? undefined,
       viewerPages: params.viewerPages ?? undefined,
       lang: params.lang,

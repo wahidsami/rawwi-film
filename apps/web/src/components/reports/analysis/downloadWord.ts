@@ -22,6 +22,12 @@ type ScriptSummary = {
   confidence: number;
 };
 
+type ReportIntegrityMeta = {
+  integrity_status?: "passed" | "failed" | "disabled";
+  integrity_mode?: "strict" | "warn" | "off";
+  validation_errors?: Array<Record<string, unknown>>;
+} | null;
+
 function resolveWordExportFindingData(params: DownloadAnalysisWordParams) {
   const hasReviewLayer = (params.reviewFindings?.length ?? 0) > 0;
   const reviewLayer = splitAnalysisReviewFindingsForPdf(params.reviewFindings);
@@ -102,6 +108,7 @@ export interface DownloadAnalysisWordParams {
   }> | null;
   reportHints?: ReportHint[] | null;
   scriptSummary?: ScriptSummary | null;
+  integrityMeta?: ReportIntegrityMeta;
   lang: "ar" | "en";
 }
 
@@ -568,6 +575,50 @@ function buildRecommendationsBlock(params: DownloadAnalysisWordParams): string {
   ].join("");
 }
 
+function buildIntegrityBannerSection(params: DownloadAnalysisWordParams): string {
+  const integrityStatus = params.integrityMeta?.integrity_status ?? "passed";
+  const integrityMode = params.integrityMeta?.integrity_mode ?? "strict";
+  const failedRules = [...new Set(
+    (params.integrityMeta?.validation_errors ?? []).flatMap((entry) => {
+      const rules = entry && typeof entry === "object" ? (entry as { validatorRulesFailed?: unknown }).validatorRulesFailed : null;
+      return Array.isArray(rules) ? rules.map((rule) => String(rule)) : [];
+    })
+  )];
+
+  if (integrityStatus === "passed") return "";
+  const title =
+    params.lang === "ar"
+      ? integrityStatus === "disabled"
+        ? "⚠ تم تعطيل التحقق لهذا التقرير."
+        : "⚠ تم إنشاء التقرير مع تحذيرات تحقق."
+      : integrityStatus === "disabled"
+        ? "⚠ Validation disabled for this report."
+        : "⚠ Report generated with validation warnings.";
+  const modeLabel = params.lang === "ar" ? "الوضع" : "Mode";
+  const rulesLabel = params.lang === "ar" ? "القواعد المتعثرة" : "Failed rules";
+  const lines = [
+    makeParagraph(title, {
+      bidi: params.lang === "ar",
+      align: "right",
+      font: TITLE_FONT,
+      size: 18,
+      bold: true,
+      spacingBefore: 100,
+      spacingAfter: 60,
+      rtl: params.lang === "ar",
+    }),
+    makeParagraph(`${modeLabel}: ${integrityMode.toUpperCase()}${failedRules.length > 0 ? ` · ${rulesLabel}: ${failedRules.join(", ")}` : ""}`, {
+      bidi: params.lang === "ar",
+      align: "right",
+      font: VALUE_FONT,
+      size: 16,
+      spacingAfter: 120,
+      rtl: params.lang === "ar",
+    }),
+  ];
+  return lines.join("");
+}
+
 function buildDocumentXml(templateXml: string, params: DownloadAnalysisWordParams): string {
   const bodyOpenMatch = templateXml.match(/^[\s\S]*?<w:body>/);
   const sectPrMatch = templateXml.match(/<w:sectPr[\s\S]*?<\/w:sectPr>/);
@@ -592,6 +643,7 @@ function buildDocumentXml(templateXml: string, params: DownloadAnalysisWordParam
       rtl: true,
     }),
     makeCoverTable(params),
+    buildIntegrityBannerSection(params),
     makeParagraph("", { bidi: true, align: "right", font: TITLE_FONT, size: 20, spacingAfter: 60, rtl: true }),
     `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`,
     makeParagraph(params.lang === "ar" ? "جدول الملاحظات" : "Findings Table", {

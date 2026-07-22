@@ -87,13 +87,14 @@ async function main() {
   process.env.SUPABASE_URL ??= "http://localhost:54321";
   process.env.SUPABASE_SERVICE_ROLE_KEY ??= "test-service-role-key";
 
-  const { persistAggregationReportOnce, persistReviewFindingRows, verifyReportContract } = await import("./aggregation.js");
+  const { persistAggregationReportOnce, persistReviewFindingRows, verifyReportContract, runReportValidationWithPolicy } = await import("./aggregation.js");
   await testAggregationReportIsPersistedOnce(persistAggregationReportOnce);
   await testReviewerFindingMaterializationIsIdempotent(persistReviewFindingRows);
   await testReportContractVerifier(verifyReportContract);
+  await testReportValidationModes(runReportValidationWithPolicy);
   testStaleRecoveryHasOneAuthoritativePath();
   testAggregationAbortsBeforeReportWhenJobFailed();
-  console.log("✓ Aggregation persistence is idempotent, reviewer findings materialization is idempotent, stale recovery has one authoritative path, and failed jobs abort aggregation before report generation");
+  console.log("✓ Aggregation persistence is idempotent, reviewer findings materialization is idempotent, report validation modes are enforced, stale recovery has one authoritative path, and failed jobs abort aggregation before report generation");
 }
 
 async function testReportContractVerifier(
@@ -149,6 +150,108 @@ async function testReportContractVerifier(
       return true;
     },
   );
+}
+
+async function testReportValidationModes(
+  runReportValidationWithPolicyFn: (...args: any[]) => Promise<{ status: string; validationErrors: readonly unknown[] }>,
+) {
+  let executed = 0;
+  const passing = await runReportValidationWithPolicyFn({
+    mode: "strict",
+    stageName: "report_assembly",
+    validatorFunctionName: "validateReportAssemblyIntegrity",
+    jobId: "job-validation-pass",
+    generationId: "generation-pass",
+    reportId: null,
+    findingCount: 2,
+    reportCount: 0,
+    pipelineIntegrity: "passed",
+    reportIntegrity: "passed",
+    failureReason: "unused",
+    run: () => {
+      executed += 1;
+    },
+  });
+  assert.equal(passing.status, "passed");
+  assert.equal(executed, 1, "strict mode should execute the validator");
+  assert.equal(passing.validationErrors.length, 0);
+
+  const failing = await runReportValidationWithPolicyFn({
+    mode: "warn",
+    stageName: "report_assembly",
+    validatorFunctionName: "validateReportAssemblyIntegrity",
+    jobId: "job-validation-warn",
+    generationId: "generation-warn",
+    reportId: "report-warn",
+    findingCount: 3,
+    reportCount: 1,
+    pipelineIntegrity: "passed",
+    reportIntegrity: "passed",
+    failureReason: "unused",
+    run: () => {
+      throw Object.assign(new Error("Report assembly integrity validation failed"), {
+        integrityDiagnostic: {
+          validatorFunctionName: "validateReportAssemblyIntegrity",
+          jobId: "job-validation-warn",
+          reportId: "report-warn",
+          findingCount: 3,
+          evaluations: [],
+          failures: [
+            {
+              ruleName: "analysis_reports_findings_count_mismatch",
+              status: "FAIL",
+              expectedValue: 3,
+              actualValue: 1,
+              sourceTable: "analysis_reports",
+              sourceRow: "reportId",
+              sourceField: "findings_count",
+              jobId: "job-validation-warn",
+              reportId: "report-warn",
+              findingCount: 3,
+              firstOffendingFindingId: "finding-1",
+              functionName: "buildReportAssemblyIntegrityReport",
+              validatorFunctionName: "validateReportAssemblyIntegrity",
+              file: "apps/worker/src/aggregation.ts",
+              lineNumber: 561,
+            },
+          ],
+          integrityReport: {
+            jobId: "job-validation-warn",
+            findingsCount: 3,
+            summaryFindingsCount: 3,
+            reportFindingsCount: 1,
+            analysisFindingIds: ["finding-1"],
+            summaryFindingIds: ["finding-1"],
+            evaluations: [],
+            mismatches: ["analysis_reports_findings_count_mismatch:1:3"],
+          },
+        },
+      });
+    },
+  });
+  assert.equal(failing.status, "failed");
+  assert.equal(failing.validationErrors.length, 1);
+
+  let offExecuted = 0;
+  const disabled = await runReportValidationWithPolicyFn({
+    mode: "off",
+    stageName: "pipeline_integrity",
+    validatorFunctionName: "validatePipelineIntegrity",
+    jobId: "job-validation-off",
+    generationId: "generation-off",
+    reportId: "report-off",
+    findingCount: 1,
+    reportCount: 1,
+    pipelineIntegrity: "disabled",
+    reportIntegrity: "disabled",
+    failureReason: "unused",
+    run: () => {
+      offExecuted += 1;
+    },
+  });
+  assert.equal(disabled.status, "disabled");
+  assert.equal(disabled.validationErrors.length, 0);
+  assert.equal(offExecuted, 0, "OFF mode must skip validator execution");
 }
 
 async function testReviewerFindingMaterializationIsIdempotent(

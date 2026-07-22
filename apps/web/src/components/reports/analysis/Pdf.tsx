@@ -28,6 +28,12 @@ export interface RevisitMentionPdf {
   end_offset: number;
 }
 
+export interface ReportIntegrityMetaPdf {
+  integrity_status?: "passed" | "failed" | "disabled";
+  integrity_mode?: "strict" | "warn" | "off";
+  validation_errors?: Array<Record<string, unknown>>;
+}
+
 export interface AnalysisSectionPdfData {
   jobId?: string;
   scriptTitle: string;
@@ -39,6 +45,7 @@ export interface AnalysisSectionPdfData {
   wordsToRevisit?: RevisitMentionPdf[];
   viewerPages?: ViewerPageSlice[] | null;
   lang?: "ar" | "en";
+  integrityMeta?: ReportIntegrityMetaPdf | null;
 }
 
 export interface AnalysisSectionPdfProps {
@@ -101,6 +108,15 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
     { ai: 0, manual: 0, glossary: 0 },
   );
   const specialNotesCount = safeReportHints.length;
+  const integrityStatus = data.integrityMeta?.integrity_status ?? "passed";
+  const integrityMode = data.integrityMeta?.integrity_mode ?? "strict";
+  const integrityRules = [...new Set(
+    (data.integrityMeta?.validation_errors ?? []).flatMap((entry) => {
+      const rules = entry && typeof entry === "object" ? (entry as { validatorRulesFailed?: unknown }).validatorRulesFailed : null;
+      return Array.isArray(rules) ? rules.map((rule) => String(rule)) : [];
+    })
+  )];
+  const shouldShowIntegrityBanner = integrityStatus !== "passed";
 
   return (
     <Document>
@@ -125,6 +141,32 @@ export const AnalysisSectionPdf: React.FC<AnalysisSectionPdfProps> = ({
         <Text style={[s.title, rtl]}>{isAr ? "تفاصيل التقرير" : "Report Details"}</Text>
         <Text style={[s.subtitle, rtl]}>{isAr ? `النص: ${data.scriptTitle}` : `Script: ${data.scriptTitle}`}</Text>
         <Text style={[s.subtitle, rtl]}>{isAr ? `إجمالي الملاحظات: ${safeFindings.length}` : `Total findings: ${safeFindings.length}`}</Text>
+        {shouldShowIntegrityBanner ? (
+          <View
+            style={{
+              marginBottom: 12,
+              padding: 10,
+              borderWidth: 1,
+              borderColor: integrityStatus === "disabled" ? "#f59e0b" : "#d97706",
+              backgroundColor: integrityStatus === "disabled" ? "#fffbeb" : "#fff7ed",
+            }}
+          >
+            <Text style={[s.findingRationaleLabel, rtl]}>
+              {isAr
+                ? integrityStatus === "disabled"
+                  ? "⚠ تم تعطيل التحقق لهذا التقرير."
+                  : "⚠ تم إنشاء التقرير مع تحذيرات تحقق."
+                : integrityStatus === "disabled"
+                  ? "⚠ Validation disabled for this report."
+                  : "⚠ Report generated with validation warnings."}
+            </Text>
+            <Text style={[s.findingMeta, rtl]}>
+              {isAr ? "الوضع: " : "Mode: "}
+              {integrityMode.toUpperCase()}
+              {integrityRules.length > 0 ? `${isAr ? " · القواعد المتعثرة: " : " · Failed rules: "}${integrityRules.join(", ")}` : ""}
+            </Text>
+          </View>
+        ) : null}
 
         <View style={s.row}>
           <View style={s.stat}><Text style={s.statValue}>{typeCounts.ai}</Text><Text style={s.statLabel}>{isAr ? "ملاحظات آلية" : "Automated findings"}</Text></View>

@@ -1048,6 +1048,15 @@ export function Results() {
 
   const summary = report.summaryJson;
   const analysisMeta = summary.analysis_meta;
+  const integrityStatus = analysisMeta?.integrity_status ?? 'passed';
+  const integrityMode = analysisMeta?.integrity_mode ?? 'strict';
+  const validationErrors = Array.isArray(analysisMeta?.validation_errors) ? analysisMeta.validation_errors : [];
+  const failedValidationRules = [...new Set(
+    validationErrors.flatMap((entry) => {
+      const rules = entry && typeof entry === 'object' ? (entry as { validatorRulesFailed?: unknown }).validatorRulesFailed : null;
+      return Array.isArray(rules) ? rules.map((rule) => String(rule)) : [];
+    })
+  )];
   const partialReportMeta = summary.partial_report;
   const manualReviewContextMeta = summary.manual_review_context;
   void partialReportMeta;
@@ -1589,6 +1598,7 @@ export function Results() {
         reviewFindings: safeReviewFindingsForPdf,
         reportHints: safeReportHintsForPdf,
         scriptSummary: summary?.script_summary ?? undefined,
+        integrityMeta: summary?.analysis_meta ?? undefined,
         viewerPages: reportViewerPages,
         lang: isAr ? ('ar' as const) : ('en' as const),
         dateFormat,
@@ -1770,6 +1780,7 @@ export function Results() {
         reviewFindings: latestReviewFindings,
         reportHints: reportHints.length > 0 ? reportHints : undefined,
         scriptSummary: summary.script_summary ?? undefined,
+        integrityMeta: summary.analysis_meta ?? undefined,
         lang: (isAr ? 'ar' : 'en') as 'ar' | 'en',
       };
       await downloadAnalysisWord(basePayload);
@@ -2498,9 +2509,31 @@ export function Results() {
                 </Badge>
                 <Badge variant="outline" className="bg-background/70 text-text-muted border-border/70">
                   {lang === 'ar'
-                    ? `${analysisMeta.analysis_engine === 'hybrid' ? 'محرك هجين' : 'محرك v2'}`
-                    : `${analysisMeta.analysis_engine === 'hybrid' ? 'Hybrid engine' : 'v2 engine'}`}
+                  ? `${analysisMeta.analysis_engine === 'hybrid' ? 'محرك هجين' : 'محرك v2'}`
+                  : `${analysisMeta.analysis_engine === 'hybrid' ? 'Hybrid engine' : 'v2 engine'}`}
                 </Badge>
+              </div>
+            )}
+            {analysisMeta && integrityStatus !== 'passed' && (
+              <div className="mt-3 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-text-main print:hidden">
+                <div className="flex items-center gap-2 font-semibold text-warning">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span>
+                    {integrityStatus === 'disabled'
+                      ? (lang === 'ar' ? '⚠ تم تعطيل التحقق لهذا التقرير.' : '⚠ Validation disabled for this report.')
+                      : (lang === 'ar'
+                          ? '⚠ تم إنشاء التقرير مع تحذيرات تحقق.'
+                          : '⚠ Report generated with validation warnings.')}
+                  </span>
+                </div>
+                <div className="mt-1 text-xs text-text-muted">
+                  {lang === 'ar'
+                    ? `الوضع: ${integrityMode.toUpperCase()}`
+                    : `Mode: ${integrityMode.toUpperCase()}`}
+                  {failedValidationRules.length > 0
+                    ? ` · ${lang === 'ar' ? 'القواعد المتعثرة' : 'Failed rules'}: ${failedValidationRules.join('، ')}`
+                    : ''}
+                </div>
               </div>
             )}
           </div>
