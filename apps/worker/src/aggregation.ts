@@ -27,6 +27,7 @@ import {
 } from "./analysisEngineV3/inspection/inspectionStageBuilders.js";
 import { buildV3AnalysisRuntimeTrace, persistV3AnalysisRuntimeTrace } from "./analysisEngineV3/runtime/analysisRuntimeTrace.js";
 import { loadV3InspectionTimelineByJobId } from "./analysisEngineV3/inspection/inspectionLoader.js";
+import { exportRuntimeDiagnosticArtifact } from "./diagnosticPersistence.js";
 
 export type SummaryJson = {
   job_id: string;
@@ -3202,5 +3203,6 @@ export async function runAggregation(jobId: string): Promise<void> {
     aggregationDurationMs: Date.now() - aggregationStartedAt,
     scriptSummarySource: fullScriptText.length > 0 ? "analysis_jobs.normalized_text" : "none",
   });
+  await exportRuntimeDiagnosticArtifact(jobId);
   clearCachedJobResources(jobId);
 }

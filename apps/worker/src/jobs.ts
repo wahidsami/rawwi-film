@@ -1,6 +1,7 @@
 import { supabase } from "./db.js";
 import { logger } from "./logger.js";
 import { logAuditEvent } from "./audit.js";
+import { exportRuntimeDiagnosticArtifact } from "./diagnosticPersistence.js";
 
 export type AnalysisJob = {
   id: string;
@@ -397,9 +398,11 @@ export async function setJobFailed(jobId: string, errorMessage: string): Promise
 
   if (error) {
     logger.warn("Failed to mark job as failed", { jobId, error: error.message });
+    await exportRuntimeDiagnosticArtifact(jobId);
     return false;
   }
 
+  await exportRuntimeDiagnosticArtifact(jobId);
   return !!data;
 }
 

@@ -1,6 +1,7 @@
 import { supabase } from "../../db.js";
 import { config } from "../../config.js";
 import { logger } from "../../logger.js";
+import { recordRuntimeDiagnosticArtifact, shouldPersistDeveloperDiagnostic } from "../../diagnosticPersistence.js";
 import type { V3InspectionRecord, V3InspectionRecordInput } from "./inspectionTypes.js";
 
 export type V3InspectionPersistence = (records: readonly V3InspectionRecord[]) => Promise<void>;
@@ -35,6 +36,30 @@ async function persistInspectionRecords(records: readonly V3InspectionRecord[]):
   logger.info("V3 instrumentation ENTER: first inspection write", {
     recordCount: records.length,
   });
+
+  for (const record of records) {
+    recordRuntimeDiagnosticArtifact(record.jobId, {
+      tableName: "analysis_v3_inspection",
+      operation: "insert",
+      payload: record,
+      metadata: {
+        findingKey: record.findingKey,
+        stageName: record.stageName,
+        stageOrder: record.stageOrder,
+        chunkId: record.chunkId,
+      },
+    });
+  }
+
+  if (!shouldPersistDeveloperDiagnostic("analysis_v3_inspection")) {
+    logger.info("V3 instrumentation EXIT: first inspection write", {
+      recordCount: records.length,
+      durationMs: Date.now() - startedAt,
+      skipped: true,
+    });
+    return;
+  }
+
   const { error } = await supabase.from("analysis_v3_inspection").insert(
     records.map((record) => ({
       job_id: record.jobId,

@@ -38,6 +38,7 @@ import { refineAtomPrecision } from "./atomPrecision.js";
 import { sha256 } from "./hash.js";
 import { isDetectionVerbatim } from "./textDetectionNormalize.js";
 import { PIPELINE_V2_EVIDENCE_PINNING_VERSION, pinFindingEvidenceToChunk } from "./pipelineV2/evidencePinning.js";
+import { recordRuntimeDiagnosticArtifact, shouldPersistDeveloperDiagnostic } from "./diagnosticPersistence.js";
 import { PIPELINE_V2_MEMORY_VERSION } from "./pipelineV2/contextMemory.js";
 import { PIPELINE_V2_SCENE_MEMORY_VERSION } from "./pipelineV2/sceneMemory.js";
 import { PIPELINE_V2_SCRIPT_MEMORY_VERSION } from "./pipelineV2/scriptMemory.js";
@@ -873,6 +874,27 @@ async function persistMemory2SanityTrace(args: {
       rejected_samples: args.rejected.slice(0, 8),
     },
   };
+
+  recordRuntimeDiagnosticArtifact(args.job.id, {
+    tableName: "analysis_memory_traces",
+    operation: "upsert",
+    payload: traceRow,
+    metadata: {
+      chunk_id: args.chunk.id,
+      chunk_index: args.chunk.chunk_index,
+      pass_name: traceRow.pass_name,
+      memory_version: PIPELINE_V2_MEMORY_VERSION,
+    },
+  });
+
+  if (!shouldPersistDeveloperDiagnostic("analysis_memory_traces")) {
+    logger.info("Memory2 sanity trace persistence skipped in production mode", {
+      jobId: args.job.id,
+      chunkId: args.chunk.id,
+      passName: traceRow.pass_name,
+    });
+    return;
+  }
 
   const { error } = await supabase
     .from("analysis_memory_traces")
@@ -3177,20 +3199,39 @@ export async function processChunkJudge(
           hybrid_needs_review: hybrid.metrics.needsReviewCount,
           hybrid_violation: hybrid.metrics.violationCount,
         };
-        try {
-          await withOperationTimeout(
-            "Persist analysis_engine_evaluation",
-            NON_CRITICAL_DB_TIMEOUT_MS,
-            supabase.from("analysis_engine_evaluations").insert(evalPayload)
-          );
-        } catch (error) {
-          logger.warn("Failed to persist analysis engine evaluation", {
+        recordRuntimeDiagnosticArtifact(jobId, {
+          tableName: "analysis_engine_evaluations",
+          operation: "insert",
+          payload: evalPayload,
+          metadata: {
+            run_key: runKey,
+            chunk_id: chunk.id,
+            engine: analysisEngine,
+            mode: hybridMode,
+          },
+        });
+        if (!shouldPersistDeveloperDiagnostic("analysis_engine_evaluations")) {
+          logger.info("Analysis engine evaluation persistence skipped in production mode", {
             jobId,
             chunkId: chunk.id,
             runKey,
-            error: error instanceof Error ? error.message : String(error),
-            timeoutMs: NON_CRITICAL_DB_TIMEOUT_MS,
           });
+        } else {
+          try {
+            await withOperationTimeout(
+              "Persist analysis_engine_evaluation",
+              NON_CRITICAL_DB_TIMEOUT_MS,
+              supabase.from("analysis_engine_evaluations").insert(evalPayload)
+            );
+          } catch (error) {
+            logger.warn("Failed to persist analysis engine evaluation", {
+              jobId,
+              chunkId: chunk.id,
+              runKey,
+              error: error instanceof Error ? error.message : String(error),
+              timeoutMs: NON_CRITICAL_DB_TIMEOUT_MS,
+            });
+          }
         }
       }
     } catch (error) {

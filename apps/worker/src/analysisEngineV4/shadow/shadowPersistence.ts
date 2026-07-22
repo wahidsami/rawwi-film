@@ -3,6 +3,7 @@ import type { AnalysisResult } from "../../analysisEngine/types.js";
 import type { SceneAnalysisTraceDocument } from "../sceneAnalysisTraceViewer.js";
 import type { ShadowComparisonReport } from "./shadowComparator.js";
 import type { RuntimeOrchestrationResult } from "../runtime/runtimeArtifacts.js";
+import { recordRuntimeDiagnosticArtifact, shouldPersistDeveloperDiagnostic } from "../../diagnosticPersistence.js";
 
 export type ShadowPersistenceInput = Readonly<{
   jobId: string;
@@ -142,21 +143,39 @@ export async function persistShadowMode(input: ShadowPersistenceInput): Promise<
   }
 
   try {
-    const { data: existing, error: lookupError } = await supabase
-      .from("analysis_engine_evaluations")
-      .select("id")
-      .eq("run_key", shadowRunKey)
-      .maybeSingle();
-    if (lookupError) {
-      logger.warn("Failed to lookup V4 shadow benchmark summary", {
+    recordRuntimeDiagnosticArtifact(input.jobId, {
+      tableName: "analysis_engine_evaluations",
+      operation: "insert",
+      payload: evaluationPayload,
+      metadata: {
+        run_key: shadowRunKey,
+        chunk_id: input.chunkId,
+        engine: "v4",
+        mode: "shadow",
+      },
+    });
+
+    if (!shouldPersistDeveloperDiagnostic("analysis_engine_evaluations")) {
+      logger.info("V4 shadow benchmark summary persistence skipped in production mode", {
         jobId: input.jobId,
         chunkId: input.chunkId,
         runKey: shadowRunKey,
-        error: lookupError.message,
-        errorCode: lookupError.code,
       });
     } else {
-      if (existing?.id) {
+      const { data: existing, error: lookupError } = await supabase
+        .from("analysis_engine_evaluations")
+        .select("id")
+        .eq("run_key", shadowRunKey)
+        .maybeSingle();
+      if (lookupError) {
+        logger.warn("Failed to lookup V4 shadow benchmark summary", {
+          jobId: input.jobId,
+          chunkId: input.chunkId,
+          runKey: shadowRunKey,
+          error: lookupError.message,
+          errorCode: lookupError.code,
+        });
+      } else if (existing?.id) {
         evaluationPersisted = true;
       } else {
         const { error } = await supabase

@@ -3,6 +3,7 @@ import { supabase } from "./db.js";
 import { sha256 } from "./hash.js";
 import { logger } from "./logger.js";
 import { extractJsonFromText } from "./schemas.js";
+import { recordRuntimeDiagnosticArtifact, shouldPersistDeveloperDiagnostic } from "./diagnosticPersistence.js";
 
 export type JudgeDiagnosticInsert = {
   job_id: string;
@@ -52,6 +53,19 @@ export function extractRawFindingCount(rawJudgeResponse: string): number | null 
 
 export async function persistJudgeDiagnostic(row: JudgeDiagnosticInsert): Promise<void> {
   if (!config.ENABLE_AI_DIAGNOSTICS) return;
+
+  recordRuntimeDiagnosticArtifact(row.job_id, {
+    tableName: "analysis_judge_diagnostics",
+    operation: "insert",
+    payload: row,
+    metadata: {
+      diagnostic_kind: row.diagnostic_kind ?? "judge_call",
+      chunk_id: row.chunk_id,
+      pass_name: row.pass_name ?? null,
+    },
+  });
+
+  if (!shouldPersistDeveloperDiagnostic("analysis_judge_diagnostics")) return;
 
   const rawJudgeResponse = row.raw_judge_response ?? "";
   const computedRawFindingCount =

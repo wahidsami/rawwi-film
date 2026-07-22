@@ -3,6 +3,7 @@ import { supabase } from "./db.js";
 import { evidenceHash, sha256 } from "./hash.js";
 import { logger } from "./logger.js";
 import { canonicalStringify } from "./canonicalJson.js";
+import { recordRuntimeDiagnosticArtifact, shouldPersistDeveloperDiagnostic } from "./diagnosticPersistence.js";
 
 export type LineageStageName =
   | "pass_output"
@@ -163,6 +164,21 @@ export async function persistLineageEvents(events: LineageEventInsert[]): Promis
   try {
     if (!config.ENABLE_FINDING_LINEAGE) return;
     if (events.length === 0) return;
+
+    for (const event of events) {
+      recordRuntimeDiagnosticArtifact(event.job_id, {
+        tableName: "analysis_finding_lineage_events",
+        operation: "insert",
+        payload: event,
+        metadata: {
+          stage_name: event.stage_name,
+          lineage_id: event.lineage_id,
+          chunk_id: event.chunk_id ?? null,
+        },
+      });
+    }
+
+    if (!shouldPersistDeveloperDiagnostic("analysis_finding_lineage_events")) return;
 
     const insertPromise: Promise<{ error?: { message?: string } | null }> = Promise.resolve(
       supabase

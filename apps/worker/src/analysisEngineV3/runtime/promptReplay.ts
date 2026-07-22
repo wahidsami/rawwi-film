@@ -2,6 +2,7 @@ import { supabase } from "../../db.js";
 import { canonicalStringify } from "../../canonicalJson.js";
 import { config } from "../../config.js";
 import { logger } from "../../logger.js";
+import { recordRuntimeDiagnosticArtifact, shouldPersistDeveloperDiagnostic } from "../../diagnosticPersistence.js";
 
 function estimatePromptTokens(systemPrompt: string, userPrompt: string): number {
   return Math.max(1, Math.ceil((systemPrompt.length + userPrompt.length) / 4));
@@ -27,6 +28,34 @@ export type V3PromptReplayFileInput = Readonly<{
 export async function writeV3PromptReplayFile(input: V3PromptReplayFileInput): Promise<string | null> {
   if (!config.V3_DIAGNOSTIC_MODE) return null;
   if (!input.jobId || !input.chunkId) return null;
+
+  recordRuntimeDiagnosticArtifact(input.jobId, {
+    tableName: "analysis_prompt_replays",
+    operation: "upsert",
+    payload: {
+      job_id: input.jobId,
+      chunk_id: input.chunkId,
+      prompt_hash: input.promptHash,
+      model_name: input.modelName,
+      chunk_text: input.chunkText,
+      evidence_spans: input.evidenceSpans,
+      candidate_reviewers: input.candidateReviewers,
+      candidate_articles: input.candidateArticles,
+      candidate_atoms: input.candidateAtoms,
+      compiled_reviewer_context: input.compiledReviewerContext,
+      system_prompt: input.systemPrompt,
+      user_prompt: input.userPrompt,
+      raw_provider_response: input.rawProviderResponse,
+      parsed_decision: input.parsedDecision,
+    },
+    metadata: {
+      prompt_hash: input.promptHash,
+      model_name: input.modelName,
+      chunk_id: input.chunkId,
+    },
+  });
+
+  if (!shouldPersistDeveloperDiagnostic("analysis_prompt_replays")) return null;
 
   const promptLengthChars = input.systemPrompt.length + input.userPrompt.length;
   const promptTokenEstimate = estimatePromptTokens(input.systemPrompt, input.userPrompt);

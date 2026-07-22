@@ -1,6 +1,7 @@
 import { supabase } from "../db.js";
 import type { AnalysisChunk, AnalysisJob } from "../jobs.js";
 import { logger } from "../logger.js";
+import { recordRuntimeDiagnosticArtifact, shouldPersistDeveloperDiagnostic } from "../diagnosticPersistence.js";
 import type { ChunkContextEnvelope } from "./contextMemory.js";
 import type { ChunkSceneMemory } from "./sceneMemory.js";
 import type { ScriptMemoryPayload } from "./scriptMemory.js";
@@ -155,6 +156,27 @@ export async function persistMemory2Artifacts(args: PersistArgs): Promise<void> 
       next_chunk_index: args.contextEnvelope.memory.nextChunkIndex,
     },
   };
+
+  recordRuntimeDiagnosticArtifact(args.job.id, {
+    tableName: "analysis_memory_traces",
+    operation: "upsert",
+    payload: traceRow,
+    metadata: {
+      chunk_id: args.chunk.id,
+      chunk_index: args.chunk.chunk_index,
+      pass_name: traceRow.pass_name,
+      memory_version: MEMORY2_VERSION,
+    },
+  });
+
+  if (!shouldPersistDeveloperDiagnostic("analysis_memory_traces")) {
+    logger.info("Memory2 trace persistence skipped in production mode", {
+      jobId: args.job.id,
+      chunkId: args.chunk.id,
+      passName: traceRow.pass_name,
+    });
+    return;
+  }
 
   const { error: traceErr } = await supabase
     .from("analysis_memory_traces")

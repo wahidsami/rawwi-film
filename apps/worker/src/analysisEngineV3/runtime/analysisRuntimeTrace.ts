@@ -1,5 +1,6 @@
 import { supabase } from "../../db.js";
 import { logger } from "../../logger.js";
+import { recordRuntimeDiagnosticArtifact, shouldPersistDeveloperDiagnostic } from "../../diagnosticPersistence.js";
 import type { V3InspectionRecord, V3InspectionTimeline, V3InspectionTimelineFinding } from "../inspection/inspectionTypes.js";
 import { buildV3ReasoningReplayFromInspectionRecords } from "../reasoningTrace/reasoningReplay.js";
 
@@ -367,6 +368,17 @@ export async function persistV3AnalysisRuntimeTrace(input: Readonly<{
   trace: V3AnalysisRuntimeTrace;
 }>): Promise<string | null> {
   try {
+    recordRuntimeDiagnosticArtifact(input.trace.jobId, {
+      tableName: "analysis_runtime_traces",
+      operation: "upsert",
+      payload: input.trace,
+      metadata: {
+        report_id: input.trace.reportBuilderTrace.reportId ?? null,
+      },
+    });
+
+    if (!shouldPersistDeveloperDiagnostic("analysis_runtime_traces")) return null;
+
     const { data, error } = await supabase
       .from("analysis_runtime_traces")
       .upsert({
