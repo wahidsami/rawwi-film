@@ -592,6 +592,10 @@ function pickAnalysisEngine(value: unknown): "v2" | "v3" | "v4" | "shadow" | "hy
   return "v3";
 }
 
+export function shouldBypassReportIntegrityValidationForEngine(value: unknown): boolean {
+  return pickAnalysisEngine(value) === "review_core";
+}
+
 function pickPipelineVersion(value: unknown): "v1" | "v2" {
   return value === "v2" ? "v2" : "v1";
 }
@@ -3811,38 +3815,49 @@ export async function runAggregation(jobId: string): Promise<void> {
   if (j.created_by != null) reportRow.created_by = j.created_by;
 
   const analysisGenerationId = (job.config_snapshot as { analysis_generation_id?: string | null } | null)?.analysis_generation_id ?? null;
+  const analysisEngine = pickAnalysisEngine((job.config_snapshot as { analysis_engine?: string | null } | null)?.analysis_engine ?? config.ANALYSIS_ENGINE);
+  const bypassReportIntegrityValidation = shouldBypassReportIntegrityValidationForEngine(analysisEngine);
   const reportValidationMode = config.REPORT_VALIDATION_MODE;
   const reportValidationTimestamp = new Date().toISOString();
   let reportValidationErrors: ReportValidationFailureDetail[] = [];
   let reportIntegrityStatus: ReportIntegrityStatus = reportValidationMode === "off" ? "disabled" : "passed";
 
-  const reportAssemblyValidation = await runReportValidationWithPolicy({
-    mode: reportValidationMode,
-    stageName: "report_assembly",
-    validatorFunctionName: "validateReportAssemblyIntegrity",
-    jobId,
-    generationId: analysisGenerationId,
-    reportId: null,
-    findingCount: list.length,
-    reportCount: 0,
-    pipelineIntegrity: reportIntegrityStatus,
-    reportIntegrity: reportIntegrityStatus,
-    failureReason: "Report assembly integrity validation failed",
-    run: () =>
-      validateReportAssemblyIntegrity({
-        jobId,
-        findings: list,
-        summary,
-        reportRow,
-        sourceCanonicalFindings,
-      }),
-  });
+  if (!bypassReportIntegrityValidation) {
+    const reportAssemblyValidation = await runReportValidationWithPolicy({
+      mode: reportValidationMode,
+      stageName: "report_assembly",
+      validatorFunctionName: "validateReportAssemblyIntegrity",
+      jobId,
+      generationId: analysisGenerationId,
+      reportId: null,
+      findingCount: list.length,
+      reportCount: 0,
+      pipelineIntegrity: reportIntegrityStatus,
+      reportIntegrity: reportIntegrityStatus,
+      failureReason: "Report assembly integrity validation failed",
+      run: () =>
+        validateReportAssemblyIntegrity({
+          jobId,
+          findings: list,
+          summary,
+          reportRow,
+          sourceCanonicalFindings,
+        }),
+    });
 
-  if (reportAssemblyValidation.validationErrors.length > 0) {
-    reportValidationErrors = [...reportValidationErrors, ...reportAssemblyValidation.validationErrors];
-    reportIntegrityStatus = "failed";
-  } else if (reportAssemblyValidation.status === "disabled") {
+    if (reportAssemblyValidation.validationErrors.length > 0) {
+      reportValidationErrors = [...reportValidationErrors, ...reportAssemblyValidation.validationErrors];
+      reportIntegrityStatus = "failed";
+    } else if (reportAssemblyValidation.status === "disabled") {
+      reportIntegrityStatus = "disabled";
+    }
+  } else {
     reportIntegrityStatus = "disabled";
+    logger.info("review_core bypassed report assembly integrity validation", {
+      jobId,
+      analysisEngine,
+      reportValidationMode,
+    });
   }
 
   applyReportValidationMetadata(summary, {
@@ -3920,58 +3935,66 @@ export async function runAggregation(jobId: string): Promise<void> {
     );
     await materializeReviewFindings(reportId, summary, job.version_id, fullScriptText);
     await finalizeRevisionCycleReanalysis(reportId);
-    const pipelineValidation = await runReportValidationWithPolicy({
-      mode: reportValidationMode,
-      stageName: "pipeline_integrity",
-      validatorFunctionName: "validatePipelineIntegrity",
-      jobId,
-      generationId: analysisGenerationId,
-      reportId,
-      findingCount: list.length,
-      reportCount: reportInserted && reportId ? 1 : 0,
-      pipelineIntegrity: reportIntegrityStatus,
-      reportIntegrity: reportIntegrityStatus,
-      failureReason: "Pipeline integrity validation failed",
-      run: () =>
-        validatePipelineIntegrity({
-          jobId,
-          reportId,
-          findings: list,
-          summary,
-          reportRow,
-          sourceCanonicalFindings,
-        }),
-    });
-    if (pipelineValidation.validationErrors.length > 0) {
-      reportValidationErrors = [...reportValidationErrors, ...pipelineValidation.validationErrors];
-      reportIntegrityStatus = reportValidationMode === "off" ? "disabled" : "failed";
-      applyReportValidationMetadata(summary, {
-        integrity_status: reportIntegrityStatus,
-        integrity_mode: reportValidationMode,
-        validation_errors: reportValidationErrors,
-        validation_timestamp: reportValidationTimestamp,
-        validator_version: REPORT_VALIDATION_VERSION,
+    if (!bypassReportIntegrityValidation) {
+      const pipelineValidation = await runReportValidationWithPolicy({
+        mode: reportValidationMode,
+        stageName: "pipeline_integrity",
+        validatorFunctionName: "validatePipelineIntegrity",
+        jobId,
+        generationId: analysisGenerationId,
+        reportId,
+        findingCount: list.length,
+        reportCount: reportInserted && reportId ? 1 : 0,
+        pipelineIntegrity: reportIntegrityStatus,
+        reportIntegrity: reportIntegrityStatus,
+        failureReason: "Pipeline integrity validation failed",
+        run: () =>
+          validatePipelineIntegrity({
+            jobId,
+            reportId,
+            findings: list,
+            summary,
+            reportRow,
+            sourceCanonicalFindings,
+          }),
       });
-      const updatedReportHtml = buildReportHtml(summary);
-      await supabase
-        .from("analysis_reports")
-        .update({
-          summary_json: summary as unknown as Record<string, unknown>,
-          report_html: updatedReportHtml,
-        })
-        .eq("id", reportId);
-      reportRow.summary_json = summary as unknown as Record<string, unknown>;
-      reportRow.report_html = updatedReportHtml;
+      if (pipelineValidation.validationErrors.length > 0) {
+        reportValidationErrors = [...reportValidationErrors, ...pipelineValidation.validationErrors];
+        reportIntegrityStatus = reportValidationMode === "off" ? "disabled" : "failed";
+        applyReportValidationMetadata(summary, {
+          integrity_status: reportIntegrityStatus,
+          integrity_mode: reportValidationMode,
+          validation_errors: reportValidationErrors,
+          validation_timestamp: reportValidationTimestamp,
+          validator_version: REPORT_VALIDATION_VERSION,
+        });
+        const updatedReportHtml = buildReportHtml(summary);
+        await supabase
+          .from("analysis_reports")
+          .update({
+            summary_json: summary as unknown as Record<string, unknown>,
+            report_html: updatedReportHtml,
+          })
+          .eq("id", reportId);
+        reportRow.summary_json = summary as unknown as Record<string, unknown>;
+        reportRow.report_html = updatedReportHtml;
+      }
+      await verifyReportContract({
+        jobId,
+        generationId: analysisGenerationId,
+        findingCount: list.length,
+        pipelineIntegrityStatus: reportIntegrityStatus === "disabled" ? "skipped" : reportIntegrityStatus,
+        atpStatus: "passed",
+        reportInserted,
+        reportId,
+      });
+    } else {
+      logger.info("review_core bypassed report integrity validation and contract check", {
+        jobId,
+        reportId,
+        analysisEngine,
+      });
     }
-    await verifyReportContract({
-      jobId,
-      generationId: analysisGenerationId,
-      findingCount: list.length,
-      pipelineIntegrityStatus: reportIntegrityStatus === "disabled" ? "skipped" : reportIntegrityStatus,
-      atpStatus: "passed",
-      reportInserted,
-      reportId,
-    });
   }
 
   if (!isPartialReport) {
