@@ -125,12 +125,18 @@ async function testEngineFactorySelection(): Promise<void> {
     v4Adapter: createStubEngine("v4"),
     reviewCoreAdapter: createStubEngine("review_core"),
   });
+  const defaultEngine = create({
+    v3Adapter: createStubEngine("v3"),
+    v4Adapter: createStubEngine("v4"),
+    reviewCoreAdapter: createStubEngine("review_core"),
+  });
 
   assert.equal((await v3Engine.execute(buildJobContext())).truthLayerMeta.engine, "v3");
   assert.equal((await v4Engine.execute(buildJobContext())).truthLayerMeta.engine, "v4");
   assert.equal((await shadowEngine.execute(buildJobContext())).truthLayerMeta.engine, "v3");
   assert.equal((await reviewCoreEngine.execute(buildJobContext())).truthLayerMeta.engine, "review_core");
-  assert.equal((await fallbackEngine.execute(buildJobContext())).truthLayerMeta.engine, "v3");
+  assert.equal((await fallbackEngine.execute(buildJobContext())).truthLayerMeta.engine, "review_core");
+  assert.equal((await defaultEngine.execute(buildJobContext())).truthLayerMeta.engine, "review_core");
 }
 
 async function testV3AdapterDelegates(): Promise<void> {

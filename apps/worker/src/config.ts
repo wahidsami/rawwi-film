@@ -76,17 +76,19 @@ export const config = {
   V3_ENABLE_AUTOMATIC_FALLBACK: (process.env.V3_ENABLE_AUTOMATIC_FALLBACK ?? "true").toLowerCase() !== "false",
   /**
    * Analysis engine selection for the worker runtime.
-   * - v3: default visible engine
+   * - review_core: default production engine
+   * - v3: legacy compatibility engine
    * - v4: experimental V4 adapter
    * - shadow: V3-visible run with V4 shadow collection enabled separately
    * Legacy V2 job configs are still handled downstream by the pipeline.
    */
-   ANALYSIS_ENGINE: ((): "v3" | "v4" | "shadow" | "review_core" => {
-     const value = (process.env.ANALYSIS_ENGINE ?? "v3").toLowerCase();
+   ANALYSIS_ENGINE: ((): "review_core" | "v3" | "v4" | "shadow" => {
+     const value = (process.env.ANALYSIS_ENGINE ?? "review_core").toLowerCase();
+     if (value === "v3") return "v3";
      if (value === "v4") return "v4";
      if (value === "shadow") return "shadow";
      if (value === "review_core") return "review_core";
-     return "v3";
+     return "review_core";
    })(),
   /**
    * Violation prompt pack:

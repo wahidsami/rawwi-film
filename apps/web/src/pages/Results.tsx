@@ -2509,8 +2509,16 @@ export function Results() {
                 </Badge>
                 <Badge variant="outline" className="bg-background/70 text-text-muted border-border/70">
                   {lang === 'ar'
-                  ? `${analysisMeta.analysis_engine === 'hybrid' ? 'محرك هجين' : 'محرك v2'}`
-                  : `${analysisMeta.analysis_engine === 'hybrid' ? 'Hybrid engine' : 'v2 engine'}`}
+                  ? `${analysisMeta.analysis_engine === 'review_core'
+                      ? 'محرك Review Core'
+                      : analysisMeta.analysis_engine === 'hybrid'
+                        ? 'محرك هجين'
+                        : 'محرك v2'}`
+                  : `${analysisMeta.analysis_engine === 'review_core'
+                      ? 'Review Core engine'
+                      : analysisMeta.analysis_engine === 'hybrid'
+                        ? 'Hybrid engine'
+                        : 'v2 engine'}`}
                 </Badge>
               </div>
             )}
@@ -3430,9 +3438,11 @@ export function Results() {
                 <div className="rounded-xl border border-border bg-background/60 p-3">
                   <div className="text-[11px] text-text-muted mb-1">{lang === 'ar' ? 'المعالجة' : 'Engine'}</div>
                   <div className="font-semibold text-text-main">
-                    {traceModal.analysisMeta.analysis_engine === 'hybrid'
-                      ? (lang === 'ar' ? 'محرك هجين' : 'Hybrid engine')
-                      : 'v2'}
+                    {traceModal.analysisMeta.analysis_engine === 'review_core'
+                      ? (lang === 'ar' ? 'محرك Review Core' : 'Review Core')
+                      : traceModal.analysisMeta.analysis_engine === 'hybrid'
+                        ? (lang === 'ar' ? 'محرك هجين' : 'Hybrid engine')
+                        : 'v2'}
                   </div>
                 </div>
               </div>

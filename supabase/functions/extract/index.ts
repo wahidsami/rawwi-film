@@ -154,6 +154,7 @@ async function runIngest(
       config_snapshot: {
         ...DEFAULT_DETERMINISTIC_CONFIG,
         analysis_memory_mode: analysisMemoryMode,
+        analysis_engine: "review_core",
         knowledge_manifest_version: REVIEWER_KNOWLEDGE_VERSIONS.knowledge_manifest_version,
         handbook_version: REVIEWER_KNOWLEDGE_VERSIONS.handbook_version,
         universal_review_protocol_version: REVIEWER_KNOWLEDGE_VERSIONS.universal_review_protocol_version,

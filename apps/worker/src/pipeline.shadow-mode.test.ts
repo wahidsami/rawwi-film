@@ -12,6 +12,10 @@ async function main(): Promise<void> {
   assert.equal(shadowEngine, "shadow");
   assert.equal(shouldRunV4ShadowMode(shadowEngine), true);
 
+  const defaultEngine = resolveAnalysisEngineForJob({}, "v2");
+  assert.equal(defaultEngine, "review_core");
+  assert.equal(shouldRunV4ShadowMode(defaultEngine), false);
+
   const v4Engine = resolveAnalysisEngineForJob({ analysis_engine: "v4" }, "v2");
   assert.equal(v4Engine, "v4");
   assert.equal(shouldRunV4ShadowMode(v4Engine), false);

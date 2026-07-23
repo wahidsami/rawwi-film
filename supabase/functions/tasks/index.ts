@@ -60,7 +60,7 @@ type JobRow = {
   config_snapshot?: {
     pipeline_version?: "v1" | "v2";
     analysis_profile?: "quality" | "balanced" | "turbo";
-    analysis_engine?: "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1";
+    analysis_engine?: "review_core" | "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1";
     hybrid_mode?: "off" | "shadow" | "enforce";
     policy_v1_mode?: "shadow" | "enforce";
     knowledge_manifest_version?: string;

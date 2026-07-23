@@ -3547,7 +3547,7 @@ export function ScriptWorkspace() {
         forceFresh: true,
         analysisProfile: analysisModeProfile,
         pipelineVersion: 'v2',
-        analysisEngine: 'v3',
+        analysisEngine: 'review_core',
       });
       setAnalysisJobId(jobId);
       setAnalysisJob(null);
@@ -3831,6 +3831,8 @@ export function ScriptWorkspace() {
         : null;
     const analysisEngineLabel = fallbackActive
       ? (lang === 'ar' ? 'V2 (العودة التلقائية)' : 'V2 (Automatic Fallback)')
+      : analysisJob.analysisEngine === 'review_core'
+        ? 'Review Core'
       : analysisJob.analysisEngine === 'v3'
         ? 'V3'
         : analysisJob.analysisEngine === 'hybrid'

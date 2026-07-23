@@ -1,4 +1,4 @@
-export type TaskAnalysisEngine = "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1";
+export type TaskAnalysisEngine = "review_core" | "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1";
 
 function normalize(value: unknown): string {
   return String(value ?? "").trim().toLowerCase();
@@ -9,6 +9,7 @@ export function resolveRequestedAnalysisEngine(
   envAnalysisEngine: string | null | undefined,
 ): TaskAnalysisEngine {
   const normalizedEnv = normalize(envAnalysisEngine);
+  if (normalizedEnv === "review_core") return "review_core";
   if (normalizedEnv === "v3") return "v3";
   if (normalizedEnv === "v4") return "v4";
   if (normalizedEnv === "shadow") return "shadow";
@@ -16,12 +17,13 @@ export function resolveRequestedAnalysisEngine(
   if (normalizedEnv === "hybrid") return "hybrid";
 
   const requested = normalize(bodyAnalysisEngine);
+  if (requested === "review_core") return "review_core";
   if (requested === "v3") return "v3";
   if (requested === "v4") return "v4";
   if (requested === "shadow") return "shadow";
   if (requested === "policy_v1") return "policy_v1";
   if (requested === "hybrid") return "hybrid";
-  return "v2";
+  return "review_core";
 }
 
 export function resolveRequestedPipelineVersion(

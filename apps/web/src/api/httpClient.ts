@@ -352,7 +352,7 @@ async function mockFetch(url: string, options: RequestInit = {}): Promise<any> {
         versionId: 'mock-version',
         status: action === 'pause' ? 'paused' : action === 'stop' ? 'stopping' : action === 'cancel' ? 'cancelled' : 'running',
         analysisMode: body?.analysisProfile ?? 'balanced',
-        analysisEngine: body?.analysisEngine ?? 'v3',
+        analysisEngine: body?.analysisEngine ?? 'review_core',
         engineAttempted: body?.engineAttempted ?? null,
         engineUsed: body?.engineUsed ?? null,
         fallbackReason: body?.fallbackReason ?? null,

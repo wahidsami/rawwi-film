@@ -11,9 +11,11 @@ export type AnalysisEngineFactoryOptions = Readonly<{
 
 function normalizeSelection(value: string | undefined | null): AnalysisEngineName {
   const normalized = value?.toLowerCase();
+  if (normalized === "v3") return "v3";
   if (normalized === "v4") return "v4";
+  if (normalized === "shadow") return "v3";
   if (normalized === "review_core") return "review_core";
-  return "v3";
+  return "review_core";
 }
 
 function createLazyAnalysisEngineV3Adapter(): AnalysisEngine {

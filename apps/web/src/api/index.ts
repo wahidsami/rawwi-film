@@ -1002,7 +1002,7 @@ export const scriptsApi = {
       forceFresh?: boolean;
       analysisProfile?: AnalysisModeProfile;
       pipelineVersion?: 'v1' | 'v2';
-      analysisEngine?: 'v2' | 'v3' | 'hybrid' | 'policy_v1';
+      analysisEngine?: 'review_core' | 'v2' | 'v3' | 'v4' | 'shadow' | 'hybrid' | 'policy_v1';
       analysisOptions?: { mergeStrategy?: 'same_location_only' | 'every_occurrence' };
     }
   ): Promise<{ jobId: string; manualReviewContextCount?: number; linkedRevisionCycleNumber?: number | null }> =>

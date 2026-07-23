@@ -25,7 +25,7 @@ export enum OverrideEventType {
 
 export type AnalysisModeProfile = 'quality' | 'balanced' | 'turbo';
 export type AnalysisPipelineVersion = 'v1' | 'v2';
-export type AnalysisEngine = 'v2' | 'v3' | 'v4' | 'shadow' | 'hybrid' | 'policy_v1';
+export type AnalysisEngine = 'review_core' | 'v2' | 'v3' | 'v4' | 'shadow' | 'hybrid' | 'policy_v1';
 export type AnalysisHybridMode = 'off' | 'shadow' | 'enforce';
 
 export interface User {
@@ -328,7 +328,7 @@ export interface Report {
     analysis_meta?: {
       auditor_layer_version: 'v2' | 'v3' | 'v4';
       violation_system_version: 'v2' | 'v3' | 'v4';
-      analysis_engine: 'v2' | 'v3' | 'v4' | 'shadow' | 'hybrid' | 'policy_v1';
+      analysis_engine: 'review_core' | 'v2' | 'v3' | 'v4' | 'shadow' | 'hybrid' | 'policy_v1';
       analysis_pipeline_version: 'v1' | 'v2';
       deep_auditor_enabled: boolean;
       generated_by: 'worker';
