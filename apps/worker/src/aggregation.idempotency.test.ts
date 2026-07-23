@@ -83,6 +83,27 @@ function testAggregationAbortsBeforeReportWhenJobFailed() {
   assert.equal(source.includes("Aggregation aborted because job is already failed"), true, "aggregation should log the abort reason");
 }
 
+function testReviewCoreUsesFastPathBeforeLegacyPostProcessing() {
+  const sourcePath = join(process.cwd(), "apps", "worker", "src", "aggregation.ts");
+  const source = readFileSync(sourcePath, "utf8");
+
+  const runAggregationStart = source.indexOf("export async function runAggregation(jobId: string): Promise<void>");
+  const reviewCoreBranchIndex = source.indexOf('if (analysisEngine === "review_core")', runAggregationStart);
+  const materializeIndex = source.indexOf("await materializeReviewFindings(", runAggregationStart);
+  const validationIndex = source.indexOf("runReportValidationWithPolicy({", runAggregationStart);
+  const reportPersistIndex = source.indexOf("persistAggregationReportOnce(jobId, reportRow)", reviewCoreBranchIndex);
+  const cacheClearIndex = source.indexOf("clearCachedJobResources(jobId);", reviewCoreBranchIndex);
+  const returnIndex = source.indexOf("return;", cacheClearIndex);
+
+  assert.ok(reviewCoreBranchIndex >= 0, "review_core fast path should exist");
+  assert.ok(runAggregationStart >= 0, "runAggregation should exist");
+  assert.ok(materializeIndex > reviewCoreBranchIndex, "materializeReviewFindings should remain after the review_core fast path");
+  assert.ok(validationIndex > reviewCoreBranchIndex, "report validation should remain after the review_core fast path");
+  assert.ok(reportPersistIndex > reviewCoreBranchIndex, "review_core fast path should still persist analysis_reports");
+  assert.ok(cacheClearIndex > reviewCoreBranchIndex, "review_core fast path should clear cached job resources");
+  assert.ok(returnIndex > cacheClearIndex, "review_core fast path should return immediately after completion");
+}
+
 async function main() {
   process.env.SUPABASE_URL ??= "http://localhost:54321";
   process.env.SUPABASE_SERVICE_ROLE_KEY ??= "test-service-role-key";
@@ -94,6 +115,7 @@ async function main() {
   await testReportValidationModes(runReportValidationWithPolicy);
   testStaleRecoveryHasOneAuthoritativePath();
   testAggregationAbortsBeforeReportWhenJobFailed();
+  testReviewCoreUsesFastPathBeforeLegacyPostProcessing();
   console.log("✓ Aggregation persistence is idempotent, reviewer findings materialization is idempotent, report validation modes are enforced, stale recovery has one authoritative path, and failed jobs abort aggregation before report generation");
 }
 

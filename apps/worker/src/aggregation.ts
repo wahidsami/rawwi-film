@@ -307,6 +307,33 @@ export async function persistAggregationReportOnce(
   return { inserted: false, reportId: fallbackReportId };
 }
 
+async function completeAggregationJob(
+  jobId: string,
+  job: {
+    progress_total?: number | null;
+    progress_done?: number | null;
+    partial_finalize_requested?: boolean | null;
+  },
+): Promise<void> {
+  const totalProgress = Math.max(1, Number(job.progress_total ?? 1));
+  const completedProgress = job.partial_finalize_requested
+    ? Math.max(0, Number(job.progress_done ?? 0))
+    : totalProgress;
+  const completedPercent = job.partial_finalize_requested
+    ? Math.floor((100 * completedProgress) / totalProgress)
+    : 100;
+
+  await supabase
+    .from("analysis_jobs")
+    .update({
+      status: "completed",
+      completed_at: new Date().toISOString(),
+      progress_done: completedProgress,
+      progress_percent: completedPercent,
+    })
+    .eq("id", jobId);
+}
+
 type ReportContractRow = Readonly<{
   id: string;
   analysis_generation_id: string | null;
@@ -3828,6 +3855,29 @@ export async function runAggregation(jobId: string): Promise<void> {
     };
     const j = job as { created_by?: string | null };
     if (j.created_by != null) reportRow.created_by = j.created_by;
+
+    if (analysisEngine === "review_core") {
+      reportHtml = buildReportHtml(summary);
+      reportRow.report_html = reportHtml;
+
+      const persistedReport = await persistAggregationReportOnce(jobId, reportRow);
+      reportInserted = persistedReport.inserted;
+      reportId = persistedReport.reportId;
+      logger.info("review_core fast path persisted report and skipped legacy post-processing", {
+        jobId,
+        reportId,
+        inserted: reportInserted,
+        analysisEngine,
+      });
+
+      if (!reportId) {
+        throw new Error("Review core report persistence failed");
+      }
+
+      await completeAggregationJob(jobId, job);
+      clearCachedJobResources(jobId);
+      return;
+    }
 
     const bypassReportIntegrityValidation = shouldBypassReportIntegrityValidationForEngine(analysisEngine);
     const reportValidationMode = config.REPORT_VALIDATION_MODE;
