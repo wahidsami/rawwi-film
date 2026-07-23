@@ -1586,6 +1586,19 @@ export function applyPersistenceFilters(input: Readonly<{
   });
 }
 
+export function shouldRunValidatedTruthPipelineForEngine(
+  analysisEngine: AnalysisEngineMode,
+  hybridMode: string,
+  truthValidationEnabled: boolean,
+): boolean {
+  if (analysisEngine === "review_core") return false;
+  return truthValidationEnabled || (analysisEngine === "hybrid" && hybridMode !== "off");
+}
+
+export function shouldApplyPersistenceFiltersForEngine(analysisEngine: AnalysisEngineMode): boolean {
+  return analysisEngine !== "review_core";
+}
+
 function articleListsAreEquivalent(a: number[], b: number[]): boolean {
   if (a.length !== b.length) return false;
   const left = [...a].sort((x, y) => x - y);
@@ -2938,12 +2951,23 @@ export async function processChunkJudge(
     const afterDedupeCount = allFindings.length;
     allFindings = v3StabilizationMode ? allFindings : overlapCollapse(allFindings);
     const afterOverlapCount = allFindings.length;
-    const persistenceFilterResult = applyPersistenceFilters({
-      findings: allFindings,
-      normalizedText,
-    });
-    allFindings = [...persistenceFilterResult.accepted];
-    persistenceFilterRejections = [...persistenceFilterResult.rejected];
+    const applyLegacyPersistenceFilters = shouldApplyPersistenceFiltersForEngine(analysisEngine);
+    if (applyLegacyPersistenceFilters) {
+      const persistenceFilterResult = applyPersistenceFilters({
+        findings: allFindings,
+        normalizedText,
+      });
+      allFindings = [...persistenceFilterResult.accepted];
+      persistenceFilterRejections = [...persistenceFilterResult.rejected];
+    } else {
+      persistenceFilterRejections = [];
+      logger.info("review_core bypassed legacy persistence filters", {
+        jobId,
+        chunkId: chunk.id,
+        runKey,
+        findingsCount: allFindings.length,
+      });
+    }
     const afterArticleFourCollapseCount = allFindings.length;
     logger.info("[DEBUG] Dedupe/overlap stage complete", {
       jobId,
@@ -3062,7 +3086,7 @@ export async function processChunkJudge(
   let policyV1Metrics: Record<string, unknown> | null = null;
   const partialFinalizeRequested = await isPartialFinalizeRequested(jobId);
   const truthValidationEnabled = config.AUDITOR_LAYER_VERSION === "v4";
-  const shouldRunValidatedTruthPipeline = truthValidationEnabled || (analysisEngine === "hybrid" && hybridMode !== "off");
+  const shouldRunValidatedTruthPipeline = shouldRunValidatedTruthPipelineForEngine(analysisEngine, hybridMode, truthValidationEnabled);
   throwIfAborted(signal);
   if (partialFinalizeRequested) {
     logger.info("Partial finalize requested; skipping hybrid context pipeline for current chunk", {
