@@ -3792,11 +3792,11 @@ export async function runAggregation(jobId: string): Promise<void> {
         logger.warn("Revisit pass failed", { jobId, error: String(e) });
         throw e;
       }
-    }
-    const fragmentedMentions = findFragmentedArabicMentions(fullScriptText);
-    if (fragmentedMentions.length > 0) {
-      const existing = summary.words_to_revisit ?? [];
-      const seen = new Set(existing.map((item) => `${item.start_offset}:${item.end_offset}:${item.term}`));
+  }
+  const fragmentedMentions = findFragmentedArabicMentions(fullScriptText);
+  if (fragmentedMentions.length > 0) {
+    const existing = summary.words_to_revisit ?? [];
+    const seen = new Set(existing.map((item) => `${item.start_offset}:${item.end_offset}:${item.term}`));
       for (const mention of fragmentedMentions) {
         const key = `${mention.start_offset}:${mention.end_offset}:${mention.term}`;
         if (!seen.has(key)) {
@@ -3807,204 +3807,224 @@ export async function runAggregation(jobId: string): Promise<void> {
       summary.words_to_revisit = existing.slice(0, 60);
     }
   }
-  applySummaryContextToRulings(summary);
-  const sourceCanonicalFindings = [...(summary.canonical_findings ?? [])];
-  applyReportGate(summary);
-
-  const reportRow: Record<string, unknown> = {
-    job_id: jobId,
-    script_id: job.script_id,
-    version_id: job.version_id,
-    analysis_generation_id: (job.config_snapshot as { analysis_generation_id?: string | null } | null)?.analysis_generation_id ?? null,
-    report_generation_id: (job.config_snapshot as { analysis_generation_id?: string | null } | null)?.analysis_generation_id ?? null,
-    summary_json: summary as unknown as Record<string, unknown>,
-    findings_count: summary.totals.findings_count,
-    severity_counts: summary.totals.severity_counts as unknown as Record<string, unknown>,
-  };
-  const j = job as { created_by?: string | null };
-  if (j.created_by != null) reportRow.created_by = j.created_by;
-
   const analysisGenerationId = (job.config_snapshot as { analysis_generation_id?: string | null } | null)?.analysis_generation_id ?? null;
-  const bypassReportIntegrityValidation = shouldBypassReportIntegrityValidationForEngine(analysisEngine);
-  const reportValidationMode = config.REPORT_VALIDATION_MODE;
-  const reportValidationTimestamp = new Date().toISOString();
-  let reportValidationErrors: ReportValidationFailureDetail[] = [];
-  let reportIntegrityStatus: ReportIntegrityStatus = reportValidationMode === "off" ? "disabled" : "passed";
+  let reportHtml = "";
+  let reportInserted = false;
+  let reportId: string | null = null;
+  try {
+    applySummaryContextToRulings(summary);
+    const sourceCanonicalFindings = [...(summary.canonical_findings ?? [])];
+    applyReportGate(summary);
 
-  if (!bypassReportIntegrityValidation) {
-    const reportAssemblyValidation = await runReportValidationWithPolicy({
-      mode: reportValidationMode,
-      stageName: "report_assembly",
-      validatorFunctionName: "validateReportAssemblyIntegrity",
-      jobId,
-      generationId: analysisGenerationId,
-      reportId: null,
-      findingCount: list.length,
-      reportCount: 0,
-      pipelineIntegrity: reportIntegrityStatus,
-      reportIntegrity: reportIntegrityStatus,
-      failureReason: "Report assembly integrity validation failed",
-      run: () =>
-        validateReportAssemblyIntegrity({
-          jobId,
-          analysisEngine,
-          findings: list,
-          summary,
-          reportRow,
-          sourceCanonicalFindings,
-        }),
-    });
+    const reportRow: Record<string, unknown> = {
+      job_id: jobId,
+      script_id: job.script_id,
+      version_id: job.version_id,
+      analysis_generation_id: (job.config_snapshot as { analysis_generation_id?: string | null } | null)?.analysis_generation_id ?? null,
+      report_generation_id: (job.config_snapshot as { analysis_generation_id?: string | null } | null)?.analysis_generation_id ?? null,
+      summary_json: summary as unknown as Record<string, unknown>,
+      findings_count: summary.totals.findings_count,
+      severity_counts: summary.totals.severity_counts as unknown as Record<string, unknown>,
+    };
+    const j = job as { created_by?: string | null };
+    if (j.created_by != null) reportRow.created_by = j.created_by;
 
-    if (reportAssemblyValidation.validationErrors.length > 0) {
-      reportValidationErrors = [...reportValidationErrors, ...reportAssemblyValidation.validationErrors];
-      reportIntegrityStatus = "failed";
-    } else if (reportAssemblyValidation.status === "disabled") {
-      reportIntegrityStatus = "disabled";
-    }
-  } else {
-    reportIntegrityStatus = "disabled";
-    logger.info("review_core bypassed report assembly integrity validation", {
-      jobId,
-      analysisEngine,
-      reportValidationMode,
-    });
-  }
+    const bypassReportIntegrityValidation = shouldBypassReportIntegrityValidationForEngine(analysisEngine);
+    const reportValidationMode = config.REPORT_VALIDATION_MODE;
+    const reportValidationTimestamp = new Date().toISOString();
+    let reportValidationErrors: ReportValidationFailureDetail[] = [];
+    let reportIntegrityStatus: ReportIntegrityStatus = reportValidationMode === "off" ? "disabled" : "passed";
 
-  applyReportValidationMetadata(summary, {
-    integrity_status: reportIntegrityStatus,
-    integrity_mode: reportValidationMode,
-    validation_errors: reportValidationErrors,
-    validation_timestamp: reportValidationTimestamp,
-    validator_version: REPORT_VALIDATION_VERSION,
-  });
-
-  const reportHtml = buildReportHtml(summary);
-
-  logger.info("[DEBUG] Aggregation report payload ready", {
-    jobId,
-    findingsCount: summary.totals.findings_count,
-    canonicalFindingCount: summary.canonical_findings?.length ?? 0,
-    reportHintCount: summary.report_hints?.length ?? 0,
-  });
-
-  reportRow.report_html = reportHtml;
-
-  const { inserted: reportInserted, reportId } = await persistAggregationReportOnce(jobId, reportRow);
-  logger.info("report generated", {
-    jobId,
-    reportId,
-    inserted: reportInserted,
-  });
-
-  if (!reportInserted) {
-    await verifyReportContract({
-      jobId,
-      generationId: analysisGenerationId,
-      findingCount: list.length,
-      pipelineIntegrityStatus: "skipped",
-      atpStatus: "skipped",
-      reportInserted,
-      reportId,
-    });
-    logger.info("Aggregation report already persisted by another worker; exiting without rewriting", {
-      jobId,
-      reportId,
-    });
-    if (reportId) {
-      const totalProgress = Math.max(1, Number((job as { progress_total?: number | null }).progress_total ?? 1));
-      const completedProgress = (job as { partial_finalize_requested?: boolean | null }).partial_finalize_requested
-        ? Math.max(0, Number((job as { progress_done?: number | null }).progress_done ?? 0))
-        : totalProgress;
-      const completedPercent = (job as { partial_finalize_requested?: boolean | null }).partial_finalize_requested
-        ? Math.floor((100 * completedProgress) / totalProgress)
-        : 100;
-      await supabase
-        .from("analysis_jobs")
-        .update({
-          status: "completed",
-          completed_at: new Date().toISOString(),
-          progress_done: completedProgress,
-          progress_percent: completedPercent,
-        })
-        .eq("id", jobId);
-    }
-    clearCachedJobResources(jobId);
-    return;
-  }
-
-  if (reportId) {
-    await persistLineageEvents(
-      list.map((finding) =>
-        buildLineageEvent(finding, {
-          jobId,
-          chunkId: null,
-          stageName: "final_report",
-          passName: null,
-        })
-      )
-    );
-    await materializeReviewFindings(reportId, summary, job.version_id, fullScriptText);
-    await finalizeRevisionCycleReanalysis(reportId);
     if (!bypassReportIntegrityValidation) {
-      const pipelineValidation = await runReportValidationWithPolicy({
+      const reportAssemblyValidation = await runReportValidationWithPolicy({
         mode: reportValidationMode,
-        stageName: "pipeline_integrity",
-        validatorFunctionName: "validatePipelineIntegrity",
+        stageName: "report_assembly",
+        validatorFunctionName: "validateReportAssemblyIntegrity",
         jobId,
         generationId: analysisGenerationId,
-        reportId,
+        reportId: null,
         findingCount: list.length,
-        reportCount: reportInserted && reportId ? 1 : 0,
+        reportCount: 0,
         pipelineIntegrity: reportIntegrityStatus,
         reportIntegrity: reportIntegrityStatus,
-        failureReason: "Pipeline integrity validation failed",
+        failureReason: "Report assembly integrity validation failed",
         run: () =>
-          validatePipelineIntegrity({
+          validateReportAssemblyIntegrity({
             jobId,
-            reportId,
+            analysisEngine,
             findings: list,
             summary,
             reportRow,
             sourceCanonicalFindings,
           }),
       });
-      if (pipelineValidation.validationErrors.length > 0) {
-        reportValidationErrors = [...reportValidationErrors, ...pipelineValidation.validationErrors];
-        reportIntegrityStatus = reportValidationMode === "off" ? "disabled" : "failed";
-        applyReportValidationMetadata(summary, {
-          integrity_status: reportIntegrityStatus,
-          integrity_mode: reportValidationMode,
-          validation_errors: reportValidationErrors,
-          validation_timestamp: reportValidationTimestamp,
-          validator_version: REPORT_VALIDATION_VERSION,
-        });
-        const updatedReportHtml = buildReportHtml(summary);
-        await supabase
-          .from("analysis_reports")
-          .update({
-            summary_json: summary as unknown as Record<string, unknown>,
-            report_html: updatedReportHtml,
-          })
-          .eq("id", reportId);
-        reportRow.summary_json = summary as unknown as Record<string, unknown>;
-        reportRow.report_html = updatedReportHtml;
+
+      if (reportAssemblyValidation.validationErrors.length > 0) {
+        reportValidationErrors = [...reportValidationErrors, ...reportAssemblyValidation.validationErrors];
+        reportIntegrityStatus = "failed";
+      } else if (reportAssemblyValidation.status === "disabled") {
+        reportIntegrityStatus = "disabled";
       }
+    } else {
+      reportIntegrityStatus = "disabled";
+      logger.info("review_core bypassed report assembly integrity validation", {
+        jobId,
+        analysisEngine,
+        reportValidationMode,
+      });
+    }
+
+    applyReportValidationMetadata(summary, {
+      integrity_status: reportIntegrityStatus,
+      integrity_mode: reportValidationMode,
+      validation_errors: reportValidationErrors,
+      validation_timestamp: reportValidationTimestamp,
+      validator_version: REPORT_VALIDATION_VERSION,
+    });
+
+    reportHtml = buildReportHtml(summary);
+
+    logger.info("[DEBUG] Aggregation report payload ready", {
+      jobId,
+      findingsCount: summary.totals.findings_count,
+      canonicalFindingCount: summary.canonical_findings?.length ?? 0,
+      reportHintCount: summary.report_hints?.length ?? 0,
+    });
+
+    reportRow.report_html = reportHtml;
+
+    const persistedReport = await persistAggregationReportOnce(jobId, reportRow);
+    reportInserted = persistedReport.inserted;
+    reportId = persistedReport.reportId;
+    logger.info("report generated", {
+      jobId,
+      reportId,
+      inserted: reportInserted,
+    });
+
+    if (!reportInserted) {
       await verifyReportContract({
         jobId,
         generationId: analysisGenerationId,
         findingCount: list.length,
-        pipelineIntegrityStatus: reportIntegrityStatus === "disabled" ? "skipped" : reportIntegrityStatus,
-        atpStatus: "passed",
+        pipelineIntegrityStatus: "skipped",
+        atpStatus: "skipped",
         reportInserted,
         reportId,
       });
-    } else {
-      logger.info("review_core bypassed report integrity validation and contract check", {
+      logger.info("Aggregation report already persisted by another worker; exiting without rewriting", {
         jobId,
         reportId,
-        analysisEngine,
       });
+      if (reportId) {
+        const totalProgress = Math.max(1, Number((job as { progress_total?: number | null }).progress_total ?? 1));
+        const completedProgress = (job as { partial_finalize_requested?: boolean | null }).partial_finalize_requested
+          ? Math.max(0, Number((job as { progress_done?: number | null }).progress_done ?? 0))
+          : totalProgress;
+        const completedPercent = (job as { partial_finalize_requested?: boolean | null }).partial_finalize_requested
+          ? Math.floor((100 * completedProgress) / totalProgress)
+          : 100;
+        await supabase
+          .from("analysis_jobs")
+          .update({
+            status: "completed",
+            completed_at: new Date().toISOString(),
+            progress_done: completedProgress,
+            progress_percent: completedPercent,
+          })
+          .eq("id", jobId);
+      }
+      clearCachedJobResources(jobId);
+      return;
     }
+
+    if (reportId) {
+      const persistedReportId = reportId;
+      await persistLineageEvents(
+        list.map((finding) =>
+          buildLineageEvent(finding, {
+            jobId,
+            chunkId: null,
+            stageName: "final_report",
+            passName: null,
+          })
+        )
+      );
+      await materializeReviewFindings(reportId, summary, job.version_id, fullScriptText);
+      await finalizeRevisionCycleReanalysis(reportId);
+      if (!bypassReportIntegrityValidation) {
+        const pipelineValidation = await runReportValidationWithPolicy({
+          mode: reportValidationMode,
+          stageName: "pipeline_integrity",
+          validatorFunctionName: "validatePipelineIntegrity",
+          jobId,
+          generationId: analysisGenerationId,
+          reportId: persistedReportId,
+          findingCount: list.length,
+          reportCount: reportInserted && persistedReportId ? 1 : 0,
+          pipelineIntegrity: reportIntegrityStatus,
+          reportIntegrity: reportIntegrityStatus,
+          failureReason: "Pipeline integrity validation failed",
+          run: () =>
+            validatePipelineIntegrity({
+              jobId,
+              reportId: persistedReportId,
+              findings: list,
+              summary,
+              reportRow,
+              sourceCanonicalFindings,
+            }),
+        });
+        if (pipelineValidation.validationErrors.length > 0) {
+          reportValidationErrors = [...reportValidationErrors, ...pipelineValidation.validationErrors];
+          reportIntegrityStatus = reportValidationMode === "off" ? "disabled" : "failed";
+          applyReportValidationMetadata(summary, {
+            integrity_status: reportIntegrityStatus,
+            integrity_mode: reportValidationMode,
+            validation_errors: reportValidationErrors,
+            validation_timestamp: reportValidationTimestamp,
+            validator_version: REPORT_VALIDATION_VERSION,
+          });
+          const updatedReportHtml = buildReportHtml(summary);
+          await supabase
+            .from("analysis_reports")
+            .update({
+              summary_json: summary as unknown as Record<string, unknown>,
+              report_html: updatedReportHtml,
+            })
+            .eq("id", persistedReportId);
+          reportRow.summary_json = summary as unknown as Record<string, unknown>;
+          reportRow.report_html = updatedReportHtml;
+        }
+        await verifyReportContract({
+          jobId,
+          generationId: analysisGenerationId,
+          findingCount: list.length,
+          pipelineIntegrityStatus: reportIntegrityStatus === "disabled" ? "skipped" : reportIntegrityStatus,
+          atpStatus: "passed",
+          reportInserted,
+          reportId: persistedReportId,
+        });
+      } else {
+        logger.info("review_core bypassed report integrity validation and contract check", {
+          jobId,
+          reportId: persistedReportId,
+          analysisEngine,
+        });
+      }
+    }
+  } catch (error) {
+    logger.error("Report generation/report-validation failed", {
+      jobId,
+      analysisEngine,
+      error,
+    });
+    logger.warn("Continuing aggregation finalization after report generation/report-validation failure", {
+      jobId,
+      analysisEngine,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack ?? null : null,
+    });
   }
 
   if (!isPartialReport) {
