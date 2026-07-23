@@ -37,7 +37,7 @@ export type SummaryJson = {
   analysis_meta?: {
     auditor_layer_version: "v2" | "v3" | "v4";
     violation_system_version: "v2" | "v3" | "v4";
-    analysis_engine: "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1";
+    analysis_engine: "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1" | "review_core";
     analysis_pipeline_version: "v1" | "v2";
     knowledge_manifest_version?: string;
     handbook_version?: string;
@@ -581,13 +581,14 @@ type JobConfigMeta = {
   prompt_template_version?: string;
 };
 
-function pickAnalysisEngine(value: unknown): "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1" {
+function pickAnalysisEngine(value: unknown): "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1" | "review_core" {
   if (value === "v2") return "v2";
   if (value === "v3") return "v3";
   if (value === "v4") return "v4";
   if (value === "shadow") return "shadow";
   if (value === "hybrid") return "hybrid";
   if (value === "policy_v1") return "policy_v1";
+  if (value === "review_core") return "review_core";
   return "v3";
 }
 
@@ -927,7 +928,11 @@ export function buildPipelineIntegrityReport(input: {
   summary: SummaryJson;
   reportRow: Record<string, unknown>;
   sourceCanonicalFindings?: Array<{ canonical_finding_id: string | null; source_finding_id?: string | null }>;
+  analysisEngine?: string | null;
 }): PipelineIntegrityReport {
+  const analysisEngine = pickAnalysisEngine(
+    input.analysisEngine ?? input.summary.analysis_meta?.analysis_engine ?? config.ANALYSIS_ENGINE,
+  );
   const analysisFindingIds = uniqueStrings(input.findings.map((finding) => findingIntegrityIdentity(finding)));
   const sourceCanonicalFindingIds = uniqueStrings(
     (input.sourceCanonicalFindings ?? input.summary.canonical_findings ?? []).map((finding) =>
@@ -941,7 +946,7 @@ export function buildPipelineIntegrityReport(input: {
   );
   const summaryReviewFindingIds = uniqueStrings([
     ...(input.summary.canonical_findings ?? []).map((finding) => finding.canonical_finding_id),
-    ...(input.summary.report_hints ?? []).map((finding) => finding.canonical_finding_id),
+    ...(analysisEngine === "review_core" ? [] : (input.summary.report_hints ?? []).map((finding) => finding.canonical_finding_id)),
   ]);
   const manualReviewFindingCount = input.reviewFindings.filter((row) => row.is_manual).length;
   const summaryManualReviewCount = input.summary.manual_review_context?.items?.length ?? 0;
