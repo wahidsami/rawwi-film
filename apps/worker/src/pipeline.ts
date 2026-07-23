@@ -3086,7 +3086,26 @@ export async function processChunkJudge(
   let policyV1Metrics: Record<string, unknown> | null = null;
   const partialFinalizeRequested = await isPartialFinalizeRequested(jobId);
   const truthValidationEnabled = config.AUDITOR_LAYER_VERSION === "v4";
+  logger.info("[V4] truth-pipeline decision inputs", {
+    jobId,
+    analysisEngine,
+    jobConfigAnalysisEngine: jobConfig.analysis_engine ?? null,
+    workerAnalysisEngine: config.ANALYSIS_ENGINE,
+    pipelineVersion,
+    hybridMode,
+    truthValidationEnabled,
+  });
   const shouldRunValidatedTruthPipeline = shouldRunValidatedTruthPipelineForEngine(analysisEngine, hybridMode, truthValidationEnabled);
+  logger.info("[V4] truth-pipeline decision result", {
+    jobId,
+    analysisEngine,
+    jobConfigAnalysisEngine: jobConfig.analysis_engine ?? null,
+    workerAnalysisEngine: config.ANALYSIS_ENGINE,
+    pipelineVersion,
+    hybridMode,
+    truthValidationEnabled,
+    shouldRunValidatedTruthPipeline,
+  });
   throwIfAborted(signal);
   if (partialFinalizeRequested) {
     logger.info("Partial finalize requested; skipping hybrid context pipeline for current chunk", {
@@ -3192,6 +3211,16 @@ export async function processChunkJudge(
     await setChunkPhase(chunk.id, "hybrid");
     const hybridStartedAt = Date.now();
     let hybridTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
+    logger.info("[V4] ENTERING HYBRID CONTEXT PIPELINE", {
+      jobId,
+      analysisEngine,
+      jobConfigAnalysisEngine: jobConfig.analysis_engine ?? null,
+      workerAnalysisEngine: config.ANALYSIS_ENGINE,
+      pipelineVersion,
+      hybridMode,
+      truthValidationEnabled,
+      shouldRunValidatedTruthPipeline,
+    });
     logger.info("Hybrid context pipeline starting", {
       jobId,
       chunkId: chunk.id,
