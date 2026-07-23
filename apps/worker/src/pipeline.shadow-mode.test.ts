@@ -24,6 +24,10 @@ async function main(): Promise<void> {
   assert.equal(v3Engine, "v3");
   assert.equal(shouldRunV4ShadowMode(v3Engine), false);
 
+  const legacyV2Engine = resolveAnalysisEngineForJob({ analysis_engine: "v2" }, "v2");
+  assert.equal(legacyV2Engine, "review_core");
+  assert.equal(shouldRunV4ShadowMode(legacyV2Engine), false);
+
   console.log("✓ pipeline shadow mode selection tests passed");
 }
 

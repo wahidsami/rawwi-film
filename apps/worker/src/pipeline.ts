@@ -514,6 +514,7 @@ export function resolveAnalysisEngineForJob(
 ): AnalysisEngineMode {
   if (pipelineVersion === "v2") {
     const requested = jobConfig.analysis_engine;
+    if (requested === "v2") return "review_core";
     if (requested === "v3") return "v3";
     if (requested === "v4") return "v4";
     if (requested === "shadow") return "shadow";
