@@ -2,7 +2,7 @@ import type { AnalysisResponse } from "../analysisEngineV3/engine/analysisRespon
 import type { V3RuntimeDiagnostics } from "../analysisEngineV3/runtime/runtimeDiagnostics.js";
 import type { V3RuntimeAdapterOptions, V3RuntimeAdapterRequest, V3RuntimeFinding } from "../analysisEngineV3/runtime/runtimeTypes.js";
 
-export type AnalysisEngineName = "v3" | "v4";
+export type AnalysisEngineName = "v3" | "v4" | "review_core";
 
 export type AnalysisDiagnostics = Readonly<Omit<V3RuntimeDiagnostics, "engineVersion"> & {
   engineVersion: AnalysisEngineName;

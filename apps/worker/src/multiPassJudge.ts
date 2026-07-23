@@ -1774,7 +1774,7 @@ interface PassResult {
   error?: string;
 }
 
-type AnalysisEngineMode = "v2" | "v3" | "hybrid" | "policy_v1";
+type AnalysisEngineMode = "v2" | "v3" | "review_core" | "hybrid" | "policy_v1";
 
 function hasGovernanceAnchor(text: string): boolean {
   return /(نظام\s+الحكم|القيادة\s+السياسية|الحكومة|الدولة|الملك|ولي\s+العهد|انقلاب|انتفاض|إسقاط|تمرد|الأمن\s+الوطني|مؤسسات\s+الحكم)/u.test(

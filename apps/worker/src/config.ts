@@ -81,10 +81,11 @@ export const config = {
    * - shadow: V3-visible run with V4 shadow collection enabled separately
    * Legacy V2 job configs are still handled downstream by the pipeline.
    */
-   ANALYSIS_ENGINE: ((): "v3" | "v4" | "shadow" => {
+   ANALYSIS_ENGINE: ((): "v3" | "v4" | "shadow" | "review_core" => {
      const value = (process.env.ANALYSIS_ENGINE ?? "v3").toLowerCase();
      if (value === "v4") return "v4";
      if (value === "shadow") return "shadow";
+     if (value === "review_core") return "review_core";
      return "v3";
    })(),
   /**

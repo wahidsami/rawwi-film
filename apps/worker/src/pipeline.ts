@@ -85,7 +85,7 @@ export type PersistenceFilterRejection = Readonly<{
   source: string | null;
 }>;
 
-type AnalysisEngineMode = "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1";
+type AnalysisEngineMode = "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1" | "review_core";
 type HybridRunMode = "off" | "shadow" | "enforce";
 type PolicyV1RunMode = "shadow" | "enforce";
 
@@ -517,6 +517,7 @@ export function resolveAnalysisEngineForJob(
     if (requested === "v3") return "v3";
     if (requested === "v4") return "v4";
     if (requested === "shadow") return "shadow";
+    if (requested === "review_core") return "review_core";
     if (requested === "hybrid") return "hybrid";
     if (requested === "policy_v1") return "policy_v1";
     if (requested === "v2") return "v2";
@@ -1706,10 +1707,16 @@ export async function processChunkJudge(
     pipelineVersion,
     jobAnalysisEngine: analysisEngine,
     workerAnalysisEngine: config.ANALYSIS_ENGINE,
-    visibleEnginePath: config.ANALYSIS_ENGINE === "v4" ? "analysisEngineV4" : "analysisEngineV3",
+    visibleEnginePath: config.ANALYSIS_ENGINE === "v4"
+      ? "analysisEngineV4"
+      : config.ANALYSIS_ENGINE === "review_core"
+        ? "analysisEngineReviewCore"
+        : "analysisEngineV3",
     visibleEngineSkippedReason: config.ANALYSIS_ENGINE === "v4"
       ? "analysisEngineV3 skipped because worker ANALYSIS_ENGINE=v4"
-      : "analysisEngineV4 skipped because worker ANALYSIS_ENGINE is not v4",
+      : config.ANALYSIS_ENGINE === "review_core"
+        ? "analysisEngineV4 skipped because worker ANALYSIS_ENGINE=review_core"
+        : "analysisEngineV4 skipped because worker ANALYSIS_ENGINE is not v4",
     shadowEnabled,
     shadowSkipReason: shadowEnabled
       ? null

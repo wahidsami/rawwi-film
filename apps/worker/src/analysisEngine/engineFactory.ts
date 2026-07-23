@@ -5,11 +5,15 @@ export type AnalysisEngineFactoryOptions = Readonly<{
   env?: Readonly<{ ANALYSIS_ENGINE?: string | undefined }>;
   v3Adapter?: AnalysisEngine;
   v4Adapter?: AnalysisEngine;
+  reviewCoreAdapter?: AnalysisEngine;
   jobId?: string | null;
 }>;
 
 function normalizeSelection(value: string | undefined | null): AnalysisEngineName {
-  return value?.toLowerCase() === "v4" ? "v4" : "v3";
+  const normalized = value?.toLowerCase();
+  if (normalized === "v4") return "v4";
+  if (normalized === "review_core") return "review_core";
+  return "v3";
 }
 
 function createLazyAnalysisEngineV3Adapter(): AnalysisEngine {
@@ -40,6 +44,22 @@ function createLazyAnalysisEngineV4Adapter(): AnalysisEngine {
   });
 }
 
+function createLazyAnalysisEngineReviewCoreAdapter(): AnalysisEngine {
+  let delegatePromise: Promise<AnalysisEngine> | null = null;
+
+  return Object.freeze({
+    async execute(jobContext) {
+      if (!delegatePromise) {
+        delegatePromise = import("./analysisEngineReviewCoreAdapter.js").then(({ createAnalysisEngineReviewCoreAdapter }) =>
+          createAnalysisEngineReviewCoreAdapter(),
+        );
+      }
+      const delegate = await delegatePromise;
+      return delegate.execute(jobContext);
+    },
+  });
+}
+
 export function create(options: AnalysisEngineFactoryOptions = {}): AnalysisEngine {
   const selection = normalizeSelection(options.env?.ANALYSIS_ENGINE ?? process.env.ANALYSIS_ENGINE);
   logger.info("[V4] Engine factory selection", {
@@ -49,6 +69,9 @@ export function create(options: AnalysisEngineFactoryOptions = {}): AnalysisEngi
   });
   if (selection === "v4") {
     return options.v4Adapter ?? createLazyAnalysisEngineV4Adapter();
+  }
+  if (selection === "review_core") {
+    return options.reviewCoreAdapter ?? createLazyAnalysisEngineReviewCoreAdapter();
   }
   return options.v3Adapter ?? createLazyAnalysisEngineV3Adapter();
 }

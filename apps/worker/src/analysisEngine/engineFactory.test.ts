@@ -97,26 +97,37 @@ async function testEngineFactorySelection(): Promise<void> {
     env: { ANALYSIS_ENGINE: "v3" },
     v3Adapter: createStubEngine("v3"),
     v4Adapter: createStubEngine("v4"),
+    reviewCoreAdapter: createStubEngine("review_core"),
   });
   const v4Engine = create({
     env: { ANALYSIS_ENGINE: "v4" },
     v3Adapter: createStubEngine("v3"),
     v4Adapter: createStubEngine("v4"),
+    reviewCoreAdapter: createStubEngine("review_core"),
   });
   const shadowEngine = create({
     env: { ANALYSIS_ENGINE: "shadow" },
     v3Adapter: createStubEngine("v3"),
     v4Adapter: createStubEngine("v4"),
+    reviewCoreAdapter: createStubEngine("review_core"),
+  });
+  const reviewCoreEngine = create({
+    env: { ANALYSIS_ENGINE: "review_core" },
+    v3Adapter: createStubEngine("v3"),
+    v4Adapter: createStubEngine("v4"),
+    reviewCoreAdapter: createStubEngine("review_core"),
   });
   const fallbackEngine = create({
     env: { ANALYSIS_ENGINE: "banana" },
     v3Adapter: createStubEngine("v3"),
     v4Adapter: createStubEngine("v4"),
+    reviewCoreAdapter: createStubEngine("review_core"),
   });
 
   assert.equal((await v3Engine.execute(buildJobContext())).truthLayerMeta.engine, "v3");
   assert.equal((await v4Engine.execute(buildJobContext())).truthLayerMeta.engine, "v4");
   assert.equal((await shadowEngine.execute(buildJobContext())).truthLayerMeta.engine, "v3");
+  assert.equal((await reviewCoreEngine.execute(buildJobContext())).truthLayerMeta.engine, "review_core");
   assert.equal((await fallbackEngine.execute(buildJobContext())).truthLayerMeta.engine, "v3");
 }
 
@@ -206,6 +217,61 @@ async function testV4AdapterContract(): Promise<void> {
   assert.equal(typeof result.truthLayerMeta, "object");
 }
 
+async function testReviewCoreAdapterContract(): Promise<void> {
+  if (!process.env.SUPABASE_URL) process.env.SUPABASE_URL = "https://example.supabase.co";
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
+  const { createAnalysisEngineReviewCoreAdapter } = await import("./analysisEngineReviewCoreAdapter.js");
+  const providerCalls: Array<{ systemPrompt: string; userPrompt: string }> = [];
+  const adapter = createAnalysisEngineReviewCoreAdapter({
+    providerFactory: {
+      create() {
+        return {
+          name: "openai",
+          async callJudgeRaw(input: any) {
+            providerCalls.push({ systemPrompt: input.systemPrompt, userPrompt: input.userPrompt });
+            return {
+              providerName: "openai",
+              modelName: "stub-model",
+              modelVersion: "stub-version",
+              rawResponse: JSON.stringify({
+                findings: [
+                  {
+                    articleId: 1,
+                    atomId: null,
+                    quotedText: "يا كلب",
+                    startOffset: 7,
+                    endOffset: 13,
+                    reason: "insult",
+                    confidence: 0.91,
+                  },
+                ],
+              }),
+              finishReason: "stop",
+              usage: { promptTokens: 10, completionTokens: 5, totalTokens: 15 },
+              responseId: "response-1",
+              responseTimestamp: "2026-07-23T00:00:00.000Z",
+            };
+          },
+        };
+      },
+    } as any,
+    getJobResources: async () => ({
+      pageRows: [{ page_number: 1, content: "قال: يا كلب" }],
+      promptLexiconTerms: [],
+    }),
+    selectArticleIds: () => [1],
+  });
+
+  const result = await adapter.execute(buildJobContext());
+
+  assert.equal(providerCalls.length, 1);
+  assert.equal(result.diagnostics.engineVersion, "review_core");
+  assert.equal(result.findings.length, 1);
+  assert.equal(result.findings[0].article_id, 1);
+  assert.equal(result.findings[0].evidence_snippet.includes("يا كلب"), true);
+  assert.deepStrictEqual(result.truthLayerMeta.selected_article_ids, [1]);
+}
+
 async function main(): Promise<void> {
   await testEngineFactorySelection();
   console.log("✓ engineFactory selects V3/V4, supports shadow, and falls back to V3");
@@ -213,6 +279,8 @@ async function main(): Promise<void> {
   console.log("✓ V3 adapter delegates correctly");
   await testV4AdapterContract();
   console.log("✓ V4 adapter returns the shared AnalysisResult contract");
+  await testReviewCoreAdapterContract();
+  console.log("✓ Review core adapter returns a shared AnalysisResult contract");
   console.log("\nAll analysis engine adapter tests passed.");
 }
 
