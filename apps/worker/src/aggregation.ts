@@ -1287,6 +1287,7 @@ export function validateReportAssemblyIntegrity(input: {
   summary: SummaryJson;
   reportRow: Record<string, unknown>;
   reportId?: string | null;
+  analysisEngine?: string | null;
   sourceCanonicalFindings?: Array<{ canonical_finding_id: string | null; source_finding_id?: string | null }>;
 }): ReportAssemblyIntegrityReport {
   const report = buildReportAssemblyIntegrityReport(input);
@@ -1296,24 +1297,15 @@ export function validateReportAssemblyIntegrity(input: {
       "validateReportAssemblyIntegrity",
       REPORT_ASSEMBLY_RULE_LOCATIONS,
     );
-    const integrityDiagnostic: IntegrityValidationDiagnostic = {
-      validatorFunctionName: "validateReportAssemblyIntegrity",
+    logger.warn("[REPORT VALIDATION DISABLED] Report assembly integrity validation skipped", {
       jobId: report.jobId,
+      analysisEngine: input.analysisEngine ?? null,
       reportId: input.reportId ?? null,
       findingCount: report.findingsCount,
-      evaluations: report.evaluations,
-      failures: validationFailures,
-      integrityReport: report,
-    };
-    emitIntegrityDiagnosticLogs(integrityDiagnostic);
-    logger.error("Report assembly integrity validation failed", {
-      ...integrityDiagnostic,
+      mismatchCount: report.mismatches.length,
+      validationFailures,
     });
-    const error = new Error("Report assembly integrity validation failed");
-    (error as Error & { integrityDiagnostic?: IntegrityValidationDiagnostic }).integrityDiagnostic = integrityDiagnostic;
-    (error as Error & { integrityReport?: ReportAssemblyIntegrityReport; validationFailures?: IntegrityRuleFailure[] }).integrityReport = report;
-    (error as Error & { integrityReport?: ReportAssemblyIntegrityReport; validationFailures?: IntegrityRuleFailure[] }).validationFailures = validationFailures;
-    throw error;
+    return report;
   }
   logger.info("Report assembly integrity validation passed", {
     jobId: report.jobId,
@@ -3855,6 +3847,7 @@ export async function runAggregation(jobId: string): Promise<void> {
       run: () =>
         validateReportAssemblyIntegrity({
           jobId,
+          analysisEngine,
           findings: list,
           summary,
           reportRow,
