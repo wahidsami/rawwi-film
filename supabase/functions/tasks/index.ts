@@ -668,7 +668,7 @@ Deno.serve(async (req: Request) => {
   const forceFresh = body?.forceFresh === true;
   const analysisMemoryMode = await loadAnalysisMemoryMode(supabase);
   const requestedAnalysisEngine = resolveRequestedAnalysisEngine(body?.analysisEngine, Deno.env.get("ANALYSIS_ENGINE"));
-  logger.info("[TASKS] analysis engine resolution", {
+  console.info("[TASKS] analysis engine resolution", {
     correlationId,
     requestBodyAnalysisEngine: body?.analysisEngine ?? null,
     envAnalysisEngine: Deno.env.get("ANALYSIS_ENGINE") ?? null,
@@ -822,7 +822,7 @@ Deno.serve(async (req: Request) => {
   const overlapSize = usePageChunks ? 0 : 800;
   const totalDetectionPasses = requestedAnalysisEngine === "policy_v1" ? 1 : 11;
   const analysisGenerationId = crypto.randomUUID();
-  logger.info("[TASKS] analysis_jobs insert payload", {
+  console.info("[TASKS] analysis_jobs insert payload", {
     correlationId,
     requestBodyAnalysisEngine: body?.analysisEngine ?? null,
     envAnalysisEngine: Deno.env.get("ANALYSIS_ENGINE") ?? null,
