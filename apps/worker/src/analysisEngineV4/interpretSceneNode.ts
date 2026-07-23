@@ -1,8 +1,4 @@
-import OpenAI from "openai";
-
-import { config } from "../config.js";
 import { canonicalStringify } from "../canonicalJson.js";
-import { sha256 } from "../hash.js";
 import type {
   SemanticSceneEvent,
   SemanticSceneModel,
@@ -24,10 +20,7 @@ export type InterpretSceneNodeInput = Readonly<{
 
 export type InterpretSceneNodeOptions = Readonly<{
   interpretScene?: (input: InterpretSceneNodeInput) => Promise<SemanticSceneInterpretation> | SemanticSceneInterpretation;
-  useOpenAI?: boolean;
 }>;
-
-const openai = config.OPENAI_API_KEY ? new OpenAI({ apiKey: config.OPENAI_API_KEY }) : null;
 
 const PROBLEM_PATTERNS: readonly Readonly<{ concept: string; eventType: string; regex: RegExp }>[] = Object.freeze([
   { concept: "profanity", eventType: "Insult", regex: /(?:كس\s*امة|يا\s+(?:كلب|حمار|خنزير|غبي|حقير|قذر|وسخ|لعين)|شتيمة|شتائم|سباب|سب|شتم|يا[.…\.]{1,})/u },
@@ -221,93 +214,12 @@ function buildPrompt(sceneModel: SceneModel): Readonly<{ systemPrompt: string; u
   });
 }
 
-async function interpretWithOpenAI(sceneModel: SceneModel): Promise<SemanticSceneInterpretation> {
-  if (!openai) {
-    return buildDeterministicInterpretation(sceneModel);
-  }
-
-  const { systemPrompt, userPrompt } = buildPrompt(sceneModel);
-  const startedAt = globalThis.performance?.now?.() ?? Date.now();
-  const response = await openai.chat.completions.create({
-    model: config.OPENAI_RATIONALE_MODEL,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    response_format: { type: "json_object" },
-    temperature: 0,
-    seed: 12345,
-    max_tokens: 2048,
-  });
-  const raw = response.choices[0]?.message?.content ?? "{}";
-  const finishedAt = globalThis.performance?.now?.() ?? Date.now();
-  const durationMs = Math.max(0, finishedAt - startedAt);
-  try {
-    const parsed = JSON.parse(raw) as Partial<SemanticSceneModel>;
-    const fallback = buildDeterministicInterpretation(sceneModel);
-    const semanticSceneModel: SemanticSceneModel = freeze({
-      summary: typeof parsed.summary === "string" && parsed.summary.trim().length > 0 ? parsed.summary : fallback.semanticSceneModel.summary,
-      participants: Array.isArray(parsed.participants) ? uniqueSorted(parsed.participants.map(String)) : fallback.semanticSceneModel.participants,
-      relationships: Array.isArray(parsed.relationships)
-        ? freeze(parsed.relationships.map((relationship) => {
-            const record = relationship as Record<string, unknown>;
-            return freeze({
-              subject: String(record.subject ?? ""),
-              relation: String(record.relation ?? ""),
-              object: String(record.object ?? ""),
-              evidence: record.evidence == null ? null : String(record.evidence),
-            });
-          }))
-        : fallback.semanticSceneModel.relationships,
-      events: Array.isArray(parsed.events)
-        ? freeze(parsed.events.map((event) => {
-            const record = event as Record<string, unknown>;
-            const participants = Array.isArray(record.participants) ? uniqueSorted(record.participants.map(String)) : fallback.semanticSceneModel.participants;
-            return freeze({
-              eventType: String(record.eventType ?? "Scene Observation"),
-              description: String(record.description ?? ""),
-              evidence: String(record.evidence ?? ""),
-              participants,
-            });
-          }))
-        : fallback.semanticSceneModel.events,
-      timeline: Array.isArray(parsed.timeline) ? freeze(parsed.timeline.map((entry, index) => freeze({
-        order: Number((entry as Record<string, unknown>).order ?? index + 1),
-        description: String((entry as Record<string, unknown>).description ?? ""),
-        evidence: (entry as Record<string, unknown>).evidence == null ? null : String((entry as Record<string, unknown>).evidence),
-      }))) : fallback.semanticSceneModel.timeline,
-      speakerIntent: typeof parsed.speakerIntent === "string" && parsed.speakerIntent.trim().length > 0 ? parsed.speakerIntent : fallback.semanticSceneModel.speakerIntent,
-      emotionalState: typeof parsed.emotionalState === "string" && parsed.emotionalState.trim().length > 0 ? parsed.emotionalState : fallback.semanticSceneModel.emotionalState,
-      victims: Array.isArray(parsed.victims) ? uniqueSorted(parsed.victims.map(String)) : fallback.semanticSceneModel.victims,
-      aggressors: Array.isArray(parsed.aggressors) ? uniqueSorted(parsed.aggressors.map(String)) : fallback.semanticSceneModel.aggressors,
-      targets: Array.isArray(parsed.targets) ? uniqueSorted(parsed.targets.map(String)) : fallback.semanticSceneModel.targets,
-      sensitiveConcepts: Array.isArray(parsed.sensitiveConcepts) ? uniqueSorted(parsed.sensitiveConcepts.map(String)) : fallback.semanticSceneModel.sensitiveConcepts,
-      scenePurpose: typeof parsed.scenePurpose === "string" && parsed.scenePurpose.trim().length > 0 ? parsed.scenePurpose : fallback.semanticSceneModel.scenePurpose,
-      sceneOutcome: typeof parsed.sceneOutcome === "string" && parsed.sceneOutcome.trim().length > 0 ? parsed.sceneOutcome : fallback.semanticSceneModel.sceneOutcome,
-      confidence: typeof parsed.confidence === "number" && Number.isFinite(parsed.confidence)
-        ? Math.max(0, Math.min(1, parsed.confidence))
-        : fallback.semanticSceneModel.confidence,
-    });
-
-    return freeze({
-      semanticSceneModel,
-      semanticSceneResponse: raw,
-    });
-  } catch {
-    const fallback = buildDeterministicInterpretation(sceneModel);
-    return freeze({
-      semanticSceneModel: fallback.semanticSceneModel,
-      semanticSceneResponse: raw,
-    });
-  }
-}
-
 export function buildInterpretScenePrompt(sceneModel: SceneModel): Readonly<{ systemPrompt: string; userPrompt: string }> {
   return buildPrompt(sceneModel);
 }
 
 export function interpretScene(sceneModel: SceneModel): Promise<SemanticSceneInterpretation> {
-  return interpretWithOpenAI(sceneModel);
+  return Promise.resolve(buildDeterministicInterpretation(sceneModel));
 }
 
 export function createInterpretSceneNode(dependencies: InterpretSceneNodeOptions = {}) {

@@ -28,6 +28,7 @@ import {
 import { buildV3AnalysisRuntimeTrace, persistV3AnalysisRuntimeTrace } from "./analysisEngineV3/runtime/analysisRuntimeTrace.js";
 import { loadV3InspectionTimelineByJobId } from "./analysisEngineV3/inspection/inspectionLoader.js";
 import { exportRuntimeDiagnosticArtifact } from "./diagnosticPersistence.js";
+import { PROMPT_TEMPLATE_VERSION, REVIEWER_KNOWLEDGE_VERSIONS } from "./aiConstants.js";
 
 export type SummaryJson = {
   job_id: string;
@@ -38,6 +39,10 @@ export type SummaryJson = {
     violation_system_version: "v2" | "v3" | "v4";
     analysis_engine: "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1";
     analysis_pipeline_version: "v1" | "v2";
+    knowledge_manifest_version?: string;
+    handbook_version?: string;
+    universal_review_protocol_version?: string;
+    prompt_template_version?: string;
     deep_auditor_enabled: boolean;
     generated_by: "worker";
     analysis_generation_id?: string | null;
@@ -570,6 +575,10 @@ type JobConfigMeta = {
   auditor_layer_version?: string;
   deep_auditor_enabled?: boolean;
   analysis_generation_id?: string | null;
+  knowledge_manifest_version?: string;
+  handbook_version?: string;
+  universal_review_protocol_version?: string;
+  prompt_template_version?: string;
 };
 
 function pickAnalysisEngine(value: unknown): "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1" {
@@ -1500,6 +1509,10 @@ function applyReportValidationMetadata(
       violation_system_version: "v3",
       analysis_engine: "v3",
       analysis_pipeline_version: "v1",
+      knowledge_manifest_version: REVIEWER_KNOWLEDGE_VERSIONS.knowledge_manifest_version,
+      handbook_version: REVIEWER_KNOWLEDGE_VERSIONS.handbook_version,
+      universal_review_protocol_version: REVIEWER_KNOWLEDGE_VERSIONS.universal_review_protocol_version,
+      prompt_template_version: PROMPT_TEMPLATE_VERSION,
       deep_auditor_enabled: true,
       generated_by: "worker",
     }),
@@ -3036,6 +3049,11 @@ export function buildSummaryJson(
       violation_system_version: pickViolationSystemVersion(jobConfigMeta?.violation_system_version ?? config.VIOLATION_SYSTEM_VERSION),
       analysis_engine: pickAnalysisEngine(jobConfigMeta?.analysis_engine ?? config.ANALYSIS_ENGINE),
       analysis_pipeline_version: pickPipelineVersion(jobConfigMeta?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION),
+      knowledge_manifest_version: jobConfigMeta?.knowledge_manifest_version ?? REVIEWER_KNOWLEDGE_VERSIONS.knowledge_manifest_version,
+      handbook_version: jobConfigMeta?.handbook_version ?? REVIEWER_KNOWLEDGE_VERSIONS.handbook_version,
+      universal_review_protocol_version:
+        jobConfigMeta?.universal_review_protocol_version ?? REVIEWER_KNOWLEDGE_VERSIONS.universal_review_protocol_version,
+      prompt_template_version: jobConfigMeta?.prompt_template_version ?? PROMPT_TEMPLATE_VERSION,
       deep_auditor_enabled:
         typeof jobConfigMeta?.deep_auditor_enabled === "boolean"
           ? jobConfigMeta.deep_auditor_enabled
@@ -3644,6 +3662,11 @@ export async function runAggregation(jobId: string): Promise<void> {
       violation_system_version: (job.config_snapshot as { violation_system_version?: string } | null)?.violation_system_version,
       auditor_layer_version: (job.config_snapshot as { auditor_layer_version?: string } | null)?.auditor_layer_version,
       deep_auditor_enabled: (job.config_snapshot as { deep_auditor_enabled?: boolean } | null)?.deep_auditor_enabled,
+      knowledge_manifest_version: (job.config_snapshot as { knowledge_manifest_version?: string } | null)?.knowledge_manifest_version,
+      handbook_version: (job.config_snapshot as { handbook_version?: string } | null)?.handbook_version,
+      universal_review_protocol_version:
+        (job.config_snapshot as { universal_review_protocol_version?: string } | null)?.universal_review_protocol_version,
+      prompt_template_version: (job.config_snapshot as { prompt_template_version?: string } | null)?.prompt_template_version,
       analysis_generation_id: (job.config_snapshot as { analysis_generation_id?: string | null } | null)?.analysis_generation_id ?? null,
     },
   );

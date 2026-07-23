@@ -8,18 +8,10 @@ import { joinPromptSections, renderListSection, renderRawSection, renderSection,
 import type { V3PromptBuilderInput, V3RenderedPrompt } from "./builderTypes.js";
 import { config } from "../../config.js";
 import { createPromptConceptContext, runReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRunner.js";
-import { getDefaultReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRegistry.js";
-import { renderReviewerMethodologySection } from "../reviewerMethodology/reviewerMethodologyRenderer.js";
-import { getDefaultReviewerQuestionSet, renderReviewerQuestionSetSection } from "../reviewerQuestions/index.js";
-import { createReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
-import { renderReviewerKnowledgePacksSection } from "../reviewerKnowledge/reviewerKnowledgeRenderer.js";
 import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
-import { createDefaultReviewerKnowledgeRegistry } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
-import type { ReviewerKnowledgePack } from "../reviewerKnowledge/reviewerKnowledgeTypes.js";
-import { buildReviewerReasoningEnginePayload } from "./reviewerReasoningEngine.js";
 import { compileReviewerContext } from "../reviewerCompiler/compiler.js";
-import { renderCompiledReviewerContextSection } from "../reviewerCompiler/compilerRenderer.js";
 import { logger } from "../../logger.js";
+import { buildReviewerAcademyKnowledgePrompt } from "../../reviewerAcademy/articleKnowledgeRenderer.js";
 
 type PromptRenderStepMetric = Readonly<{
   step: string;
@@ -31,6 +23,43 @@ type PromptRenderStepMetric = Readonly<{
 
 function estimatePromptTokens(value: string): number {
   return Math.max(1, Math.ceil(value.length / 4));
+}
+
+function normalizeArticleId(value: string): string {
+  const normalized = value.trim().toLowerCase();
+  const numericMatch = normalized.match(/(\d+)/u);
+  if (!numericMatch) {
+    return normalized;
+  }
+
+  const parsed = Number.parseInt(numericMatch[1] ?? "", 10);
+  if (!Number.isFinite(parsed)) {
+    return normalized;
+  }
+
+  return `article_${String(parsed).padStart(2, "0")}`;
+}
+
+function compareArticleIds(left: string, right: string): number {
+  const leftMatch = left.match(/(\d+)/u);
+  const rightMatch = right.match(/(\d+)/u);
+  const leftNumber = leftMatch ? Number.parseInt(leftMatch[1] ?? "", 10) : Number.NaN;
+  const rightNumber = rightMatch ? Number.parseInt(rightMatch[1] ?? "", 10) : Number.NaN;
+
+  if (Number.isFinite(leftNumber) && Number.isFinite(rightNumber)) {
+    return leftNumber - rightNumber;
+  }
+
+  return left.localeCompare(right);
+}
+
+function collectSelectedArticleIds(
+  input: V3PromptBuilderInput,
+  compiledReviewerContext: NonNullable<V3PromptBuilderInput["compiledReviewerContext"]> | null,
+): readonly string[] {
+  const fromCompiledContext = compiledReviewerContext?.selectedArticles.map((article) => article.articleId) ?? [];
+  const fromSubjectModule = (input.subjectModule.articleIds ?? []).map((articleId) => `article_${String(articleId).padStart(2, "0")}`);
+  return [...new Set([...fromCompiledContext, ...fromSubjectModule].map(normalizeArticleId).filter((articleId) => articleId.length > 0))].sort(compareArticleIds);
 }
 
 function measurePromptRenderStep<T>(
@@ -110,7 +139,6 @@ export function renderV3Prompt(input: V3PromptBuilderInput): string {
   const reviewerAssessment = measurePromptRenderStep(profile, "runReviewerMethodology", () => runReviewerMethodology({ promptInput: context, conceptContext }), {
     items: conceptContext.concepts.length,
   });
-  const reviewerQuestionSet = measurePromptRenderStep(profile, "getDefaultReviewerQuestionSet", () => getDefaultReviewerQuestionSet());
   const compiledReviewerContext = measurePromptRenderStep(profile, "resolveCompiledReviewerContext", () =>
     useReviewerCompiler
       ? (context.compiledReviewerContext ?? compileReviewerContext({
@@ -129,57 +157,26 @@ export function renderV3Prompt(input: V3PromptBuilderInput): string {
           assessment: reviewerAssessment,
         }),
   );
-  const reviewerKnowledgeRegistry = reviewerKnowledgeSelection?.reviewerKnowledgeRegistry
-    ?? createDefaultReviewerKnowledgeRegistry(compiledReviewerContext?.selection.selectedAcademyFolders);
-  let knowledgeRetrieval: ReturnType<typeof createReviewerKnowledgeRetrievalReport> | null = null;
-  let reviewerKnowledgePacks: readonly ReviewerKnowledgePack[] = [];
-  let reviewerReasoningEngine: ReturnType<typeof buildReviewerReasoningEnginePayload> | null = null;
-  if (!useReviewerCompiler && reviewerKnowledgeSelection) {
-    const localKnowledgeRetrieval = measurePromptRenderStep(profile, "createReviewerKnowledgeRetrievalReport", () =>
-      createReviewerKnowledgeRetrievalReport({
-        assessment: reviewerAssessment,
-        conceptContext,
-        subjectModule: context.subjectModule,
-        registry: reviewerKnowledgeSelection.reviewerKnowledgeRegistry,
-        topK: Math.max(1, reviewerKnowledgeSelection.routing.selectedReviewerPackIds.length),
-      }),
-    );
-    knowledgeRetrieval = localKnowledgeRetrieval;
-    reviewerKnowledgePacks = localKnowledgeRetrieval.selectedPacks;
-    reviewerReasoningEngine = measurePromptRenderStep(profile, "buildReviewerReasoningEnginePayload", () =>
-      buildReviewerReasoningEnginePayload(
-        context,
-        conceptContext,
-        reviewerAssessment,
-        reviewerKnowledgePacks,
-        reviewerKnowledgeSelection.knowledgeRegistry,
-        localKnowledgeRetrieval,
-      ),
-    );
-  }
-  const reviewerMethodology = measurePromptRenderStep(profile, "getDefaultReviewerMethodology", () => getDefaultReviewerMethodology());
+  const selectedArticleIds = measurePromptRenderStep(profile, "collectSelectedArticleIds", () =>
+    collectSelectedArticleIds(context, compiledReviewerContext),
+  );
+  const academyKnowledgePrompt = measurePromptRenderStep(profile, "buildReviewerAcademyKnowledgePrompt", () =>
+    buildReviewerAcademyKnowledgePrompt(selectedArticleIds),
+  );
 
   const promptAssemblyStartedAt = performance.now();
   const prompt = joinPromptSections([
     "# Analysis Engine V3 System Prompt",
-    renderReviewerMethodologySection(reviewerMethodology, reviewerAssessment),
-    renderReviewerQuestionSetSection(reviewerQuestionSet),
-    useReviewerCompiler && compiledReviewerContext
-      ? renderCompiledReviewerContextSection(compiledReviewerContext)
-      : renderReviewerKnowledgePacksSection(reviewerKnowledgePacks),
-    useReviewerCompiler && compiledReviewerContext
-      ? renderStableJsonSection("Compiled Reviewer Context Summary", {
-          selected_reviewer_ids: [...compiledReviewerContext.selection.selectedReviewerIds],
-          selected_reviewer_labels: [...compiledReviewerContext.selection.selectedReviewerLabels],
-          loaded_manual_count: compiledReviewerContext.loadedManualCount,
-          estimated_token_count: compiledReviewerContext.estimatedTokenCount,
-          prompt_character_count: compiledReviewerContext.promptCharacterCount,
-          prompt_token_estimate: compiledReviewerContext.promptTokenEstimate,
-        })
-      : renderStableJsonSection("GPT Reviewer Assistant", reviewerReasoningEngine!.gpt_reviewer_assistant ?? {}),
-    useReviewerCompiler && compiledReviewerContext
-      ? null
-      : renderStableJsonSection("Reviewer Reasoning Engine", reviewerReasoningEngine!),
+    renderSection(
+      "Minimal Reviewer Framing",
+      joinPromptSections([
+        "You are the official reviewer responsible for the supplied GCAM article knowledge.",
+        "Use the handbook below directly.",
+        "Do not summarize, compile, synthesize, or rewrite the handbook.",
+        "Keep output grounded in the supplied schema.",
+      ]),
+    ),
+    academyKnowledgePrompt.section,
     renderReasoningStageAssembly(context.reasoningContract),
     renderDecisionGraphSection(context.decisionGraph),
     renderSemanticLayerSection(context.semanticLayer),
@@ -204,12 +201,14 @@ export function renderV3Prompt(input: V3PromptBuilderInput): string {
     useReviewerCompiler,
     evidenceCandidateCount: reviewerAssessment?.reasoningTrace?.length ?? 0,
     selectedReviewerCount: reviewerKnowledgeSelection?.routing.selectedReviewerIds.length ?? compiledReviewerContext?.selection.selectedReviewerIds.length ?? 0,
-    selectedArticleCount: compiledReviewerContext?.selectedArticles.length ?? 0,
-    selectedArticleIds: [...(compiledReviewerContext?.selectedArticles.map((article) => article.articleId) ?? [])],
-    selectedPolicyArticleIds: [...(compiledReviewerContext?.selectedPolicyArticleIds ?? compiledReviewerContext?.candidateDiagnostics?.articleRanking.selectedPolicyArticleIds ?? [])],
+    selectedArticleCount: selectedArticleIds.length,
+    selectedArticleIds: [...selectedArticleIds],
+    selectedPolicyArticleIds: [...selectedArticleIds.map((articleId) => Number.parseInt(articleId.replace(/[^\d]/g, ""), 10)).filter((articleId) => Number.isFinite(articleId))],
     selectedAtomCount: compiledReviewerContext?.selectedAtoms.length ?? 0,
     selectedAtomIds: [...(compiledReviewerContext?.selectedAtoms.map((atom) => atom.atomId) ?? [])],
     selectedPolicyAtomIds: [...(compiledReviewerContext?.selectedPolicyAtomIds ?? compiledReviewerContext?.candidateDiagnostics?.atomRanking.selectedPolicyAtomIds ?? [])],
+    academyMarkdownFiles: [...academyKnowledgePrompt.filePaths],
+    academyMarkdownCharacterCount: academyKnowledgePrompt.characterCount,
     stepTimings: profile,
   });
 

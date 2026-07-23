@@ -5,7 +5,7 @@
 import { strict as assert } from "node:assert";
 
 import { createSceneAnalysisState, type SceneAnalysisState } from "./sceneAnalysisState.js";
-import { createInterpretSceneNode, buildInterpretScenePrompt } from "./interpretSceneNode.js";
+import { createInterpretSceneNode, buildInterpretScenePrompt, interpretScene } from "./interpretSceneNode.js";
 import { createSceneUnderstandingNode } from "./sceneUnderstandingNode.js";
 
 function testPromptUsesSceneModelOnly(): void {
@@ -86,9 +86,22 @@ async function testIdenticalSceneModelsProduceEquivalentSemanticModels(): Promis
   assert.equal(first.semanticSceneModel?.events[0]?.eventType, "Insult");
 }
 
+async function testDefaultInterpretSceneIsDeterministic(): Promise<void> {
+  const sceneText = "INT. HOUSE - NIGHT\nفهد: يا كلب\nالجارة تغلق الباب.";
+  const understand = createSceneUnderstandingNode();
+  const sceneModel = understand(createSceneAnalysisState({ sceneId: "scene-default", sceneText })).sceneModel!;
+  const interpretation = await interpretScene(sceneModel);
+
+  assert.equal(interpretation.semanticSceneResponse, JSON.stringify(interpretation.semanticSceneModel));
+  assert.equal(interpretation.semanticSceneModel.participants.includes("فهد"), true);
+  assert.equal(interpretation.semanticSceneModel.events.length > 0, true);
+  assert.equal(interpretation.semanticSceneModel.sensitiveConcepts.includes("profanity"), true);
+}
+
 async function main(): Promise<void> {
   testPromptUsesSceneModelOnly();
   await testIdenticalSceneModelsProduceEquivalentSemanticModels();
+  await testDefaultInterpretSceneIsDeterministic();
   console.log("\nAll V4 InterpretSceneNode tests passed.");
 }
 

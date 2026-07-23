@@ -4,8 +4,10 @@
  */
 import { buildV3Prompt, buildV3RenderedPrompt, renderV3PromptHash } from "./promptBuilder.js";
 import type { V3PromptBuilderInput } from "./builderTypes.js";
-import { getDefaultReviewerQuestionSet } from "../reviewerQuestions/index.js";
 import { renderCompiledReviewerContextSection } from "../reviewerCompiler/compilerRenderer.js";
+import { compileReviewerContext } from "../reviewerCompiler/compiler.js";
+import { createPromptConceptContext, runReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRunner.js";
+import { buildReviewerAcademyKnowledgePrompt } from "../../reviewerAcademy/articleKnowledgeRenderer.js";
 
 function assert(condition: boolean, message: string): void {
   if (!condition) throw new Error(message);
@@ -188,41 +190,42 @@ function testIdenticalInputStable(): void {
   console.log("✓ identical input renders identical prompt and hash");
 }
 
-function testReviewerKnowledgePackRendered(): void {
+function testAcademyMarkdownRendered(): void {
   const rendered = buildV3RenderedPrompt(makeBaseInput());
 
-  assert(rendered.prompt.indexOf("## Reviewer Methodology") < rendered.prompt.indexOf("## Reviewer Knowledge Packs"), "methodology should render before packs");
-  assert(rendered.prompt.indexOf("## Reviewer Questions") < rendered.prompt.indexOf("## Reviewer Knowledge Packs"), "questions should render before packs");
-  assert(rendered.prompt.indexOf("## Reviewer Methodology") < rendered.prompt.indexOf("## Reviewer Questions"), "methodology should render before questions");
-  assert(rendered.prompt.includes("Reviewer Knowledge Packs"), "reviewer knowledge section should be rendered");
-  assert(rendered.prompt.includes("GPT Reviewer Assistant"), "GPT reviewer assistant should be rendered");
-  assert(rendered.prompt.includes("Reviewer Reasoning Engine"), "reviewer reasoning engine should be rendered");
-  assert(rendered.prompt.includes("knowledge_retrieval"), "dynamic knowledge retrieval should be rendered");
-  assert(rendered.prompt.includes("reasoning_pipeline"), "reviewer reasoning pipeline should be rendered");
-  assert(rendered.prompt.includes("Default Reviewer Question Set"), "default reviewer question set should render");
-  assert(rendered.prompt.includes(getDefaultReviewerQuestionSet().id), "default reviewer question set id should render");
-  assert(rendered.prompt.includes("Profanity Reviewer Knowledge Pack"), "profanity pack should be selected for profanity input");
+  assert(rendered.prompt.indexOf("## Reviewer Methodology") < rendered.prompt.indexOf("## Reviewer Academy Knowledge"), "methodology should render before the Academy knowledge");
+  assert(rendered.prompt.indexOf("## Reviewer Questions") < rendered.prompt.indexOf("## Reviewer Academy Knowledge"), "questions should render before the Academy knowledge");
+  assert(rendered.prompt.includes("Reviewer Academy Knowledge"), "reviewer academy knowledge section should be rendered");
+  assert(rendered.prompt.includes("Universal Review Protocol"), "universal protocol should be injected");
+  assert(rendered.prompt.includes("Selected Article Knowledge"), "selected article knowledge should be injected");
+  assert(rendered.prompt.includes("article_04"), "article 04 should be injected");
+  assert(rendered.prompt.includes("article_16"), "article 16 should be injected");
   assert(rendered.prompt.includes("reasoned_decision"), "output schema should request a reasoned decision");
-  assert(rendered.prompt.includes("recommendation"), "output schema should request a recommendation");
-  assert(rendered.prompt.includes("legal concepts"), "prompt should request concept-first reasoning");
-  assert(rendered.prompt.includes("knowledge domains"), "prompt should request knowledge-domain mapping");
-  assert(rendered.prompt.includes("candidate articles"), "prompt should request candidate article ranking");
-  assert(rendered.prompt.includes("primary article"), "prompt should request a primary article");
-  assert(rendered.prompt.includes("secondary articles"), "prompt should request secondary articles");
-  assert(rendered.prompt.includes("contradicting_evidence"), "prompt should request contradicting evidence using the parser's canonical field");
-  assert(rendered.prompt.includes("evidence_candidates"), "prompt should render sentence-level evidence candidates");
-  assert(rendered.prompt.includes("policy engine"), "prompt should hand exception handling to the policy engine");
-  assert(rendered.prompt.includes("Do not suppress a detection"), "prompt should not suppress detections because of exceptions");
-  assert(rendered.prompt.includes("article-by-article"), "prompt should instruct article-by-article evaluation");
-  assert(rendered.prompt.includes("PASS or FAIL"), "prompt should instruct PASS or FAIL per article");
-  assert(rendered.prompt.includes("find all policy violations"), "prompt should instruct exhaustive violation hunting");
-  assert(rendered.prompt.includes("Do not stop after finding one exception"), "prompt should forbid stopping after a single exception");
-  assert(rendered.prompt.includes("Analyze every threatening, abusive, violent, sexual, political, religious, criminal, or profane statement independently"), "prompt should require per-statement analysis");
-  assert(rendered.prompt.includes("independent violation evidence unit"), "prompt should treat evidence units as the atomic unit of work");
-  assert(rendered.prompt.includes("Repeated article ids may appear in article_evaluations"), "prompt should allow repeated article ids for separate evidence units");
-  assert(rendered.prompt.includes("facts, actors, objects, injuries, or events"), "prompt should prohibit unsupported facts");
-  assert(!rendered.prompt.includes('"rules": ['), "subject rule bundles should no longer be rendered directly");
-  console.log("✓ reviewer knowledge packs are rendered instead of subject rule bundles");
+  assert(!rendered.prompt.includes("Reviewer Knowledge Packs"), "legacy reviewer knowledge packs section should not be rendered");
+  assert(!rendered.prompt.includes("Reviewer Reasoning Engine"), "legacy reviewer reasoning engine block should not be rendered");
+  assert(!rendered.prompt.includes("GPT Reviewer Assistant"), "legacy GPT assistant block should not be rendered");
+  console.log("✓ Academy markdown is rendered directly instead of synthesized knowledge packs");
+}
+
+function testCanonicalKnowledgeFilesComeFromWorkerKnowledge(): void {
+  const knowledgePrompt = buildReviewerAcademyKnowledgePrompt(["article_04", "article_16"]);
+  const canonicalArticlePaths = knowledgePrompt.articleDocuments.map((document) => document.filePath);
+
+  assert(canonicalArticlePaths.length === 2, "two requested article handbooks should load");
+  assert(canonicalArticlePaths.every((filePath) => /[\\/]apps[\\/]worker[\\/]knowledge[\\/]/i.test(filePath)), "article handbook files should load from apps/worker/knowledge");
+  assert(!canonicalArticlePaths.some((filePath) => /[\\/]reviewerAcademy[\\/]Articles[\\/]/i.test(filePath)), "article handbook files should not load from reviewerAcademy/Articles");
+  console.log("✓ article handbooks load from the canonical worker knowledge folder");
+}
+
+function testAcademyMarkdownPromptIsSmallerThanLegacyCompiledContext(): void {
+  const input = makeBaseInput();
+  const conceptContext = createPromptConceptContext(input);
+  const assessment = runReviewerMethodology({ promptInput: input, conceptContext });
+  const compiled = compileReviewerContext({ promptInput: input, conceptContext, assessment }).compiledReviewerContext;
+  const rendered = buildV3RenderedPrompt(input);
+
+  assert(compiled.promptCharacterCount > rendered.prompt.length, "new Academy markdown prompt should be smaller than the legacy compiled reviewer context preview");
+  console.log(`✓ prompt shrank from ${compiled.promptCharacterCount} chars to ${rendered.prompt.length} chars`);
 }
 
 function testDeterministicCandidateContractUsesPolicyArticleIds(): void {
@@ -440,7 +443,9 @@ function testGlossaryChangesHash(): void {
 
 async function main(): Promise<void> {
   testIdenticalInputStable();
-  testReviewerKnowledgePackRendered();
+  testAcademyMarkdownRendered();
+  testCanonicalKnowledgeFilesComeFromWorkerKnowledge();
+  testAcademyMarkdownPromptIsSmallerThanLegacyCompiledContext();
   testDeterministicCandidateContractUsesPolicyArticleIds();
   testStoryMemoryChangesHash();
   testSubjectModuleChangesHash();

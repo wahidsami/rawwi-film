@@ -80,10 +80,26 @@ export const judgeFindingSchema = z.object({
     .transform((v) => v ?? { start_offset: 0, end_offset: 0, start_line: null, end_line: null }),
 });
 
+export const judgeRawFindingSchema = z.object({
+  startOffset: z.preprocess(toNullableNumber, z.number().int().min(0).nullable().optional())
+    .transform((v) => (typeof v === "number" ? Math.max(0, Math.floor(v)) : 0)),
+  endOffset: z.preprocess(toNullableNumber, z.number().int().min(0).nullable().optional())
+    .transform((v) => (typeof v === "number" ? Math.max(0, Math.floor(v)) : 0)),
+  reason: z.string().optional().nullable().transform((v) => (v == null ? "" : String(v))),
+  confidence: z.preprocess(toNullableNumber, z.number().min(0).max(1).nullable().optional())
+    .transform((v) => (typeof v === "number" ? Math.max(0, Math.min(1, v)) : 0.7)),
+});
+
+export const judgeRawOutputSchema = z.object({
+  findings: z.array(judgeRawFindingSchema),
+});
+
 export const judgeOutputSchema = z.object({
   findings: z.array(judgeFindingSchema),
 });
 
+export type JudgeRawFinding = z.infer<typeof judgeRawFindingSchema>;
+export type JudgeRawOutput = z.infer<typeof judgeRawOutputSchema>;
 export type JudgeFinding = z.infer<typeof judgeFindingSchema>;
 export type JudgeOutput = z.infer<typeof judgeOutputSchema>;
 
@@ -137,6 +153,12 @@ export function parseJudgeOutput(raw: string): JudgeOutput {
   const json = extractJsonFromText(raw);
   const parsed = JSON.parse(json) as unknown;
   return judgeOutputSchema.parse(parsed);
+}
+
+export function parseJudgeRawOutput(raw: string): JudgeRawOutput {
+  const json = extractJsonFromText(raw);
+  const parsed = JSON.parse(json) as unknown;
+  return judgeRawOutputSchema.parse(parsed);
 }
 
 export function parseAuditorOutput(raw: string): AuditorOutput {

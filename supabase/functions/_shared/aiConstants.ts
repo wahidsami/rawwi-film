@@ -17,6 +17,14 @@ export const PROMPT_VERSIONS = {
   schema: "v1.9",
 };
 
+export const REVIEWER_KNOWLEDGE_VERSIONS = {
+  knowledge_manifest_version: "knowledge-manifest-v1",
+  handbook_version: "knowledge-handbook-v1",
+  universal_review_protocol_version: "universal-review-protocol-v1",
+} as const;
+
+export const PROMPT_TEMPLATE_VERSION = "reviewer-prompt-template-v1" as const;
+
 /** AI-002: temperature 0 (+ seed) for reproducibility; worker/pipeline must pass these to the API. */
 export const DEFAULT_DETERMINISTIC_CONFIG = {
   router_model: "gpt-4.1-mini",

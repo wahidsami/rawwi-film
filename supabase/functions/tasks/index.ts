@@ -34,6 +34,8 @@ import { resolveRequestedAnalysisEngine, resolveRequestedPipelineVersion } from 
 import {
   DEFAULT_DETERMINISTIC_CONFIG,
   PROMPT_VERSIONS,
+  PROMPT_TEMPLATE_VERSION,
+  REVIEWER_KNOWLEDGE_VERSIONS,
   ROUTER_SYSTEM_MSG,
   JUDGE_SYSTEM_MSG
 } from "../_shared/aiConstants.ts";
@@ -61,6 +63,10 @@ type JobRow = {
     analysis_engine?: "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1";
     hybrid_mode?: "off" | "shadow" | "enforce";
     policy_v1_mode?: "shadow" | "enforce";
+    knowledge_manifest_version?: string;
+    handbook_version?: string;
+    universal_review_protocol_version?: string;
+    prompt_template_version?: string;
     analysis_signature?: {
       chunk_size?: number;
       overlap_size?: number;
@@ -837,6 +843,10 @@ Deno.serve(async (req: Request) => {
         ...(requestedAnalysisEngine === "policy_v1" ? { policy_v1_mode: requestedPolicyV1Mode } : {}),
         max_router_candidates: analysisProfilePreset.maxRouterCandidates,
         deep_auditor_enabled: analysisProfilePreset.deepAuditorEnabled,
+        knowledge_manifest_version: REVIEWER_KNOWLEDGE_VERSIONS.knowledge_manifest_version,
+        handbook_version: REVIEWER_KNOWLEDGE_VERSIONS.handbook_version,
+        universal_review_protocol_version: REVIEWER_KNOWLEDGE_VERSIONS.universal_review_protocol_version,
+        prompt_template_version: PROMPT_TEMPLATE_VERSION,
         router_prompt_version: PROMPT_VERSIONS.router,
         router_prompt_hash: await sha256Hash(ROUTER_SYSTEM_MSG),
         judge_prompt_version: PROMPT_VERSIONS.judge,

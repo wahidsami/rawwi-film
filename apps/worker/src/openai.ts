@@ -6,14 +6,12 @@ import {
   auditorAssessmentSchema,
   auditorOutputSchema,
   extractJsonFromText,
-  judgeOutputSchema,
   parseAuditorOutput,
-  parseJudgeOutput,
+  parseJudgeRawOutput,
   parseRouterOutput,
   type AuditorAssessment,
   type AuditorOutput,
-  type JudgeFinding,
-  type JudgeOutput,
+  type JudgeRawFinding,
   type RouterOutput,
 } from "./schemas.js";
 import { logger } from "./logger.js";
@@ -27,9 +25,16 @@ installHttpTrace();
 
 const openai = new OpenAI({ apiKey: config.OPENAI_API_KEY });
 
+const MINIMAL_JUDGE_OUTPUT_CONTRACT = `Final output contract (must override any earlier schema text):
+- Return JSON only.
+- Shape: { "findings": [ { "startOffset": number, "endOffset": number, "reason": string, "confidence": number } ] }
+- Do NOT include snippet text, page number, article id, atom id, title, description, severity, canonical ids, or recommendation fields.
+- Do NOT include any extra keys outside findings/startOffset/endOffset/reason/confidence.
+`;
+
 const REPAIR_SYSTEM = `You fix broken JSON. Return only valid JSON, no markdown, no explanation.
-Expected shape: { "findings": [ { "article_id", "atom_id", "canonical_atom", "intensity", "context_impact", "legal_sensitivity", "audience_risk", "confidence", "title_ar", "description_ar", "evidence_snippet", "location": { "start_offset", "end_offset", "start_line", "end_line" }, "is_interpretive" } ] }
-Each of intensity, context_impact, legal_sensitivity, audience_risk must be 1-4. Do NOT include "severity" (computed by backend).`;
+Expected shape: { "findings": [ { "startOffset", "endOffset", "reason", "confidence" } ] }
+Each finding must include only the minimal fields above. Do NOT include article_id, atom_id, canonical_atom, title_ar, description_ar, evidence_snippet, location, severity, or any recommendation fields.`;
 
 type OpenAiCallOptions = {
   signal?: AbortSignal;
@@ -191,9 +196,8 @@ export async function callJudgeRaw(
 }> {
   const payload = buildJudgeArticlesPayload(selectedArticles);
   const textSlice = chunkText.slice(0, 30_000);
-  const allowedArticleIds = selectedArticles.map((a) => a.id).join(", ");
-  const systemPrompt = judgeSystemPrompt || JUDGE_SYSTEM_MSG;
-  const userContent = `${payload}\n\n---\nمقطع النص (start_offset=${globalStart}، end_offset=${globalEnd}):\n${textSlice}\n\nقواعد تنسيق إلزامية:\n- article_id (اختياري): إذا استخدمته فيجب أن يكون رقماً صحيحاً من المواد المعروضة فقط: [${allowedArticleIds}]. إذا لم تُحدده استخدم canonical_atom.\n- canonical_atom مطلوب: واحدة من INSULT, VIOLENCE, SEXUAL, SUBSTANCES, DISCRIMINATION, CHILD_SAFETY, WOMEN, MISINFORMATION, PUBLIC_ORDER, EXTREMISM, INTERNATIONAL, ECONOMIC, PRIVACY, APPEARANCE.\n- intensity, context_impact, legal_sensitivity, audience_risk مطلوبة وكل واحدة رقماً بين 1 و 4.\n- rationale_ar مطلوبة: جملة أو جملتان بالعربية تشرح أين يظهر المقتطف، ما الذي تم رصده، ولماذا يندرج تحت المادة. امنع الشرح العام مثل "وجود لفظ مخالف" دون توضيح.\n- يجب أن يطابق rationale_ar المادة الأساسية المختارة، ولا تذكر مادة مختلفة عنها في الشرح.\n- لا تُرجع severity — تُحسب في الخلفية.\n- evidence_snippet يجب أن يكون أصغر اقتباس حرفي ممكن يثبت المخالفة، وليس فقرة واسعة إلا إذا تعذر غير ذلك.\n- location.start_offset و location.end_offset يجب أن يحددا نفس المقتطف القصير داخل chunk الحالي (لا تُرجع null ولا نافذة واسعة بلا حاجة).\n- confidence رقماً بين 0 و 1.\n- evidence_snippet نصاً غير null.\n${userPromptAddition && userPromptAddition.trim().length > 0 ? `\n${userPromptAddition.trim()}\n` : ""}أرجع JSON بمصفوفة findings فقط.`;
+  const systemPrompt = `${judgeSystemPrompt || JUDGE_SYSTEM_MSG}\n\n${MINIMAL_JUDGE_OUTPUT_CONTRACT}`;
+  const userContent = `${payload}\n\n---\nمقطع النص (start_offset=${globalStart}، end_offset=${globalEnd}):\n${textSlice}\n\nقواعد الإخراج الإلزامية:\n- أرجع JSON فقط بالشكل: { "findings": [ { "startOffset": number, "endOffset": number, "reason": string, "confidence": number } ] }\n- startOffset و endOffset يجب أن يحددا أصغر مقطع حرفي ممكن من النص الحالي يثبت الملاحظة.\n- reason مطلوب: جملة أو جملتان بالعربية تشرح لماذا يثبت هذا المقطع المخالفة.\n- confidence مطلوب: رقم بين 0 و 1.\n- لا تُرجع snippet_text أو page أو article_id أو atom_id أو title أو description أو severity أو canonical ids أو recommendation.\n${userPromptAddition && userPromptAddition.trim().length > 0 ? `\n${userPromptAddition.trim()}\n` : ""}`;
   const promptHash = config.ENABLE_AI_DIAGNOSTICS
     ? sha256(canonicalStringify({
         system: systemPrompt,
@@ -323,7 +327,7 @@ export async function parseJudgeWithRepair(
   raw: string,
   model: string,
   options: OpenAiCallOptions = {}
-): Promise<{ findings: JudgeFinding[]; diagnostics: JudgeParseDiagnostics }> {
+): Promise<{ findings: JudgeRawFinding[]; diagnostics: JudgeParseDiagnostics }> {
   let content = raw;
   let usedRepair = false;
   let repairReason: string | null = null;
@@ -335,9 +339,7 @@ export async function parseJudgeWithRepair(
   });
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const json = extractJsonFromText(content);
-      const parsed = JSON.parse(json) as unknown;
-      const out = judgeOutputSchema.parse(parsed);
+      const out = parseJudgeRawOutput(content);
       logger.info("[DEBUG] Judge parse succeeded", {
         model,
         findingsCount: out.findings.length,

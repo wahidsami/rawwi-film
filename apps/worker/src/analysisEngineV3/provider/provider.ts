@@ -11,17 +11,12 @@ import type {
 import { createPromptConceptContext, runReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRunner.js";
 import { getDefaultReviewerMethodology } from "../reviewerMethodology/reviewerMethodologyRegistry.js";
 import { getDefaultReviewerQuestionSet } from "../reviewerQuestions/index.js";
-import { createReviewerKnowledgeRetrievalReport } from "../reviewerKnowledge/reviewerKnowledgeRetrieval.js";
 import { createEmergencyContextualReviewerKnowledgeSelection } from "../reviewerKnowledge/emergencyContextualReviewerRouter.js";
-import { createDefaultReviewerKnowledgeRegistry, resolveKnowledgeDomainCandidateArticleIds } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
-import type { ReviewerKnowledgePack } from "../reviewerKnowledge/reviewerKnowledgeTypes.js";
-import { buildReviewerReasoningEnginePayload } from "../builder/reviewerReasoningEngine.js";
-import { compileReviewerContext } from "../reviewerCompiler/compiler.js";
+import { resolveKnowledgeDomainCandidateArticleIds } from "../reviewerKnowledge/reviewerKnowledgeRegistry.js";
 import { validateReasonedDecisionAgainstEvidence } from "./reasonedDecisionValidation.js";
 import { createV3AnalysisFailure, type V3AnalysisFailureCode } from "./analysisFailure.js";
 import type { V3ProviderErrorDetails } from "./providerError.js";
 import { logger } from "../../logger.js";
-import { config } from "../../config.js";
 import { writeV3PromptReplayFile } from "../runtime/promptReplay.js";
 
 export type V3ProviderFlowInput = Readonly<{
@@ -67,102 +62,28 @@ export function buildV3ProviderUserPrompt(input: V3PromptBuilderInput): string {
   logger.info("V3 instrumentation ENTER: buildV3ProviderUserPrompt", {
     subjectModuleId: input.subjectModule.id,
   });
-  const useReviewerCompiler = config.REVIEWER_COMPILER_ENABLED || config.DETERMINISTIC_CANDIDATES_ENABLED;
   const conceptContext = createPromptConceptContext(input);
   const reviewerAssessment = runReviewerMethodology({ promptInput: input, conceptContext });
-  const compiledReviewerContext = useReviewerCompiler
-    ? (input.compiledReviewerContext ?? compileReviewerContext({
-        promptInput: input,
-        conceptContext,
-        assessment: reviewerAssessment,
-      }).compiledReviewerContext)
-    : null;
-  if (input.compiledReviewerContext !== compiledReviewerContext) {
-    (input as V3PromptBuilderInput & { compiledReviewerContext?: typeof compiledReviewerContext | null }).compiledReviewerContext = compiledReviewerContext;
-  }
-  const reviewerKnowledgeSelection = useReviewerCompiler
-    ? null
-    : createEmergencyContextualReviewerKnowledgeSelection({
-        promptInput: input,
-        conceptContext,
-        assessment: reviewerAssessment,
-      });
-  const reviewerKnowledgeRegistry = reviewerKnowledgeSelection?.reviewerKnowledgeRegistry
-    ?? createDefaultReviewerKnowledgeRegistry(compiledReviewerContext?.selection.selectedAcademyFolders);
-  let reviewerKnowledgeRetrieval: ReturnType<typeof createReviewerKnowledgeRetrievalReport> | null = null;
-  let reviewerKnowledgePacks: readonly ReviewerKnowledgePack[] = [];
-  if (!useReviewerCompiler && reviewerKnowledgeSelection) {
-    reviewerKnowledgeRetrieval = createReviewerKnowledgeRetrievalReport({
-      assessment: reviewerAssessment,
-      conceptContext,
-      subjectModule: input.subjectModule,
-      registry: reviewerKnowledgeSelection.reviewerKnowledgeRegistry,
-      topK: Math.max(1, reviewerKnowledgeSelection.routing.selectedReviewerPackIds.length),
-    });
-    reviewerKnowledgePacks = reviewerKnowledgeRetrieval.selectedPacks;
-  }
-  const canonicalOwnershipRegistry = reviewerKnowledgeRegistry;
-  const selectedPolicyArticleIds = new Set(input.compiledReviewerContext?.selectedPolicyArticleIds ?? []);
-  const resolveCanonicalArticleId = (articleId: number, knowledgeDomain: string | null): number => {
-    if (!Number.isFinite(articleId) || articleId <= 0) return articleId;
-    const normalizedKnowledgeDomain = typeof knowledgeDomain === "string" ? knowledgeDomain : null;
-    const candidateArticleIds = normalizedKnowledgeDomain
-      ? resolveKnowledgeDomainCandidateArticleIds(canonicalOwnershipRegistry, normalizedKnowledgeDomain)
-      : Object.freeze([]);
-    if (candidateArticleIds.includes(articleId)) return articleId;
-    const selectedCandidate = candidateArticleIds.find((candidateArticleId) => selectedPolicyArticleIds.has(candidateArticleId));
-    if (typeof selectedCandidate === "number") return selectedCandidate;
-    return candidateArticleIds[0] ?? articleId;
-  };
-  const reviewerReasoningEngine = useReviewerCompiler || !reviewerKnowledgeSelection || !reviewerKnowledgeRetrieval
-    ? null
-    : buildReviewerReasoningEnginePayload(
-        input,
-        conceptContext,
-        reviewerAssessment,
-        reviewerKnowledgePacks,
-        reviewerKnowledgeSelection.knowledgeRegistry,
-        reviewerKnowledgeRetrieval,
-      );
   logger.info("V3 instrumentation EXIT: buildV3ProviderUserPrompt", {
     subjectModuleId: input.subjectModule.id,
     durationMs: Date.now() - startedAt,
   });
 
-  return stableSerializePromptValue(useReviewerCompiler && compiledReviewerContext
-    ? {
-        chunkContext: input.chunkContext,
-        glossary: input.glossary,
-        compiledReviewerContext,
-        reviewerAssessment,
-        reviewerMethodology: getDefaultReviewerMethodology(),
-        outputSchema: input.outputSchema,
-        reasoningContract: input.reasoningContract,
-        semanticLayer: input.semanticLayer,
-        storyMemory: input.storyMemory,
-        subjectModule: {
-          id: input.subjectModule.id,
-          scope: input.subjectModule.scope ?? null,
-          titleAr: input.subjectModule.titleAr,
-        },
-    }
-      : {
-        chunkContext: input.chunkContext,
-        glossary: input.glossary,
-        reviewerReasoningEngine,
-        reviewerAssessment,
-        reviewerMethodology: getDefaultReviewerMethodology(),
-        reviewerKnowledgePacks,
-        outputSchema: input.outputSchema,
-        reasoningContract: input.reasoningContract,
-        semanticLayer: input.semanticLayer,
-        storyMemory: input.storyMemory,
-        subjectModule: {
-          id: input.subjectModule.id,
-          scope: input.subjectModule.scope ?? null,
-          titleAr: input.subjectModule.titleAr,
-        },
-      });
+  return stableSerializePromptValue({
+    chunkContext: input.chunkContext,
+    glossary: input.glossary,
+    reviewerAssessment,
+    reviewerMethodology: getDefaultReviewerMethodology(),
+    outputSchema: input.outputSchema,
+    reasoningContract: input.reasoningContract,
+    semanticLayer: input.semanticLayer,
+    storyMemory: input.storyMemory,
+    subjectModule: {
+      id: input.subjectModule.id,
+      scope: input.subjectModule.scope ?? null,
+      titleAr: input.subjectModule.titleAr,
+    },
+  });
 }
 
 function appendValidationRepairInstruction(userPrompt: string, issues: readonly { path: string; message: string }[]): string {

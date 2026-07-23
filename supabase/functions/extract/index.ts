@@ -21,6 +21,8 @@ import { isSuperAdminOrAdmin } from "../_shared/roleCheck.ts";
 import {
   DEFAULT_DETERMINISTIC_CONFIG,
   PROMPT_VERSIONS,
+  PROMPT_TEMPLATE_VERSION,
+  REVIEWER_KNOWLEDGE_VERSIONS,
   ROUTER_SYSTEM_MSG,
   JUDGE_SYSTEM_MSG
 } from "../_shared/aiConstants.ts";
@@ -152,6 +154,10 @@ async function runIngest(
       config_snapshot: {
         ...DEFAULT_DETERMINISTIC_CONFIG,
         analysis_memory_mode: analysisMemoryMode,
+        knowledge_manifest_version: REVIEWER_KNOWLEDGE_VERSIONS.knowledge_manifest_version,
+        handbook_version: REVIEWER_KNOWLEDGE_VERSIONS.handbook_version,
+        universal_review_protocol_version: REVIEWER_KNOWLEDGE_VERSIONS.universal_review_protocol_version,
+        prompt_template_version: PROMPT_TEMPLATE_VERSION,
         router_prompt_version: PROMPT_VERSIONS.router,
         router_prompt_hash: await sha256Hash(ROUTER_SYSTEM_MSG),
         judge_prompt_version: PROMPT_VERSIONS.judge,

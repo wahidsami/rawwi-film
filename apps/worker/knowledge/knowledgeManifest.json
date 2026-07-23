@@ -1,0 +1,109 @@
+{
+  "version": "knowledge-manifest-v1",
+  "articles": [
+    {
+      "articleId": 1,
+      "markdownFilename": "article_01.md"
+    },
+    {
+      "articleId": 2,
+      "markdownFilename": "article_02.md"
+    },
+    {
+      "articleId": 3,
+      "markdownFilename": "article_03.md"
+    },
+    {
+      "articleId": 4,
+      "markdownFilename": "article_04.md"
+    },
+    {
+      "articleId": 5,
+      "markdownFilename": "article_05.md"
+    },
+    {
+      "articleId": 6,
+      "markdownFilename": "article_06.md"
+    },
+    {
+      "articleId": 7,
+      "markdownFilename": "article_07.md"
+    },
+    {
+      "articleId": 8,
+      "markdownFilename": "article_08.md"
+    },
+    {
+      "articleId": 9,
+      "markdownFilename": "article_09.md"
+    },
+    {
+      "articleId": 10,
+      "markdownFilename": "article_10.md"
+    },
+    {
+      "articleId": 11,
+      "markdownFilename": "article_11.md"
+    },
+    {
+      "articleId": 12,
+      "markdownFilename": "article_12.md"
+    },
+    {
+      "articleId": 13,
+      "markdownFilename": "article_13.md"
+    },
+    {
+      "articleId": 14,
+      "markdownFilename": "article_14.md"
+    },
+    {
+      "articleId": 15,
+      "markdownFilename": "article_15.md"
+    },
+    {
+      "articleId": 16,
+      "markdownFilename": "article_16.md"
+    },
+    {
+      "articleId": 17,
+      "markdownFilename": "article_17.md"
+    },
+    {
+      "articleId": 18,
+      "markdownFilename": "article_18.md"
+    },
+    {
+      "articleId": 19,
+      "markdownFilename": "article_19.md"
+    },
+    {
+      "articleId": 20,
+      "markdownFilename": "article_20.md"
+    },
+    {
+      "articleId": 21,
+      "markdownFilename": "article_21.md"
+    },
+    {
+      "articleId": 22,
+      "markdownFilename": "article_22.md"
+    },
+    {
+      "articleId": 23,
+      "markdownFilename": "article_23.md"
+    },
+    {
+      "articleId": 24,
+      "markdownFilename": "article_24.md"
+    },
+    {
+      "articleId": 25,
+      "markdownFilename": "article_25.md"
+    },
+    {
+      "articleId": 26,
+      "markdownFilename": "article_26.md"
+    }
+  ]
+}

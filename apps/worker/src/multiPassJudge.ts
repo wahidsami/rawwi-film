@@ -13,8 +13,10 @@
  * Each pass runs in parallel with a focused, simple prompt.
  */
 
+import { canonicalStringify } from "./canonicalJson.js";
+import { sha256 } from "./hash.js";
 import type { GCAMArticle } from "./gcam.js";
-import type { JudgeFinding } from "./schemas.js";
+import type { JudgeFinding, JudgeRawFinding } from "./schemas.js";
 import { callJudgeRaw, parseJudgeWithRepair } from "./openai.js";
 import { extractRawFindingCount, persistJudgeDiagnostic } from "./judgeDiagnostics.js";
 import { logger } from "./logger.js";
@@ -22,7 +24,8 @@ import { buildLineageEvent, ensureFindingLineageId, persistLineageEvents } from 
 import { getFrameworkPromptSection } from "./canonicalAtomFramework.js";
 import { flushChunkPassProgress, reportChunkPassProgressDebounced } from "./jobs.js";
 import { evaluatePassGating } from "./passGating.js";
-import { getGcamRefsForCanonicalAtom } from "./canonicalAtomMapping.js";
+import { getGcamRefsForCanonicalAtom, getPrimaryCanonicalAtomForGcam } from "./canonicalAtomMapping.js";
+import { canonicalArabicToken } from "./lexiconCache.js";
 import { config } from "./config.js";
 import { createV3AnalysisFailure } from "./analysisEngineV3/provider/analysisFailure.js";
 import {
@@ -39,10 +42,12 @@ import {
 } from "./v4PromptPack.js";
 import { buildV3PromptPrelude } from "./analysisEngineV3/engine/index.js";
 import type { AnalysisExecutionSignatureInput } from "./executionSignature.js";
+import type { CanonicalAtom } from "./severityRulebook.js";
 
 export interface LexiconTerm {
   term: string;
   gcam_article_id: number;
+  gcam_atom_id?: string | null;
   severity_floor: string;
   gcam_article_title_ar?: string | null;
   term_variants?: string[] | null;
@@ -150,6 +155,162 @@ function normalizeFindingForPass(
     article_id: articleId,
     atom_id: atomId,
   };
+}
+
+function canonicalAtomForPass(passName: string): CanonicalAtom | null {
+  const normalized = passName.toLowerCase();
+  if (normalized.includes("glossary")) return null;
+  if (normalized.includes("insult")) return "INSULT";
+  if (normalized.includes("violence")) return "VIOLENCE";
+  if (normalized.includes("sexual")) return "SEXUAL";
+  if (normalized.includes("drug")) return "SUBSTANCES";
+  if (normalized.includes("discrimination")) return "DISCRIMINATION";
+  if (normalized.includes("women")) return "WOMEN";
+  if (normalized.includes("child")) return "CHILD_SAFETY";
+  if (normalized.includes("security") || normalized.includes("public_order")) return "PUBLIC_ORDER";
+  if (normalized.includes("extremism")) return "EXTREMISM";
+  if (normalized.includes("misinformation")) return "MISINFORMATION";
+  if (normalized.includes("international")) return "INTERNATIONAL";
+  if (normalized.includes("economic")) return "ECONOMIC";
+  if (normalized.includes("privacy")) return "PRIVACY";
+  if (normalized.includes("appearance") || normalized.includes("clothing")) return "APPEARANCE";
+  if (normalized.includes("religion")) return "DISCRIMINATION";
+  return null;
+}
+
+function matchGlossaryLexiconTerm(
+  evidenceText: string,
+  lexiconTerms: LexiconTerm[],
+): LexiconTerm | null {
+  const normalizedEvidence = canonicalArabicToken(evidenceText);
+  if (!normalizedEvidence) return null;
+
+  const candidates: Array<{ term: LexiconTerm; score: number }> = [];
+  for (const term of lexiconTerms) {
+    const variants = [term.term, ...(term.term_variants ?? [])].filter((value) => typeof value === "string" && value.trim().length > 0);
+    let bestScore = 0;
+    for (const variant of variants) {
+      const normalizedVariant = canonicalArabicToken(variant);
+      if (!normalizedVariant) continue;
+      if (normalizedEvidence === normalizedVariant) {
+        bestScore = Math.max(bestScore, 1000 + normalizedVariant.length);
+      } else if (normalizedEvidence.includes(normalizedVariant) || normalizedVariant.includes(normalizedEvidence)) {
+        bestScore = Math.max(bestScore, normalizedVariant.length);
+      }
+    }
+    if (bestScore > 0) {
+      candidates.push({ term, score: bestScore });
+    }
+  }
+
+  if (candidates.length === 0) return null;
+  candidates.sort((left, right) => right.score - left.score || left.term.gcam_article_id - right.term.gcam_article_id);
+  return candidates[0]?.term ?? null;
+}
+
+export function enrichRawJudgeFinding(args: {
+  finding: JudgeRawFinding;
+  chunkText: string;
+  passName: string;
+  articles: GCAMArticle[];
+  lexiconTerms: LexiconTerm[];
+}): JudgeFinding {
+  const rawStart = Number.isFinite(args.finding.startOffset) ? Math.max(0, Math.floor(args.finding.startOffset)) : 0;
+  const rawEndCandidate = Number.isFinite(args.finding.endOffset) ? Math.max(0, Math.floor(args.finding.endOffset)) : rawStart;
+  const rawEnd = rawEndCandidate > rawStart ? rawEndCandidate : Math.min(args.chunkText.length, rawStart + 1);
+  const evidenceSnippet = args.chunkText.slice(rawStart, rawEnd);
+  const canonicalAtom = canonicalAtomForPass(args.passName);
+  const rawFinding: JudgeFinding = {
+    source: null,
+    article_id: 0,
+    atom_id: null,
+    canonical_atom: canonicalAtom,
+    canonical_atoms: canonicalAtom ? [canonicalAtom] : null,
+    intensity: 1,
+    context_impact: 1,
+    legal_sensitivity: 1,
+    audience_risk: 1,
+    title_ar: "مخالفة محتوى",
+    description_ar: args.finding.reason || evidenceSnippet || "مخالفة محتوى",
+    severity: null,
+    confidence: Number.isFinite(args.finding.confidence) ? Math.max(0, Math.min(1, args.finding.confidence)) : 0.7,
+    is_interpretive: false,
+    depiction_type: "unknown",
+    speaker_role: "unknown",
+    narrative_consequence: "unknown",
+    context_window_id: null,
+    context_confidence: null,
+    lexical_confidence: null,
+    policy_confidence: null,
+    rationale_ar: args.finding.reason || evidenceSnippet || "وصف محدود من الباحث الآلي.",
+    final_ruling: null,
+    detection_pass: args.passName,
+    lineage_id: null,
+    parent_lineage_id: null,
+    canonical_hash: null,
+    evidence_hash: null,
+    evidence_snippet: evidenceSnippet,
+    location: {
+      start_offset: rawStart,
+      end_offset: rawEnd,
+      start_line: null,
+      end_line: null,
+    },
+  } as JudgeFinding;
+
+  if (args.passName === "glossary") {
+    const match = matchGlossaryLexiconTerm(evidenceSnippet || args.finding.reason || "", args.lexiconTerms);
+    if (match) {
+      rawFinding.article_id = match.gcam_article_id;
+      rawFinding.atom_id = match.gcam_atom_id ?? rawFinding.atom_id;
+      rawFinding.canonical_atom = getPrimaryCanonicalAtomForGcam(match.gcam_article_id, match.gcam_atom_id ?? rawFinding.atom_id ?? null);
+      rawFinding.canonical_atoms = rawFinding.canonical_atom ? [rawFinding.canonical_atom] : null;
+      rawFinding.title_ar = match.gcam_article_title_ar ?? rawFinding.title_ar;
+      rawFinding.description_ar = match.term;
+      rawFinding.rationale_ar = rawFinding.rationale_ar || match.term;
+    }
+  }
+
+  return rawFinding;
+}
+
+export type JudgeEnrichmentProof = Readonly<{
+  promptHash: string | null;
+  promptLength: number;
+  rawResponseHash: string;
+  rawResponseLength: number;
+  rawFindingCount: number;
+  rawFindingsHash: string;
+  enrichedFindingCount: number;
+  enrichedFindingsHash: string;
+  parseDurationMs: number;
+  enrichmentDurationMs: number;
+  determinismDelta: number;
+}>;
+
+export function buildJudgeEnrichmentProof(args: Readonly<{
+  promptHash: string | null;
+  renderedSystemPrompt: string;
+  renderedUserPrompt: string;
+  rawJudgeResponse: string;
+  rawFindings: readonly JudgeRawFinding[];
+  enrichedFindings: readonly JudgeFinding[];
+  parseDurationMs: number;
+  enrichmentDurationMs: number;
+}>): JudgeEnrichmentProof {
+  return Object.freeze({
+    promptHash: args.promptHash,
+    promptLength: args.renderedSystemPrompt.length + args.renderedUserPrompt.length,
+    rawResponseHash: sha256(args.rawJudgeResponse),
+    rawResponseLength: args.rawJudgeResponse.length,
+    rawFindingCount: args.rawFindings.length,
+    rawFindingsHash: sha256(canonicalStringify(args.rawFindings)),
+    enrichedFindingCount: args.enrichedFindings.length,
+    enrichedFindingsHash: sha256(canonicalStringify(args.enrichedFindings)),
+    parseDurationMs: args.parseDurationMs,
+    enrichmentDurationMs: args.enrichmentDurationMs,
+    determinismDelta: args.rawFindings.length - args.enrichedFindings.length,
+  });
 }
 
 /**
@@ -1922,8 +2083,30 @@ async function runSinglePass(
       });
     }
 
-    // Parse findings
-    const { findings, diagnostics } = await parseJudgeWithRepair(judgeCall.raw_judge_response, model, { signal });
+    // Parse raw findings, then enrich deterministically inside the worker.
+    const parseStartedAt = Date.now();
+    const { findings: rawFindings, diagnostics } = await parseJudgeWithRepair(judgeCall.raw_judge_response, model, { signal });
+    const enrichedStartedAt = Date.now();
+    const findings = rawFindings.map((finding) =>
+      enrichRawJudgeFinding({
+        finding,
+        chunkText,
+        passName: pass.name,
+        articles,
+        lexiconTerms,
+      })
+    );
+    const enrichmentDuration = Date.now() - enrichedStartedAt;
+    const enrichmentProof = buildJudgeEnrichmentProof({
+      promptHash: judgeCall.prompt_hash ?? null,
+      renderedSystemPrompt: judgeCall.rendered_system_prompt,
+      renderedUserPrompt: judgeCall.rendered_user_prompt,
+      rawJudgeResponse: judgeCall.raw_judge_response,
+      rawFindings,
+      enrichedFindings: findings,
+      parseDurationMs: enrichedStartedAt - parseStartedAt,
+      enrichmentDurationMs: enrichmentDuration,
+    });
     if (diagnosticContext) {
       const rawFindingCount = extractRawFindingCount(judgeCall.raw_judge_response);
       await persistJudgeDiagnostic({
@@ -1946,6 +2129,18 @@ async function runSinglePass(
         parser_validation_errors: diagnostics.parser_validation_errors,
       });
     }
+    logger.info("[DEBUG] Judge enrichment completed", {
+      model,
+      passName: pass.name,
+      rawFindingCount: rawFindings.length,
+      enrichedFindingCount: findings.length,
+      parseDurationMs: enrichedStartedAt - parseStartedAt,
+      enrichmentDurationMs: enrichmentDuration,
+      enrichmentProof,
+      promptHash: judgeCall.prompt_hash ?? null,
+      rawResponseLength: judgeCall.raw_judge_response.length,
+      promptLength: judgeCall.rendered_user_prompt.length + judgeCall.rendered_system_prompt.length,
+    });
     const tagged = findings.map((f) => ({
       ...f,
       detection_pass: pass.name,
