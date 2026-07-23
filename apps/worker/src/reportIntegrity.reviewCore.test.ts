@@ -8,12 +8,15 @@ async function loadAggregationHelpers() {
   const module = await import("./aggregation.js");
   return {
     shouldBypassReportIntegrityValidationForEngine: module.shouldBypassReportIntegrityValidationForEngine as typeof import("./aggregation.js").shouldBypassReportIntegrityValidationForEngine,
+    resolveAggregationAnalysisEngine: module.resolveAggregationAnalysisEngine as typeof import("./aggregation.js").resolveAggregationAnalysisEngine,
   };
 }
 
 async function testReviewCoreBypassesReportIntegrityValidation(): Promise<void> {
-  const { shouldBypassReportIntegrityValidationForEngine } = await loadAggregationHelpers();
-  assert.equal(shouldBypassReportIntegrityValidationForEngine("review_core"), true);
+  const { resolveAggregationAnalysisEngine, shouldBypassReportIntegrityValidationForEngine } = await loadAggregationHelpers();
+  assert.equal(resolveAggregationAnalysisEngine("v3", "review_core"), "review_core");
+  assert.equal(shouldBypassReportIntegrityValidationForEngine(resolveAggregationAnalysisEngine("v3", "review_core")), true);
+  assert.equal(resolveAggregationAnalysisEngine("v3", "v3"), "v3");
   assert.equal(shouldBypassReportIntegrityValidationForEngine("v3"), false);
   assert.equal(shouldBypassReportIntegrityValidationForEngine("v4"), false);
   assert.equal(shouldBypassReportIntegrityValidationForEngine("shadow"), false);

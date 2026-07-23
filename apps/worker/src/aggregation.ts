@@ -596,6 +596,15 @@ export function shouldBypassReportIntegrityValidationForEngine(value: unknown): 
   return pickAnalysisEngine(value) === "review_core";
 }
 
+export function resolveAggregationAnalysisEngine(
+  snapshotEngine: unknown,
+  runtimeEngine: unknown,
+): "v2" | "v3" | "v4" | "shadow" | "hybrid" | "policy_v1" | "review_core" {
+  const activeRuntimeEngine = pickAnalysisEngine(runtimeEngine ?? config.ANALYSIS_ENGINE);
+  if (activeRuntimeEngine === "review_core") return "review_core";
+  return pickAnalysisEngine(snapshotEngine ?? activeRuntimeEngine);
+}
+
 function pickPipelineVersion(value: unknown): "v1" | "v2" {
   return value === "v2" ? "v2" : "v1";
 }
@@ -2797,6 +2806,7 @@ export function buildSummaryJson(
   scriptTitle?: string,
   analysisOptions?: AnalysisSummaryOptions | null,
   jobConfigMeta?: JobConfigMeta | null,
+  activeAnalysisEngine?: string | null,
 ): SummaryJson {
   const generated_at = new Date().toISOString();
   const filtered = findings.filter((f) => f.article_id !== OUT_OF_SCOPE_ARTICLE_ID);
@@ -3056,7 +3066,10 @@ export function buildSummaryJson(
     analysis_meta: {
       auditor_layer_version: pickAuditorLayerVersion(jobConfigMeta?.auditor_layer_version ?? config.AUDITOR_LAYER_VERSION),
       violation_system_version: pickViolationSystemVersion(jobConfigMeta?.violation_system_version ?? config.VIOLATION_SYSTEM_VERSION),
-      analysis_engine: pickAnalysisEngine(jobConfigMeta?.analysis_engine ?? config.ANALYSIS_ENGINE),
+      analysis_engine: resolveAggregationAnalysisEngine(
+        jobConfigMeta?.analysis_engine ?? config.ANALYSIS_ENGINE,
+        activeAnalysisEngine ?? config.ANALYSIS_ENGINE,
+      ),
       analysis_pipeline_version: pickPipelineVersion(jobConfigMeta?.pipeline_version ?? config.ANALYSIS_PIPELINE_VERSION),
       knowledge_manifest_version: jobConfigMeta?.knowledge_manifest_version ?? REVIEWER_KNOWLEDGE_VERSIONS.knowledge_manifest_version,
       handbook_version: jobConfigMeta?.handbook_version ?? REVIEWER_KNOWLEDGE_VERSIONS.handbook_version,
@@ -3650,6 +3663,10 @@ export async function runAggregation(jobId: string): Promise<void> {
     .order("page_number", { ascending: true });
 
   const fullScriptText = ((job as { normalized_text?: string | null }).normalized_text ?? "").trim();
+  const analysisEngine = resolveAggregationAnalysisEngine(
+    (job.config_snapshot as { analysis_engine?: string | null } | null)?.analysis_engine,
+    config.ANALYSIS_ENGINE,
+  );
 
   const rawAnalysisOptions = (job as { config_snapshot?: { analysisOptions?: { mergeStrategy?: string } } }).config_snapshot?.analysisOptions;
   let analysisOptions: AnalysisSummaryOptions | undefined;
@@ -3678,6 +3695,7 @@ export async function runAggregation(jobId: string): Promise<void> {
       prompt_template_version: (job.config_snapshot as { prompt_template_version?: string } | null)?.prompt_template_version,
       analysis_generation_id: (job.config_snapshot as { analysis_generation_id?: string | null } | null)?.analysis_generation_id ?? null,
     },
+    analysisEngine,
   );
   const totalChunks = Math.max(0, (((job as { progress_total?: number | null }).progress_total ?? 1) - 1));
   if ((job as { partial_finalize_requested?: boolean | null }).partial_finalize_requested) {
@@ -3815,7 +3833,6 @@ export async function runAggregation(jobId: string): Promise<void> {
   if (j.created_by != null) reportRow.created_by = j.created_by;
 
   const analysisGenerationId = (job.config_snapshot as { analysis_generation_id?: string | null } | null)?.analysis_generation_id ?? null;
-  const analysisEngine = pickAnalysisEngine((job.config_snapshot as { analysis_engine?: string | null } | null)?.analysis_engine ?? config.ANALYSIS_ENGINE);
   const bypassReportIntegrityValidation = shouldBypassReportIntegrityValidationForEngine(analysisEngine);
   const reportValidationMode = config.REPORT_VALIDATION_MODE;
   const reportValidationTimestamp = new Date().toISOString();
