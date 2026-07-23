@@ -2562,52 +2562,109 @@ export async function processChunkJudge(
       selectedArticleCount: selectedIds.length,
       routerDurationMs,
     });
-    logger.info("[DEBUG] Articles passed to multi-pass", {
-      chunkId: chunk.id,
-      selectedArticlesCount: selectedArticles.length,
-      selectedArticleIds: selectedArticles.map(a => a.id),
-    });
+      logger.info("[DEBUG] Articles passed to multi-pass", {
+        chunkId: chunk.id,
+        selectedArticlesCount: selectedArticles.length,
+        selectedArticleIds: selectedArticles.map(a => a.id),
+      });
 
-    // 3) Multi-Pass Detection (specialized scanners running in parallel)
-    allFindings = [];
-    try {
-      const passExecutionPlan = planDetectionPassExecution(chunkText, selectedArticles, terms);
-      await setChunkMultipassStart(chunk.id, Math.max(1, passExecutionPlan.activePasses.length));
-      const multiPassStartedAt = Date.now();
-      throwIfAborted(signal);
-      const multiPassResult = await runMultiPassDetection(
-        chunkText,
-        chunkStart,
-        chunkEnd,
-        selectedArticles,
-        terms,
-        { temperature, seed, analysis_engine: analysisEngine, analysis_signature_context: analysisSignatureBase },
-        { chunkId: chunk.id },
-        passExecutionPlan,
-        analysisPromptContext ?? undefined,
-        signal,
-        {
+      if (analysisEngine === "review_core") {
+        const reviewCoreStartedAt = Date.now();
+        logger.info("[ReviewCore] execution starting", {
           jobId,
           chunkId: chunk.id,
-          routerCandidates: routerOutputJson,
-        }
-      );
-      throwIfAborted(signal);
-      await setChunkPhase(chunk.id, "postprocess");
-      logger.info("Post-multipass refinement starting", {
-        jobId,
-        chunkId: chunk.id,
-        runKey,
-        rawFindings: multiPassResult.findings.length,
-        executedPassCount: multiPassResult.executedPassCount,
-        skippedPassCount: multiPassResult.skippedPassCount,
-      });
+          runKey,
+          selectedArticleIds: selectedIds,
+        });
+        await setChunkPhase(chunk.id, "postprocess");
+        const reviewCoreAnalysisJobContext = {
+          request: {
+            jobId,
+            chunkId: chunk.id,
+            scriptId,
+            versionId,
+            chunkText,
+            chunkStart,
+            chunkEnd,
+            chunkIndex: chunk.chunk_index,
+            startLine: chunk.start_line ?? null,
+            endLine: chunk.end_line ?? null,
+            storyMemory: analysisPromptContext ?? null,
+            sceneMemory: null,
+            neighboringSentences: [],
+            analysisPromptContext: analysisPromptContext ?? null,
+            promptLexiconTerms: terms,
+            analysisSignatureContext: analysisSignatureBase,
+            diagnosticsEnabled: config.ENABLE_AI_DIAGNOSTICS,
+          },
+          options: {
+            policySelectedArticleIds: selectedIds,
+          },
+        } as const;
+        const reviewCoreRunner = createAnalysisEngine({ jobId });
+        const reviewCoreResult = await reviewCoreRunner.execute(reviewCoreAnalysisJobContext);
+        logger.info("[ReviewCore] execution completed", {
+          jobId,
+          chunkId: chunk.id,
+          runKey,
+          durationMs: Date.now() - reviewCoreStartedAt,
+          findingsCount: reviewCoreResult.findings.length,
+          selectedArticleIds: selectedIds,
+        });
+        allFindings = sortFindingsStable(reviewCoreResult.findings as FindingWithGlobal[]);
+        routerOutputJson = {
+          architecture: "review_core_adapter",
+          prompt_hash: reviewCoreResult.diagnostics.promptHash,
+          semantic_hash: reviewCoreResult.diagnostics.semanticHash,
+          legal_hash: reviewCoreResult.diagnostics.legalHash,
+          stage_hashes: reviewCoreResult.diagnostics.stageHashes,
+          stage_timings: reviewCoreResult.diagnostics.stageTimings,
+          findings_count: reviewCoreResult.findings.length,
+          selected_article_ids: selectedIds,
+        };
+        chunkTruthLayerMeta = reviewCoreResult.truthLayerMeta;
+        finalDiagnosticPromptHash = reviewCoreResult.diagnostics.promptHash;
+      } else {
+        // 3) Multi-Pass Detection (specialized scanners running in parallel)
+        allFindings = [];
+        try {
+          const passExecutionPlan = planDetectionPassExecution(chunkText, selectedArticles, terms);
+          await setChunkMultipassStart(chunk.id, Math.max(1, passExecutionPlan.activePasses.length));
+          const multiPassStartedAt = Date.now();
+          throwIfAborted(signal);
+          const multiPassResult = await runMultiPassDetection(
+            chunkText,
+            chunkStart,
+            chunkEnd,
+            selectedArticles,
+            terms,
+            { temperature, seed, analysis_engine: analysisEngine, analysis_signature_context: analysisSignatureBase },
+            { chunkId: chunk.id },
+            passExecutionPlan,
+            analysisPromptContext ?? undefined,
+            signal,
+            {
+              jobId,
+              chunkId: chunk.id,
+              routerCandidates: routerOutputJson,
+            }
+          );
+          throwIfAborted(signal);
+          await setChunkPhase(chunk.id, "postprocess");
+          logger.info("Post-multipass refinement starting", {
+            jobId,
+            chunkId: chunk.id,
+            runKey,
+            rawFindings: multiPassResult.findings.length,
+            executedPassCount: multiPassResult.executedPassCount,
+            skippedPassCount: multiPassResult.skippedPassCount,
+          });
       
-      // Enforce atom_ids and prefer literal local evidence from chunk offsets.
-      const enforced = multiPassResult.findings.map(f => enforceAtomIds([f])[0]);
-      const precisionRefined = enforced.map((f) => refineAtomPrecision(f));
-      const evidencePinned = precisionRefined.map((f) => pinFindingEvidenceToChunk(f, chunkText));
-      const groundedResults = evidencePinned.map((f) => {
+        // Enforce atom_ids and prefer literal local evidence from chunk offsets.
+        const enforced = multiPassResult.findings.map(f => enforceAtomIds([f])[0]);
+        const precisionRefined = enforced.map((f) => refineAtomPrecision(f));
+        const evidencePinned = precisionRefined.map((f) => pinFindingEvidenceToChunk(f, chunkText));
+        const groundedResults = evidencePinned.map((f) => {
         const passName = (f as { detection_pass?: string | null }).detection_pass ?? null;
         const judgeCallIndex = passName != null
           ? DETECTION_PASSES.findIndex((pass) => pass.name === passName)
@@ -2673,38 +2730,38 @@ export async function processChunkJudge(
         });
         return result;
       });
-      const grounded = groundedResults
-        .filter((result) => result.grounded)
-        .filter((result) => {
-          if (!requiresStrictExactProof(result.finding)) return true;
-          return allowsStrictGroundingMethod(result.method);
-        })
-        .map((result) => result.finding);
-      await persistLineageEvents(
-        groundedResults.map((result) => {
-          const strictRejected =
-            result.grounded &&
-            requiresStrictExactProof(result.finding) &&
-            !allowsStrictGroundingMethod(result.method);
-          const reasonIfRemoved = !result.grounded
-            ? (result.reason ?? result.diagnostics?.rejection_reason ?? "grounding_rejected")
-            : strictRejected
-              ? "strict_exact_proof_required"
-              : null;
-          return buildLineageEvent(result.finding, {
-            jobId,
-            chunkId: chunk.id,
-            stageName: "grounding",
-            passName: result.finding.detection_pass ?? null,
-            reasonIfRemoved,
-            metadata: {
-              method: result.method,
-              grounded: result.grounded,
-            },
-          });
-        })
-      );
-      const enriched: FindingWithGlobal[] = (grounded as any[]).map((rawFinding: any) => {
+        const grounded = groundedResults
+          .filter((result) => result.grounded)
+          .filter((result) => {
+            if (!requiresStrictExactProof(result.finding)) return true;
+            return allowsStrictGroundingMethod(result.method);
+          })
+          .map((result) => result.finding);
+        await persistLineageEvents(
+          groundedResults.map((result) => {
+            const strictRejected =
+              result.grounded &&
+              requiresStrictExactProof(result.finding) &&
+              !allowsStrictGroundingMethod(result.method);
+            const reasonIfRemoved = !result.grounded
+              ? (result.reason ?? result.diagnostics?.rejection_reason ?? "grounding_rejected")
+              : strictRejected
+                ? "strict_exact_proof_required"
+                : null;
+            return buildLineageEvent(result.finding, {
+              jobId,
+              chunkId: chunk.id,
+              stageName: "grounding",
+              passName: result.finding.detection_pass ?? null,
+              reasonIfRemoved,
+              metadata: {
+                method: result.method,
+                grounded: result.grounded,
+              },
+            });
+          })
+        );
+        const enriched: FindingWithGlobal[] = (grounded as any[]).map((rawFinding: any) => {
         const f = rawFinding as FindingWithGlobal;
         if (v3StabilizationMode && isV3RuntimeFinding(f)) {
           return f;
@@ -2721,152 +2778,153 @@ export async function processChunkJudge(
         if (f.evidence_snippet && f.evidence_snippet.trim().length > 0) return f;
         return { ...f, evidence_snippet: fallback };
       });
-      const qualityFiltered = enriched.filter((f) => {
-        const qualityIssue = getEvidenceQualityIssue(f as unknown as JudgeFinding, chunkText);
-        if (qualityIssue && !v3StabilizationMode) {
-          logger.warn("Low-quality evidence snippet (dropping finding)", {
+        const qualityFiltered = enriched.filter((f) => {
+          const qualityIssue = getEvidenceQualityIssue(f as unknown as JudgeFinding, chunkText);
+          if (qualityIssue && !v3StabilizationMode) {
+            logger.warn("Low-quality evidence snippet (dropping finding)", {
+              chunkId: chunk.id,
+              article: f.article_id,
+              issue: qualityIssue,
+              evidence: f.evidence_snippet?.slice(0, 80),
+            });
+            return false;
+          }
+          if (qualityIssue && v3StabilizationMode && isV3RuntimeFinding(f)) {
+            logger.warn("Low-quality evidence snippet (advisory only under V3 stabilization mode)", {
+              chunkId: chunk.id,
+              article: f.article_id,
+              issue: qualityIssue,
+              evidence: f.evidence_snippet?.slice(0, 80),
+            });
+          }
+          return true;
+        });
+        const withGlobal = (qualityFiltered as readonly FindingWithGlobal[]).map((f) => toGlobalFinding(f as unknown as JudgeFinding, chunkStart));
+        withGlobal.forEach((finding, index) => {
+          ensureFindingLineageId(finding, {
+            jobId,
             chunkId: chunk.id,
-            article: f.article_id,
-            issue: qualityIssue,
-            evidence: f.evidence_snippet?.slice(0, 80),
+            passName: finding.detection_pass ?? null,
+            index,
           });
-          return false;
-        }
-        if (qualityIssue && v3StabilizationMode && isV3RuntimeFinding(f)) {
-          logger.warn("Low-quality evidence snippet (advisory only under V3 stabilization mode)", {
-            chunkId: chunk.id,
-            article: f.article_id,
-            issue: qualityIssue,
-            evidence: f.evidence_snippet?.slice(0, 80),
-          });
-        }
-        return true;
-      });
-      const withGlobal = (qualityFiltered as readonly FindingWithGlobal[]).map((f) => toGlobalFinding(f as unknown as JudgeFinding, chunkStart));
-      withGlobal.forEach((finding, index) => {
-        ensureFindingLineageId(finding, {
+        });
+        logger.info("[DEBUG] Multi-pass refinement stage complete", {
           jobId,
           chunkId: chunk.id,
-          passName: finding.detection_pass ?? null,
-          index,
+          runKey,
+          rawFindingsCount: enforced.length,
+          groundedCount: grounded.length,
+          qualityFilteredCount: qualityFiltered.length,
+          globalizedCount: withGlobal.length,
         });
-      });
-      logger.info("[DEBUG] Multi-pass refinement stage complete", {
-        jobId,
-        chunkId: chunk.id,
-        runKey,
-        rawFindingsCount: enforced.length,
-        groundedCount: grounded.length,
-        qualityFilteredCount: qualityFiltered.length,
-        globalizedCount: withGlobal.length,
-      });
-      groundedFindingCount = grounded.length;
-      logger.info("Post-multipass refinement completed", {
-        jobId,
-        chunkId: chunk.id,
-        runKey,
-        enforcedCount: enforced.length,
-        precisionRefinedCount: precisionRefined.length,
-        evidencePinnedCount: evidencePinned.length,
-        groundedCount: grounded.length,
-        groundingDroppedCount: groundedResults.length - grounded.length,
-        strictExactProofDroppedCount: groundedResults.filter(
-          (result) =>
-            result.grounded &&
-            requiresStrictExactProof(result.finding) &&
-            !allowsStrictGroundingMethod(result.method)
-        ).length,
-        groundingMethods: groundedResults.reduce<Record<string, number>>((acc, result) => {
-          acc[result.method] = (acc[result.method] ?? 0) + 1;
-          return acc;
-        }, {}),
-        enrichedCount: enriched.length,
-        qualityFilteredCount: qualityFiltered.length,
-        lowQualityDroppedCount: enriched.length - qualityFiltered.length,
-        globalizedCount: withGlobal.length,
-      });
-      
-      // Final guardrail: keep only findings anchored to literal script text.
-      const beforeVerbatimCount = withGlobal.length;
-      logger.info("Verbatim guardrail starting", {
-        jobId,
-        chunkId: chunk.id,
-        runKey,
-        findingsToCheck: beforeVerbatimCount,
-        stabilizationMode: v3StabilizationMode,
-      });
-      allFindings = v3StabilizationMode
-        ? withGlobal
-        : withGlobal.filter((f) => {
-        const isExact = isDetectionVerbatim(chunkText, f.evidence_snippet);
-        if (!isExact) {
-          logger.warn("Evidence mismatch (dropping finding)", { 
-            chunkId: chunk.id,
-            article: f.article_id,
-            evidence: f.evidence_snippet?.slice(0, 50),
-            severity: f.severity
-          });
-        }
-        return isExact;
-      });
-      if (v3StabilizationMode) {
-        for (const f of withGlobal) {
-          if (!isDetectionVerbatim(chunkText, f.evidence_snippet)) {
-            logger.warn("Evidence mismatch (advisory only under V3 stabilization mode)", {
+        groundedFindingCount = grounded.length;
+        logger.info("Post-multipass refinement completed", {
+          jobId,
+          chunkId: chunk.id,
+          runKey,
+          enforcedCount: enforced.length,
+          precisionRefinedCount: precisionRefined.length,
+          evidencePinnedCount: evidencePinned.length,
+          groundedCount: grounded.length,
+          groundingDroppedCount: groundedResults.length - grounded.length,
+          strictExactProofDroppedCount: groundedResults.filter(
+            (result) =>
+              result.grounded &&
+              requiresStrictExactProof(result.finding) &&
+              !allowsStrictGroundingMethod(result.method)
+          ).length,
+          groundingMethods: groundedResults.reduce<Record<string, number>>((acc, result) => {
+            acc[result.method] = (acc[result.method] ?? 0) + 1;
+            return acc;
+          }, {}),
+          enrichedCount: enriched.length,
+          qualityFilteredCount: qualityFiltered.length,
+          lowQualityDroppedCount: enriched.length - qualityFiltered.length,
+          globalizedCount: withGlobal.length,
+        });
+        
+        // Final guardrail: keep only findings anchored to literal script text.
+        const beforeVerbatimCount = withGlobal.length;
+        logger.info("Verbatim guardrail starting", {
+          jobId,
+          chunkId: chunk.id,
+          runKey,
+          findingsToCheck: beforeVerbatimCount,
+          stabilizationMode: v3StabilizationMode,
+        });
+        allFindings = v3StabilizationMode
+          ? withGlobal
+          : withGlobal.filter((f) => {
+          const isExact = isDetectionVerbatim(chunkText, f.evidence_snippet);
+          if (!isExact) {
+            logger.warn("Evidence mismatch (dropping finding)", { 
               chunkId: chunk.id,
               article: f.article_id,
               evidence: f.evidence_snippet?.slice(0, 50),
-              severity: f.severity,
+              severity: f.severity
             });
           }
+          return isExact;
+        });
+        if (v3StabilizationMode) {
+          for (const f of withGlobal) {
+            if (!isDetectionVerbatim(chunkText, f.evidence_snippet)) {
+              logger.warn("Evidence mismatch (advisory only under V3 stabilization mode)", {
+                chunkId: chunk.id,
+                article: f.article_id,
+                evidence: f.evidence_snippet?.slice(0, 50),
+                severity: f.severity,
+              });
+            }
+          }
         }
-      }
-      allFindings = sortFindingsStable(allFindings);
-      logger.info("Verbatim guardrail completed", {
-        jobId,
-        chunkId: chunk.id,
-        runKey,
-        beforeVerbatim: beforeVerbatimCount,
-        afterVerbatim: allFindings.length,
-        dropped: beforeVerbatimCount - allFindings.length,
-        stabilizationMode: v3StabilizationMode,
-      });
-      
-      logger.info("Multi-pass detection stats", {
-        chunkId: chunk.id,
-        runKey,
-        totalPasses: multiPassResult.passResults.length,
-        executedPasses: multiPassResult.executedPassCount,
-        skippedPasses: multiPassResult.skippedPassCount,
-        beforeVerbatim: beforeVerbatimCount,
-        afterVerbatim: allFindings.length,
-        dropped: beforeVerbatimCount - allFindings.length,
-        duration: multiPassResult.totalDuration,
-        passBreakdown: multiPassResult.passResults.map(r => ({
-          pass: r.passName,
-          findings: r.findings.length,
-          duration: r.duration,
-          skipped: r.skipped ?? false,
-          reason: r.reason ?? null,
-        }))
-      });
-      logger.info("Chunk multipass timings", {
-        jobId,
-        chunkId: chunk.id,
-        runKey,
-        routerDurationMs,
-        multiPassDurationMs: Date.now() - multiPassStartedAt,
-      });
-    } catch (e) {
-      if (
-        (e instanceof Error && (e.name === "AbortError" || e.name === "ChunkTimeoutError")) ||
-        signal?.aborted
-      ) {
-        throwIfAborted(signal);
+        allFindings = sortFindingsStable(allFindings);
+        logger.info("Verbatim guardrail completed", {
+          jobId,
+          chunkId: chunk.id,
+          runKey,
+          beforeVerbatim: beforeVerbatimCount,
+          afterVerbatim: allFindings.length,
+          dropped: beforeVerbatimCount - allFindings.length,
+          stabilizationMode: v3StabilizationMode,
+        });
+        
+        logger.info("Multi-pass detection stats", {
+          chunkId: chunk.id,
+          runKey,
+          totalPasses: multiPassResult.passResults.length,
+          executedPasses: multiPassResult.executedPassCount,
+          skippedPasses: multiPassResult.skippedPassCount,
+          beforeVerbatim: beforeVerbatimCount,
+          afterVerbatim: allFindings.length,
+          dropped: beforeVerbatimCount - allFindings.length,
+          duration: multiPassResult.totalDuration,
+          passBreakdown: multiPassResult.passResults.map(r => ({
+            pass: r.passName,
+            findings: r.findings.length,
+            duration: r.duration,
+            skipped: r.skipped ?? false,
+            reason: r.reason ?? null,
+          }))
+        });
+        logger.info("Chunk multipass timings", {
+          jobId,
+          chunkId: chunk.id,
+          runKey,
+          routerDurationMs,
+          multiPassDurationMs: Date.now() - multiPassStartedAt,
+        });
+      } catch (e) {
+        if (
+          (e instanceof Error && (e.name === "AbortError" || e.name === "ChunkTimeoutError")) ||
+          signal?.aborted
+        ) {
+          throwIfAborted(signal);
+          throw e;
+        }
+        logger.error("Multi-pass detection failed", { error: String(e), chunkId: chunk.id });
         throw e;
       }
-      logger.error("Multi-pass detection failed", { error: String(e), chunkId: chunk.id });
-      throw e;
     }
 
     // 4) Micro-windows (DISABLED for multi-pass - full chunk coverage is sufficient)

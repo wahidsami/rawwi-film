@@ -59,6 +59,7 @@ export type V3RuntimeAdapterOptions = Readonly<{
   responseFormat?: "json_object" | "text";
   subjectModule?: V3PromptSubjectModule;
   outputSchema?: V3PromptOutputSchema;
+  policySelectedArticleIds?: readonly number[];
 }>;
 
 export type V3RuntimeAdapterResult = Readonly<{

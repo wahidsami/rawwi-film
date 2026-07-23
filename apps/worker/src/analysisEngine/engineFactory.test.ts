@@ -28,7 +28,9 @@ function buildJobContext() {
       analysisSignatureContext: null,
       diagnosticsEnabled: false,
     },
-    options: {},
+    options: {
+      policySelectedArticleIds: [1],
+    },
   } as const;
 }
 
@@ -141,7 +143,7 @@ async function testV3AdapterDelegates(): Promise<void> {
       called += 1;
       assert.equal(input.jobId, "job-1");
       assert.equal(input.chunkText, "حاضر. فهد يتمتم: يا كلب");
-      assert.deepStrictEqual(options, {});
+      assert.deepStrictEqual(options, { policySelectedArticleIds: [1] });
       return {
         analysisResponse: {
           promptHash: "prompt",
@@ -259,7 +261,6 @@ async function testReviewCoreAdapterContract(): Promise<void> {
       pageRows: [{ page_number: 1, content: "قال: يا كلب" }],
       promptLexiconTerms: [],
     }),
-    selectArticleIds: () => [1],
   });
 
   const result = await adapter.execute(buildJobContext());

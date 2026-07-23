@@ -25,7 +25,9 @@ function buildJobContext() {
       analysisSignatureContext: null,
       diagnosticsEnabled: false,
     },
-    options: {},
+    options: {
+      policySelectedArticleIds: [1],
+    },
   } as const;
 }
 
@@ -70,7 +72,6 @@ async function testReviewCoreAdapterDeterminism(): Promise<void> {
       pageRows: [{ page_number: 1, content: "قال: يا كلب" }],
       promptLexiconTerms: [],
     }),
-    selectArticleIds: () => [1],
   });
 
   const first = await adapter.execute(buildJobContext());

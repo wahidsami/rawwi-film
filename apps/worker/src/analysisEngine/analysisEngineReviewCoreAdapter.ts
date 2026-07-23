@@ -1,14 +1,12 @@
 import { z } from "zod";
 
 import { buildIntelligenceContext } from "../analysisEngineV3/intelligence/intelligenceBuilder.js";
-import { resolveUniversalConceptsFromRecognitionInput } from "../analysisEngineV3/concepts/universalConceptResolver.js";
 import { createV3ProviderFactory } from "../analysisEngineV3/provider/providerFactory.js";
 import { createLegalDecision } from "../analysisEngineV3/legal/legalDecision.js";
 import type { LegalContextResult, LegalEvidenceCandidate, LegalEvidenceResult, LegalNarrativeResult, LegalSemanticResult } from "../analysisEngineV3/legal/legalTypes.js";
 import type { IntelligenceContext } from "../analysisEngineV3/intelligence/intelligenceContext.js";
 import { getCachedJobResources } from "../jobAnalysisCache.js";
 import { buildReviewerAcademyKnowledgePrompt } from "../reviewerAcademy/articleKnowledgeRenderer.js";
-import { createDefaultReviewerKnowledgeRegistry, resolveKnowledgeDomainCandidateArticleIds } from "../analysisEngineV3/reviewerKnowledge/reviewerKnowledgeRegistry.js";
 import { getPolicyArticle, getPolicyAtomIdsForArticle, getPolicyAtomTitle, derivePolicyConceptCode, isValidAtomForArticle, normalizeAtomId } from "../policyMap.js";
 import { getPrimaryCanonicalAtomForGcam } from "../canonicalAtomMapping.js";
 import { ensureFindingLineageId } from "../findingLineage.js";
@@ -46,7 +44,6 @@ type ReviewCoreRawOutput = Readonly<{
 
 type ReviewCoreDependencies = Readonly<{
   providerFactory?: ReturnType<typeof createV3ProviderFactory>;
-  selectArticleIds?: (jobContext: AnalysisJobContext, intelligence: IntelligenceContext, knowledgeDomains: readonly string[]) => readonly number[];
   getJobResources?: typeof getCachedJobResources;
   now?: () => number;
 }>;
@@ -60,7 +57,6 @@ type ReviewCorePromptBuild = Readonly<{
   knowledgePrompt: ReturnType<typeof buildReviewerAcademyKnowledgePrompt>;
 }>;
 
-const DEFAULT_REVIEWER_KNOWLEDGE_REGISTRY = createDefaultReviewerKnowledgeRegistry();
 const EMPTY_GLOSSARY = Object.freeze({
   title: "Review Core Glossary",
   entries: Object.freeze([]),
@@ -99,6 +95,15 @@ function uniqueSortedNumbers(values: readonly number[]): readonly number[] {
 
 function uniqueSortedStrings(values: readonly string[]): readonly string[] {
   return Object.freeze([...new Set(values.map((value) => normalizeText(value)).filter(Boolean))].sort((left, right) => left.localeCompare(right)));
+}
+
+function resolvePolicySelectedArticleIds(jobContext: AnalysisJobContext): readonly number[] {
+  const selected = jobContext.options?.policySelectedArticleIds ?? [];
+  const normalized = uniqueSortedNumbers(selected.map((value) => Number(value)));
+  if (normalized.length === 0) {
+    throw new Error("review_core requires policySelectedArticleIds from PolicyMap");
+  }
+  return normalized;
 }
 
 function buildSelectionNarrative(input: AnalysisJobContext["request"]): LegalNarrativeResult {
@@ -193,38 +198,6 @@ function buildSelectionIntelligenceContext(request: AnalysisJobContext["request"
   });
 }
 
-function selectArticleIdsForChunk(
-  jobContext: AnalysisJobContext,
-  intelligence: IntelligenceContext,
-): Readonly<{
-  knowledgeDomains: readonly string[];
-  articleIds: readonly number[];
-  reason: string;
-  confidence: number;
-}> {
-  const { conceptContext: _conceptContext, ...conceptInput } = intelligence;
-  const resolution = resolveUniversalConceptsFromRecognitionInput(conceptInput);
-  const selectedArticleIds = new Set<number>();
-
-  for (const domain of resolution.knowledgeDomains) {
-    for (const articleId of resolveKnowledgeDomainCandidateArticleIds(DEFAULT_REVIEWER_KNOWLEDGE_REGISTRY, domain)) {
-      selectedArticleIds.add(articleId);
-    }
-  }
-
-  if (selectedArticleIds.size === 0) {
-    selectedArticleIds.add(1);
-  }
-
-  const articleIds = uniqueSortedNumbers([...selectedArticleIds]);
-  return Object.freeze({
-    knowledgeDomains: resolution.knowledgeDomains,
-    articleIds,
-    reason: resolution.reason,
-    confidence: resolution.confidence,
-  });
-}
-
 function buildMemorySummary(jobContext: AnalysisJobContext): string {
   return [
     jobContext.request.analysisPromptContext?.trim() ?? "",
@@ -257,7 +230,24 @@ function buildReviewCorePrompt(articleId: number, jobContext: AnalysisJobContext
     memorySummary.trim().length > 0 ? `Memory2 Summary:\n${memorySummary}` : "Memory2 Summary:\n(none)",
     "Chunk Text:",
     jobContext.request.chunkText,
-    "Return findings only for the selected article.",
+    [
+      `You are reviewing ONLY Article ${String(articleId)}.`,
+      "Ignore every other GCAM article.",
+      `Your responsibility is limited to determining whether the current screenplay chunk violates Article ${String(articleId)}.`,
+      `If the screenplay violates Article ${String(articleId)},`,
+      "return EVERY violation.",
+      "If there are no violations,",
+      "return an empty array.",
+      "Do not discuss other articles.",
+      "Do not infer missing evidence.",
+      "Do not invent evidence.",
+      "Every finding MUST contain the exact quoted screenplay text.",
+      "The quoted text MUST exist verbatim inside the screenplay chunk.",
+      "Do not summarize.",
+      "Do not paraphrase.",
+      "Do not rewrite the evidence.",
+      "Return valid JSON only.",
+    ].join("\n"),
   ].join("\n\n");
 
   const prompt = `${systemPrompt}\n\n${userPrompt}`;
@@ -579,12 +569,9 @@ export function createAnalysisEngineReviewCoreAdapter(dependencies: ReviewCoreDe
       const provider = dependencies.providerFactory?.create("openai") ?? createV3ProviderFactory().create("openai");
       const getJobResources = dependencies.getJobResources ?? getCachedJobResources;
       const { pageRows } = await getJobResources(supabase, jobContext.request.jobId, jobContext.request.versionId);
-      const intelligence = buildSelectionIntelligenceContext(jobContext.request);
-      const selection = selectArticleIdsForChunk(jobContext, intelligence);
-      const selectedArticleIds = uniqueSortedNumbers(
-        dependencies.selectArticleIds?.(jobContext, intelligence, selection.knowledgeDomains) ?? selection.articleIds,
-      );
+      const selectedArticleIds = resolvePolicySelectedArticleIds(jobContext);
       const memorySummary = buildMemorySummary(jobContext);
+      const intelligence = buildSelectionIntelligenceContext(jobContext.request);
       const articleReviews: Array<Readonly<{
         articleId: number;
         promptHash: string;
@@ -601,7 +588,7 @@ export function createAnalysisEngineReviewCoreAdapter(dependencies: ReviewCoreDe
       const stageHashes: V3StageHash[] = [];
 
       let selectionStageStarted = Date.now();
-      stageHashes.push(Object.freeze({ stage: "narrative", hash: sha256(canonicalStringify({ knowledgeDomains: selection.knowledgeDomains, selectedArticleIds })) }));
+      stageHashes.push(Object.freeze({ stage: "narrative", hash: sha256(canonicalStringify({ selectedArticleIds })) }));
       stageTimings.push(Object.freeze({ stage: "narrative", durationMs: Date.now() - selectionStageStarted }));
 
       selectionStageStarted = Date.now();
@@ -655,14 +642,14 @@ export function createAnalysisEngineReviewCoreAdapter(dependencies: ReviewCoreDe
         const articleFindingCount = parsedFindings.length;
         const articleFindings: V3RuntimeFinding[] = [];
         for (const rawFinding of parsedFindings) {
-          const enriched = enrichFinding(
+        const enriched = enrichFinding(
             jobContext,
             articleId,
             pageRows,
             rawFinding,
             rawResponses[rawResponses.length - 1]?.promptHash ?? prompt.promptTokenEstimate.toString(),
-            sha256(canonicalStringify(selection.knowledgeDomains)),
-            sha256(canonicalStringify({ articleId, memorySummary })),
+            sha256(canonicalStringify({ selectedArticleIds })),
+            sha256(canonicalStringify({ articleId, memorySummary, concepts: intelligence.conceptContext.conceptIds })),
             rawResponseHash,
             rawResponse.responseId,
             rawResponse.responseTimestamp,
@@ -702,7 +689,7 @@ export function createAnalysisEngineReviewCoreAdapter(dependencies: ReviewCoreDe
       stageTimings.push(Object.freeze({ stage: "legal", durationMs: Date.now() - startedAt }));
 
       const promptHash = sha256(canonicalStringify({ jobId: jobContext.request.jobId, chunkId: jobContext.request.chunkId, reviews: articleReviews }));
-      const semanticHash = sha256(canonicalStringify({ knowledgeDomains: selection.knowledgeDomains, intelligence: intelligence.conceptContext.conceptIds }));
+      const semanticHash = sha256(canonicalStringify({ selectedArticleIds, memorySummary, concepts: intelligence.conceptContext.conceptIds }));
       const legalHash = sha256(canonicalStringify(dedupedFindings.map((finding) => ({
         articleId: finding.article_id,
         atomId: finding.atom_id,
@@ -724,8 +711,8 @@ export function createAnalysisEngineReviewCoreAdapter(dependencies: ReviewCoreDe
         articleIds: selectedArticleIds,
         applies: dedupedFindings.length > 0,
         status: dedupedFindings.length > 0 ? "accept" : "reject",
-        reason: selection.reason,
-        confidence: selection.confidence,
+        reason: "PolicyMap selected articles",
+        confidence: 1,
         semantic,
         narrative,
         evidence,
@@ -782,7 +769,7 @@ export function createAnalysisEngineReviewCoreAdapter(dependencies: ReviewCoreDe
         job_id: jobContext.request.jobId,
         chunk_id: jobContext.request.chunkId,
         selected_article_ids: selectedArticleIds,
-        knowledge_domains: selection.knowledgeDomains,
+        knowledge_domains: Object.freeze([]),
         article_reviews: articleReviews,
         prompt_character_count: articleReviews.reduce((total, review) => total + review.promptCharacterCount, 0),
         prompt_token_estimate: articleReviews.reduce((total, review) => total + review.promptTokenEstimate, 0),
